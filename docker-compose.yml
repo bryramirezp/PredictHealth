@@ -1,0 +1,103 @@
+version: "3.9"
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15
+    container_name: predicthealth_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: predicthealth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - predicthealth_network
+
+  # Servicio de Gestión de Doctores
+  servicio-doctores:
+    build: ./backend/servicio-doctores
+    container_name: servicio_doctores
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://admin:admin123@db:5432/predicthealth_db"
+      SECRET_KEY: "${SECRET_KEY:-$(openssl rand -base64 32)}"
+    networks:
+      - predicthealth_network
+    volumes:
+      - ./backend/servicio-doctores:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Servicio de Gestión de Pacientes
+  servicio-pacientes:
+    build: ./backend/servicio-pacientes
+    container_name: servicio_pacientes
+    restart: always
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - servicio-doctores
+    environment:
+      DATABASE_URL: "postgresql://admin:admin123@db:5432/predicthealth_db"
+      URL_SERVICIO_DOCTORES: "http://servicio-doctores:8000"
+      SECRET_KEY: "tu-clave-secreta-super-segura-cambiar-en-produccion"
+    networks:
+      - predicthealth_network
+    volumes:
+      - ./backend/servicio-pacientes:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend Flask
+  frontend:
+    build: .
+    container_name: predicthealth_frontend
+    restart: always
+    ports:
+      - "5001:5001"
+    depends_on:
+      - servicio-doctores
+      - servicio-pacientes
+    environment:
+      DOCTOR_SERVICE_URL: "http://servicio-doctores:8000"
+      PATIENT_SERVICE_URL: "http://servicio-pacientes:8000"
+      FLASK_ENV: "development"
+    networks:
+      - predicthealth_network
+    volumes:
+      - .:/app
+    command: python app.py
+
+  # Nginx (Opcional - para producción)
+  nginx:
+    image: nginx:alpine
+    container_name: predicthealth_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - servicio-doctores
+      - servicio-pacientes
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - predicthealth_network
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+
+networks:
+  predicthealth_network:
+    driver: bridge

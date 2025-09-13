@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Medidas — PredictHealth</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/measurements.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+</head>
+<body>
+  <!-- Navbar -->
+    <nav class="navbar">
+      <div class="logo">
+        <a href="user_dashboard.html" class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="logo" width="24" height="24" style="vertical-align: middle;">
+            <strong style="vertical-align: middle; margin-left: 8px;">PredictHealth</strong>
+        </a>
+      </div>
+      <div class="menu">
+        <a href="user_dashboard.html">Dashboard</a>
+        <a href="register_user.html">Registro de usuario</a>
+        <a href="lifestyle.html">Hábitos</a>
+        <a href="measurements.html">Medidas</a>
+        <a href="notifications.html">Notificaciones</a>
+        <a href="recommendations.html">Recomendaciones</a>
+        <a href="log_in.html">Cerrar sesión</a>
+      </div>
+    </nav>
+
+  <main class="container">
+    <div class="card">
+      <h1>Registrar medidas de salud</h1>
+      <form id="measurementsForm" method="POST" action="/api/measurements">
+        <label>Presión arterial (Sistólica)
+          <input type="number" name="bp_systolic" required min="50" max="250">
+        </label>
+        <label>Presión arterial (Diastólica)
+          <input type="number" name="bp_diastolic" required min="30" max="150">
+        </label>
+        <label>Glucosa (mg/dL)
+          <input type="number" name="glucose" required min="30" max="600">
+        </label>
+        <button class="btn primary" type="submit">Guardar medidas</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Tendencias</h2>
+      <canvas id="measurementsChart" height="180"></canvas>
+    </div>
+  </main>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Notificaciones — PredictHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}" />
+    <script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="user_dashboard.html" class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="logo" width="24" height="24" style="vertical-align: middle;">
+            <strong style="vertical-align: middle; margin-left: 8px;">PredictHealth</strong>
+        </a>
+      </div>
+      <div class="menu">
+        <a href="user_dashboard.html">Dashboard</a>
+        <a href="register_user.html">Registro de usuario</a>
+        <a href="lifestyle.html">Hábitos</a>
+        <a href="measurements.html">Medidas</a>
+        <a href="notifications.html">Notificaciones</a>
+        <a href="recommendations.html">Recomendaciones</a>
+        <a href="log_in.html">Cerrar sesión</a>
+      </div>
+    </nav>
+
+    <br>
+    <main class="container card">
+      <h1>Notificaciones y recordatorios</h1>
+      <div id="notificationsList" class="list">
+        <div class="empty">
+          No hay notificaciones por ahora. (Placeholder para integración con
+          Firebase)
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnAddMock" class="btn primary">
+          Añadir recordatorio demo
+        </button>
+        <a class="btn ghost" href="user_dashboard.html">Volver al panel</a>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Hábitos — PredictHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lifestyle.css') }}" />
+    <script src="{{ url_for('static', filename='js/validations.js') }}" defer></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="user_dashboard.html" class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="logo" width="24" height="24" style="vertical-align: middle;">
+            <strong style="vertical-align: middle; margin-left: 8px;">PredictHealth</strong>
+        </a>
+      </div>
+      <div class="menu">
+        <a href="user_dashboard.html">Dashboard</a>
+        <a href="register_user.html">Registro de usuario</a>
+        <a href="lifestyle.html">Hábitos</a>
+        <a href="measurements.html">Medidas</a>
+        <a href="notifications.html">Notificaciones</a>
+        <a href="recommendations.html">Recomendaciones</a>
+        <a href="log_in.html">Cerrar sesión</a>
+      </div>
+    </nav>
+
+    <br>
+    <main class="container card">
+      <h1>Registro de hábitos</h1>
+      <form id="lifestyleForm" method="POST" action="/api/lifestyle">
+        <label
+          >Actividad física (min/día)
+          <input
+            type="number"
+            name="activity_minutes"
+            min="0"
+            max="480"
+            required
+          />
+        </label>
+
+        <label
+          >Dieta (breve)
+          <select name="diet_type" required>
+            <option value="">Selecciona...</option>
+            <option value="balanced">Equilibrada</option>
+            <option value="high_carb">Alta en carbohidratos</option>
+            <option value="high_protein">Alta en proteínas</option>
+            <option value="other">Otra</option>
+          </select>
+        </label>
+
+        <label
+          >Horas de sueño por noche
+          <input
+            type="number"
+            name="sleep_hours"
+            step="0.1"
+            min="0"
+            max="24"
+            required
+          />
+        </label>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Guardar hábitos</button>
+          <a class="btn ghost" href="user_dashboard.html">Volver al panel</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,119 @@
+/* Global Styles - PredictHealth */
+
+/* Variables */
+:root {
+  --blue-100: #e6f0fa;
+  --blue-300: #87bfff;
+  --blue-500: #0d6efd;
+  --blue-700: #0a58ca;
+  --text-dark: #0f172a;
+  --text-muted: #6b7280;
+  --white: #ffffff;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Fondo degradado */
+body {
+  margin: 0;
+  background: linear-gradient(180deg, var(--blue-100), var(--white));
+  color: var(--text-dark);
+  min-height: 100vh;
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Tarjetas */
+.card {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+
+/* Botones */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn.primary {
+  background: var(--blue-500);
+  color: var(--white);
+}
+
+.btn.primary:hover {
+  background: var(--blue-700);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--blue-500);
+  border: 1px solid var(--blue-300);
+}
+
+.btn.ghost:hover {
+  background: var(--blue-100);
+}
+
+/* Formularios */
+form label {
+  display: block;
+  margin-bottom: .8rem;
+  font-weight: 500;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: .6rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-top: .3rem;
+}
+
+/* Navbar */
+.navbar {
+  background: var(--white);
+  box-shadow: var(--shadow);
+  padding: .8rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar a {
+  text-decoration: none;
+  color: var(--text-dark);
+  font-weight: 500;
+  margin-left: 1rem;
+}
+
+.navbar a:hover {
+  color: var(--blue-500);
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+.logo-link img {
+  width: 24px;
+  height: 24px;
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Doctor — PredictHealth</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="doctor_dashboard.html">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth" width="32" height="32" class="me-2">
+        <span class="fw-bold text-primary">PredictHealth</span>
+        <span class="badge bg-success ms-2">Doctor</span>
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="doctor_dashboard.html">
+              <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="register_patient.html">
+              <i class="fas fa-user-plus me-1"></i>Registrar Paciente
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="mis_pacientes.html">
+              <i class="fas fa-users me-1"></i>Mis Pacientes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="loadReports()">
+              <i class="fas fa-chart-bar me-1"></i>Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="loadSettings()">
+              <i class="fas fa-cog me-1"></i>Configuración
+            </a>
+          </li>
+        </ul>
+        
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-md me-1"></i>{{ session.get('doctor_name', 'Doctor') }}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#" onclick="loadProfile()">Mi Perfil</a></li>
+              <li><a class="dropdown-item" href="#" onclick="loadSettings()">Configuración</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="btnLogout">Cerrar sesión</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container-fluid py-4">
+      <!-- Welcome Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="welcome-card">
+            <div class="welcome-content">
+              <h1 class="welcome-title">¡Bienvenido, Dr. {{ session.get('doctor_name', 'Doctor') }}!</h1>
+              <p class="welcome-subtitle">Gestiona tus pacientes y monitorea su salud</p>
+              <div class="last-update">
+                <i class="fas fa-clock me-1"></i>
+                Última actualización: <span id="lastUpdate">Cargando...</span>
+              </div>
+            </div>
+            <div class="welcome-actions">
+              <button class="btn btn-outline-primary" onclick="loadPatients()">
+                <i class="fas fa-sync-alt me-1"></i>Actualizar datos
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Overview -->
+      <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="kpi-item">
+                <div class="kpi-icon diabetes">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div class="kpi-content">
+                  <h4 id="totalPatients">0</h4>
+                  <p>Pacientes Activos</p>
+                  <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> +2
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="kpi-item">
+                <div class="kpi-icon hypertension">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-content">
+                  <h4 id="highRiskPatients">0</h4>
+                  <p>Pacientes en Riesgo</p>
+                  <div class="kpi-trend down">
+                    <i class="fas fa-arrow-down"></i> -1
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="kpi-item">
+                <div class="kpi-icon diabetes">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="kpi-content">
+                  <h4 id="avgRiskScore">0%</h4>
+                  <p>Riesgo Promedio</p>
+                  <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> +2%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="kpi-item">
+                <div class="kpi-icon hypertension">
+                  <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="kpi-content">
+                  <h4 id="todayAppointments">0</h4>
+                  <p>Citas Hoy</p>
+                  <div class="kpi-trend up">
+                    <i class="fas fa-arrow-up"></i> +1
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patients List -->
+      <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-users me-2"></i>Mis Pacientes
+              </h3>
+              <div class="chart-controls">
+                <button class="btn btn-primary btn-sm" onclick="loadPatients()">
+                  <i class="fas fa-sync-alt me-1"></i>Actualizar
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="patientsList">
+                <div class="text-center py-4">
+                  <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                  <p class="text-muted mt-2">Cargando pacientes...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-pie me-2"></i>Distribución de Riesgo
+              </h3>
+            </div>
+            <div class="card-body">
+              <canvas id="distChart" height="300"></canvas>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-color high"></span>
+                  <span>Alto (0%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color medium"></span>
+                  <span>Medio (0%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color low"></span>
+                  <span>Bajo (0%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card quick-actions-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions-grid">
+                <a href="register_patient.html" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-user-plus"></i>
+                  </div>
+                  <h5>Registrar Paciente</h5>
+                  <p>Agregar nuevo paciente al sistema</p>
+                </a>
+                
+                <a href="#" onclick="loadPatients()" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-users"></i>
+                  </div>
+                  <h5>Ver Pacientes</h5>
+                  <p>Gestionar lista de pacientes</p>
+                </a>
+                
+                <a href="#" onclick="loadReports()" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                  </div>
+                  <h5>Generar Reportes</h5>
+                  <p>Análisis y estadísticas</p>
+                </a>
+                
+                <a href="#" onclick="loadSettings()" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-cog"></i>
+                  </div>
+                  <h5>Configuración</h5>
+                  <p>Configurar perfil y preferencias</p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set initial timestamp
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('es-ES');
+      
+      // Load dashboard data
+      loadPatients();
+      loadStatistics();
+    });
+
+    // Load patients from API
+    async function loadPatients() {
+      try {
+        const response = await fetch('/api/doctor/patients');
+        if (response.ok) {
+          const data = await response.json();
+          displayPatients(data.pacientes);
+        } else {
+          document.getElementById('patientsList').innerHTML = `
+            <div class="text-center py-4">
+              <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+              <p class="text-muted mt-2">Error al cargar pacientes</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading patients:', error);
+        document.getElementById('patientsList').innerHTML = `
+          <div class="text-center py-4">
+            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+            <p class="text-muted mt-2">Error de conexión</p>
+          </div>
+        `;
+      }
+    }
+
+    // Display patients in the list
+    function displayPatients(patients) {
+      const patientsList = document.getElementById('patientsList');
+      
+      if (patients.length === 0) {
+        patientsList.innerHTML = `
+          <div class="text-center py-4">
+            <i class="fas fa-user-plus fa-2x text-muted"></i>
+            <p class="text-muted mt-2">No tienes pacientes registrados</p>
+            <a href="register_patient.html" class="btn btn-primary">
+              <i class="fas fa-user-plus me-1"></i>Registrar Primer Paciente
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const patientsHTML = patients.map(patient => `
+        <div class="patient-card mb-3 p-3 border rounded">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-1">${patient.nombre} ${patient.apellido}</h5>
+              <p class="text-muted mb-1">${patient.email}</p>
+              <small class="text-muted">Registrado: ${new Date(patient.fecha_creacion).toLocaleDateString()}</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success">Activo</span>
+              <div class="mt-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="viewPatient('${patient.id_paciente}')">
+                  <i class="fas fa-eye me-1"></i>Ver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      patientsList.innerHTML = patientsHTML;
+    }
+
+    // Load statistics
+    async function loadStatistics() {
+      // Simulate loading statistics
+      document.getElementById('totalPatients').textContent = '0';
+      document.getElementById('highRiskPatients').textContent = '0';
+      document.getElementById('avgRiskScore').textContent = '0%';
+      document.getElementById('todayAppointments').textContent = '0';
+    }
+
+    // View patient details
+    function viewPatient(patientId) {
+      // Redirect to patient details page
+      window.location.href = `/patient_details.html?id=${patientId}`;
+    }
+
+    // Load reports
+    function loadReports() {
+      alert('Función de reportes en desarrollo');
+    }
+
+    // Load settings
+    function loadSettings() {
+      alert('Función de configuración en desarrollo');
+    }
+
+    // Load profile
+    function loadProfile() {
+      alert('Función de perfil en desarrollo');
+    }
+
+
+    // Logout functionality
+    document.getElementById('btnLogout')?.addEventListener('click', function() {
+      if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        fetch('/auth/logout', {method: 'POST'})
+          .then(() => window.location.href = 'doctor_login.html');
+      }
+    });
+  </script>
+</body>
+</html>
