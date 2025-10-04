@@ -16,23 +16,42 @@ Backend-Flask acts as an API Gateway that:
 
 ### Microservices Architecture
 
-```
-┌─────────────────┐    ┌──────────────────────┐
-│   Frontend      │────│   Backend-Flask      │
-│   (HTML/JS)     │    │   (API Gateway)      │
-└─────────────────┘    └──────────────────────┘
-                              │
-                    ┌─────────┼─────────┐
-                    │         │         │
-            ┌───────▼───┐ ┌──▼───┐ ┌───▼────┐
-            │ Auth-JWT  │ │Doctors│ │Patients│
-            │ Service   │ │Service│ │Service │
-            └───────────┘ └───────┘ └────────┘
-                    │         │         │
-            ┌───────▼───┐ ┌──▼───┐ ┌───▼────┐
-            │Institutions│ │ Admins│ │PostgreSQL│
-            │ Service    │ │Service│ │  + Redis │
-            └────────────┘ └───────┘ └─────────┘
+```mermaid
+graph TD
+    %% ==== CAPA DE PRESENTACIÓN ====
+    A["Frontend ( HTML / CSS / JS)"] --> B["API Gateway (Flask)"]
+
+    %% ==== CAPA DE NEGOCIO / MICRO SERVICIOS ====
+    B --> C1["Auth-JWT Service"]
+    B --> C2["Admin Service"]
+    B --> C3["Institutions Service"]
+    B --> C4["Doctors Service"]
+    B --> C5["Patients Service"]
+
+    %% ==== CAPA DE DATOS ====
+    C1 --> D["PostgreSQL / Redis"]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+
+    %% ==== ETIQUETAS ====
+    subgraph "Frontend Layer"
+        A
+    end
+
+    subgraph "Backend Layer (API Gateway + Microservices)"
+        B
+        C1
+        C2
+        C3
+        C4
+        C5
+    end
+
+    subgraph "Data Layer"
+        D
+    end
 ```
 
 ## Features

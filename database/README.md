@@ -52,6 +52,160 @@ users (1) ──── (1) domain entities (doctors/patients/admins)
 - Health profiles are 1:1 with patients
 - Admin audit logs track all administrative actions
 
+## Database Schema ER Diagram
+
+```mermaid
+erDiagram
+    users ||--o| patients : "references"
+    users ||--o| doctors : "references"
+    users ||--o| medical_institutions : "references"
+    users ||--|| admins : "references"
+
+    patients ||--|| health_profiles : "has"
+    patients }o--o| doctors : "associated_with"
+    patients }o--o| medical_institutions : "associated_with"
+
+    doctors }o--o| medical_institutions : "works_at"
+    doctors }o--|| doctor_specialties : "has_primary"
+    doctors }o--o| doctor_specialties : "has_secondary"
+
+    admins ||--o{ admin_audit_logs : "creates"
+
+    users {
+        uuid id PK
+        varchar email UK
+        varchar password_hash
+        varchar user_type "patient|doctor|admin|institution"
+        uuid reference_id "FK to domain table"
+        boolean is_active
+        boolean is_verified
+        int failed_login_attempts
+        timestamp last_failed_login
+        timestamp password_changed_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    patients {
+        uuid id PK
+        uuid doctor_id "soft FK"
+        uuid institution_id "soft FK"
+        varchar first_name
+        varchar last_name
+        varchar email UK
+        date date_of_birth
+        varchar gender
+        varchar phone
+        varchar emergency_contact_name
+        varchar emergency_contact_phone
+        varchar validation_status "pending|doctor_validated|institution_validated|full_access"
+        boolean is_active
+        boolean is_verified
+        timestamp last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    doctors {
+        uuid id PK
+        uuid institution_id "soft FK"
+        varchar first_name
+        varchar last_name
+        varchar email UK
+        varchar medical_license UK
+        uuid specialty_id FK
+        uuid secondary_specialty_id FK
+        varchar phone
+        int years_experience
+        decimal consultation_fee
+        varchar professional_status "active|suspended|retired"
+        boolean is_active
+        timestamp last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    medical_institutions {
+        uuid id PK
+        varchar name
+        varchar institution_type "preventive_clinic|insurer|public_health|hospital|health_center"
+        varchar contact_email UK
+        varchar address
+        varchar region_state
+        varchar phone
+        varchar website
+        varchar license_number
+        boolean is_active
+        boolean is_verified
+        timestamp last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    health_profiles {
+        uuid id PK
+        uuid patient_id FK
+        decimal height_cm
+        decimal weight_kg
+        varchar blood_type
+        boolean is_smoker
+        int smoking_years
+        boolean consumes_alcohol
+        varchar alcohol_frequency
+        boolean hypertension_diagnosis
+        boolean diabetes_diagnosis
+        boolean high_cholesterol_diagnosis
+        boolean has_stroke_history
+        boolean has_heart_disease_history
+        boolean family_history_diabetes
+        boolean family_history_hypertension
+        boolean family_history_heart_disease
+        text preexisting_conditions_notes
+        text current_medications
+        text allergies
+        int physical_activity_minutes_weekly
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    doctor_specialties {
+        uuid id PK
+        varchar name UK
+        text description
+        varchar category
+        boolean is_active
+        timestamp created_at
+    }
+
+    admins {
+        uuid id PK
+        uuid user_id FK
+        varchar email
+        varchar first_name
+        varchar last_name
+        varchar department
+        varchar employee_id UK
+        varchar phone
+        boolean is_active
+        timestamp last_login
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    admin_audit_logs {
+        uuid id PK
+        uuid admin_id FK
+        varchar action
+        varchar resource_type
+        uuid resource_id
+        text details
+        inet ip_address
+        varchar user_agent
+        boolean success
+        timestamp created_at
+    }
+```
+
 ## Configuration
 
 ### Environment Variables (.env)

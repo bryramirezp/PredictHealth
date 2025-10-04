@@ -6,31 +6,63 @@ PredictHealth is a healthcare management system built using a microservices arch
 
 ## Architecture Overview
 
+The PredictHealth system follows a microservices architecture with clear separation of concerns, centralized authentication, and an API Gateway pattern.
+
+```mermaid
+graph TD
+    subgraph "Infraestructura"
+        DB[(PostgreSQL)]
+        Cache[(Redis)]
+    end
+
+    subgraph "PredictHealth Microservices"
+        Gateway(API Gateway)
+        Auth[Auth-JWT Service]
+        Admins[Service-Admins]
+        Doctors[Service-Doctors]
+        Patients[Service-Patients]
+        Institutions[Service-Institutions]
+    end
+
+    Client[Usuario Final] --> Gateway
+
+    %% Flujos desde el Gateway a los servicios
+    Gateway -- "Peticion /api/v1/admins" --> Admins
+    Gateway -- "Peticion /api/v1/doctors" --> Doctors
+    Gateway -- "Peticion /api/v1/patients" --> Patients
+    Gateway -- "Peticion /api/v1/institutions" --> Institutions
+    Gateway -- "Peticion /auth/login" --> Auth
+
+    %% Comunicación interna para validación
+    Admins -- "1. Verificar Token" --> Auth
+    Doctors -- "1. Verificar Token" --> Auth
+    Patients -- "1. Verificar Token" --> Auth
+    Institutions -- "1. Verificar Token" --> Auth
+
+    %% Comunicación directa entre servicios
+    Admins -- "Crear Institucion" --> Institutions
+
+    %% Conexiones a la base de datos y caché
+    Auth -- "Consulta Usuarios/Tokens" --> DB
+    Auth -- "Almacena Tokens" --> Cache
+    Admins -- "2. Consulta Admins" --> DB
+    Doctors -- "2. Consulta Doctores" --> DB
+    Patients -- "2. Consulta Pacientes" --> DB
+    Institutions -- "2. Consulta Instituciones" --> DB
+
+    %% Estilos para claridad visual
+    style Gateway fill:#f9f,stroke:#333,stroke-width:2px
+    style Auth fill:#ff9,stroke:#333,stroke-width:2px
 ```
-┌─────────────────┐    ┌──────────────────┐
-│   Frontend      │    │  Backend Flask   │
-│   (React/JS)    │◄──►│   (API Gateway)  │
-└─────────────────┘    └──────────────────┘
-                              │
-                    ┌─────────┼─────────┐
-                    │         │         │
-            ┌───────▼───┐ ┌──▼───┐ ┌───▼────┐
-            │ Auth-JWT  │ │Redis │ │Postgre│
-            │ Service   │ │      │ │SQL    │
-            └───────▲───┘ └──────┘ └───────┘
-                    │
-        ┌───────────┼───────────┐
-        │           │           │
-┌───────▼───┐ ┌─────▼───┐ ┌────▼────┐
-│Service-   │ │Service- │ │Service-  │
-│Admins     │ │Doctors  │ │Patients  │
-└───────────┘ └─────────┘ └──────────┘
-                    │
-            ┌───────▼────┐
-            │Service-     │
-            │Institutions │
-            └─────────────┘
-```
+
+### Architecture Flow Explanation
+
+1. **Client Requests**: End users access the system through the API Gateway (Backend Flask)
+2. **Authentication**: All requests requiring authentication are validated against the Auth-JWT Service
+3. **Token Verification**: Domain services (Admins, Doctors, Patients, Institutions) verify JWT tokens with Auth-JWT Service
+4. **Inter-Service Communication**: Services can communicate directly (e.g., Admins service creates institutions via Institutions service)
+5. **Data Persistence**: All services store business data in PostgreSQL
+6. **Session Management**: Auth-JWT Service uses Redis for high-performance token storage and session management
 
 ## Services Description
 
