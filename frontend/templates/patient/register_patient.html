@@ -1,0 +1,672 @@
+<!-- /frontend\templates\register_patient.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Paciente — PredictHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding-top: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+
+        .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-check-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .text-muted {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .btn-register {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-register:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-primary);
+            color: white;
+            text-decoration: none;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin-top: 0.25rem;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-weak { background: #ef4444; width: 25%; }
+        .strength-fair { background: #f59e0b; width: 50%; }
+        .strength-good { background: #10b981; width: 75%; }
+        .strength-strong { background: #059669; width: 100%; }
+
+        .navbar {
+            background: white !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+
+        .navbar-brand img {
+            border-radius: 6px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary-color) !important;
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="doctor_dashboard.html">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth" width="32" height="32" class="me-2">
+                <span>PredictHealth</span>
+                <span class="badge bg-success ms-2">Doctor</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="doctor_dashboard.html">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="register_patient.html">
+                            <i class="fas fa-user-plus me-1"></i>Registrar Paciente
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-md me-1"></i>{{ session.get('doctor_name', 'Doctor') }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="doctor_dashboard.html">Dashboard</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="btnLogout">Cerrar sesión</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">Registrar Nuevo Paciente</h1>
+            <p class="page-subtitle">Agrega un nuevo paciente a tu lista de seguimiento</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-container">
+                <form id="patientRegisterForm" method="POST" action="/auth/patient/register">
+                    <!-- Información Personal -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user me-2"></i>Información Personal
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre del paciente" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="apellido" class="form-label">Apellido</label>
+                                <input type="text" id="apellido" name="apellido" class="form-control" placeholder="Apellido del paciente" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="email@ejemplo.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="genero" class="form-label">Género</label>
+                                <select id="genero" name="genero" class="form-control" required>
+                                    <option value="">Selecciona género</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                    <option value="Prefiero no decir">Prefiero no decir</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="zona_horaria" class="form-label">Zona Horaria</label>
+                                <select id="zona_horaria" name="zona_horaria" class="form-control">
+                                    <option value="America/Mexico_City">México (GMT-6)</option>
+                                    <option value="America/New_York">Nueva York (GMT-5)</option>
+                                    <option value="America/Los_Angeles">Los Ángeles (GMT-8)</option>
+                                    <option value="Europe/Madrid">Madrid (GMT+1)</option>
+                                    <option value="Europe/London">Londres (GMT+0)</option>
+                                    <option value="America/Argentina/Buenos_Aires">Buenos Aires (GMT-3)</option>
+                                    <option value="America/Sao_Paulo">São Paulo (GMT-3)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Perfil de Salud General -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-heartbeat me-2"></i>Perfil de Salud General
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="altura_cm" class="form-label">Altura (cm)</label>
+                                <input type="number" id="altura_cm" name="altura_cm" class="form-control" placeholder="Ej: 170" min="50" max="250" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="peso_kg" class="form-label">Peso (kg)</label>
+                                <input type="number" id="peso_kg" name="peso_kg" class="form-control" placeholder="Ej: 70.5" min="10" max="300" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="minutos_actividad_fisica_semanal" class="form-label">Actividad Física Semanal (minutos)</label>
+                                <input type="number" id="minutos_actividad_fisica_semanal" name="minutos_actividad_fisica_semanal" class="form-control" placeholder="Ej: 150" min="0" max="10080" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Factores de Riesgo -->
+                        <div class="form-section">
+                            <h4 class="section-title" style="font-size: 1.1rem; margin-top: 1.5rem;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Factores de Riesgo
+                            </h4>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="fumador" name="fumador" value="true">
+                                        <label class="form-check-label" for="fumador">
+                                            <i class="fas fa-smoking-ban me-1"></i>Fumador
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="consumo_alcohol" name="consumo_alcohol" value="true">
+                                        <label class="form-check-label" for="consumo_alcohol">
+                                            <i class="fas fa-wine-glass me-1"></i>Consumo de Alcohol
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="diagnostico_hipertension" name="diagnostico_hipertension" value="true">
+                                        <label class="form-check-label" for="diagnostico_hipertension">
+                                            <i class="fas fa-heart me-1"></i>Diagnóstico de Hipertensión
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="diagnostico_colesterol_alto" name="diagnostico_colesterol_alto" value="true">
+                                        <label class="form-check-label" for="diagnostico_colesterol_alto">
+                                            <i class="fas fa-tint me-1"></i>Colesterol Alto
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="antecedente_acv" name="antecedente_acv" value="true">
+                                        <label class="form-check-label" for="antecedente_acv">
+                                            <i class="fas fa-brain me-1"></i>Antecedente de ACV
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="antecedente_enf_cardiaca" name="antecedente_enf_cardiaca" value="true">
+                                        <label class="form-check-label" for="antecedente_enf_cardiaca">
+                                            <i class="fas fa-heartbeat me-1"></i>Enfermedad Cardíaca
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="condiciones_preexistentes_notas" class="form-label">Notas Adicionales sobre Condiciones Preexistentes</label>
+                            <textarea id="condiciones_preexistentes_notas" name="condiciones_preexistentes_notas" class="form-control" rows="3" placeholder="Describe cualquier condición médica adicional, alergias, medicamentos actuales, etc." maxlength="1000"></textarea>
+                            <small class="text-muted">Máximo 1000 caracteres</small>
+                        </div>
+                    </div>
+
+                    <!-- Credenciales de Acceso -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-lock me-2"></i>Credenciales de Acceso
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label for="password" class="form-label">Contraseña Temporal</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Mínimo 8 caracteres" required>
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <span id="strengthText">Ingresa una contraseña</span>
+                            </div>
+                            <small class="text-muted">El paciente podrá cambiar esta contraseña después del primer inicio de sesión.</small>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="doctor_dashboard.html" class="btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-user-plus me-1"></i>Registrar Paciente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            let strengthLabel = '';
+            
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]/)) strength++;
+            if (password.match(/[A-Z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+            if (password.match(/[^a-zA-Z0-9]/)) strength++;
+            
+            strengthFill.className = 'strength-fill';
+            
+            if (strength < 2) {
+                strengthFill.classList.add('strength-weak');
+                strengthLabel = 'Débil';
+            } else if (strength < 3) {
+                strengthFill.classList.add('strength-fair');
+                strengthLabel = 'Regular';
+            } else if (strength < 4) {
+                strengthFill.classList.add('strength-good');
+                strengthLabel = 'Buena';
+            } else {
+                strengthFill.classList.add('strength-strong');
+                strengthLabel = 'Fuerte';
+            }
+            
+            strengthText.textContent = strengthLabel;
+        });
+
+        // Form validation and enhancement
+        document.getElementById('patientRegisterForm').addEventListener('submit', function(e) {
+            const requiredFields = ['nombre', 'apellido', 'email', 'fecha_nacimiento', 'genero', 'password'];
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = '#ef4444';
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+            
+            // Email validation
+            const email = document.getElementById('email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                isValid = false;
+                document.getElementById('email').style.borderColor = '#ef4444';
+            }
+            
+            // Password validation
+            const password = document.getElementById('password').value;
+            if (password.length < 8) {
+                isValid = false;
+                document.getElementById('password').style.borderColor = '#ef4444';
+            }
+            
+            // Date validation
+            const birthDate = new Date(document.getElementById('fecha_nacimiento').value);
+            const today = new Date();
+            if (birthDate >= today) {
+                isValid = false;
+                document.getElementById('fecha_nacimiento').style.borderColor = '#ef4444';
+                alert('La fecha de nacimiento debe ser anterior a hoy.');
+            }
+            
+            // Validate numeric fields
+            const altura = document.getElementById('altura_cm').value;
+            const peso = document.getElementById('peso_kg').value;
+            const actividad = document.getElementById('minutos_actividad_fisica_semanal').value;
+            
+            if (altura && (altura < 50 || altura > 250)) {
+                isValid = false;
+                document.getElementById('altura_cm').style.borderColor = '#ef4444';
+                alert('La altura debe estar entre 50 y 250 cm.');
+            }
+            
+            if (peso && (peso < 10 || peso > 300)) {
+                isValid = false;
+                document.getElementById('peso_kg').style.borderColor = '#ef4444';
+                alert('El peso debe estar entre 10 y 300 kg.');
+            }
+            
+            if (actividad && (actividad < 0 || actividad > 10080)) {
+                isValid = false;
+                document.getElementById('minutos_actividad_fisica_semanal').style.borderColor = '#ef4444';
+                alert('Los minutos de actividad física deben estar entre 0 y 10080 (una semana).');
+            }
+            
+            // Validate textarea length
+            const notas = document.getElementById('condiciones_preexistentes_notas').value;
+            if (notas && notas.length > 1000) {
+                isValid = false;
+                document.getElementById('condiciones_preexistentes_notas').style.borderColor = '#ef4444';
+                alert('Las notas adicionales no pueden exceder 1000 caracteres.');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos correctamente.');
+                return;
+            }
+            
+            // Add loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Registrando...';
+            submitBtn.disabled = true;
+        });
+
+        // Real-time validation
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = '#10b981';
+                } else {
+                    this.style.borderColor = '';
+                }
+            });
+        });
+
+        // Logout functionality
+        document.getElementById('btnLogout')?.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                fetch('/auth/logout', {method: 'POST'})
+                  .then(() => window.location.href = 'doctor_login.html');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# /microservices\service-admins\requirements.txt
+# /microservices/service-admins/requirements.txt
+
+# --- Framework y Servidor ---
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# --- Base de datos y ORM ---
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# --- Validación y Configuración ---
+pydantic[email]==2.5.0      # Incluye pydantic base
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# --- Autenticación y JWT ---
+PyJWT==2.8.0                # Estandarizado
+bcrypt==4.2.0               # Usar bcrypt
+
+# --- Utilidades ---
+python-multipart==0.0.6
+requests==2.31.0
+httpx==0.25.2               # Para llamadas async a otros servicios

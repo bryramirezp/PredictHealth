@@ -1,0 +1,210 @@
+<!-- /frontend\templates\institution_login.html -->
+{% extends "base.html" %}
+
+{% block title %}PredictHealth - Login Institución Médica{% endblock %}
+
+{% block app_class %}login-root{% endblock %}
+
+{% block header %}
+<div class="box-root padding-top--48 padding-bottom--24 flex-flex flex-justifyContent--center">
+    <div class="predicthealth-header">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth Logo" class="predicthealth-logo">
+        <h1 class="predicthealth-title">PredictHealth</h1>
+        <div class="institution-badge">
+            <i class="fas fa-hospital me-1"></i>
+            Institución Médica
+        </div>
+        <p class="predicthealth-subtitle">Acceso seguro para instituciones médicas</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">
+    <i class="fas fa-arrow-left"></i>
+    Volver al inicio
+</a>
+
+<div class="formbg-outer">
+    <div class="formbg">
+        <div class="formbg-inner padding-horizontal--48">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <span class="padding-bottom--15">Inicia sesión en tu cuenta institucional</span>
+            <form id="institutionLoginForm">
+                <div class="field padding-bottom--24">
+                    <label for="contact_email">Email de Contacto</label>
+                    <input type="email" id="contact_email" name="contact_email" placeholder="contacto@institucion.com" autocomplete="username" required>
+                </div>
+                <div class="field padding-bottom--24">
+                    <div class="grid--50-50">
+                        <label for="password">Contraseña</label>
+                        <div class="reset-pass">
+                            <a href="#" onclick="alert('Contacta al administrador para recuperar tu contraseña')">¿Olvidaste tu contraseña?</a>
+                        </div>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" id="password" name="password" placeholder="Tu contraseña" autocomplete="current-password" data-lpignore="true" required>
+                        <button type="button" id="togglePassword" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="field field-checkbox padding-bottom--24 flex-flex align-center">
+                    <label for="checkbox">
+                        <input type="checkbox" name="checkbox" id="rememberMe"> Mantener sesión iniciada por una semana
+                    </label>
+                </div>
+                <div class="field padding-bottom--24">
+                    <input type="submit" name="submit" value="Iniciar Sesión">
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="footer-link padding-top--24">
+        <span>¿No tienes una cuenta institucional? <a href="institution_signup.html">Regístrate aquí</a></span>
+        <div class="user-type-links">
+            <a href="doctor_login.html">
+                <i class="fas fa-user-md me-1"></i>
+                Soy Doctor
+            </a>
+            <a href="patient_login.html">
+                <i class="fas fa-user me-1"></i>
+                Soy Paciente
+            </a>
+        </div>
+        <div class="listing padding-top--24 padding-bottom--24 flex-flex center-center">
+            <span><a href="#">© 2024 PredictHealth</a></span>
+            <span><a href="#">Privacidad</a></span>
+            <span><a href="#">Términos</a></span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation and JWT login
+    document.getElementById('institutionLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Prevenir envío tradicional
+
+        const requiredFields = ['contact_email', 'password'];
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            const input = document.getElementById(field);
+            if (!input.value.trim()) {
+                isValid = false;
+                input.style.borderColor = '#ef4444';
+            } else {
+                input.style.borderColor = '';
+            }
+        });
+
+        // Email validation
+        const email = document.getElementById('contact_email').value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            isValid = false;
+            document.getElementById('contact_email').style.borderColor = '#ef4444';
+        }
+
+        if (!isValid) {
+            showError('Por favor, completa todos los campos correctamente.');
+            return;
+        }
+
+        // Add loading state
+        const submitBtn = e.target.querySelector('input[type="submit"]');
+        const originalValue = submitBtn.value;
+        submitBtn.value = 'Iniciando sesión...';
+        submitBtn.disabled = true;
+
+        try {
+            // Usar el sistema JWT
+            const result = await window.AuthManager.login(email, document.getElementById('password').value, 'institution');
+
+            if (result.success) {
+                showSuccess('Inicio de sesión exitoso');
+                setTimeout(() => {
+                    authManager.redirectToDashboard();
+                }, 1500);
+            } else {
+                showError(result.error);
+                submitBtn.value = originalValue;
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            showError('Error de conexión. Inténtalo de nuevo.');
+            submitBtn.value = originalValue;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Real-time validation
+    document.querySelectorAll('input[type="email"], input[type="password"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#10b981';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+    });
+
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = this.querySelector('i');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    });
+
+    // Auto-focus on email field
+    document.getElementById('contact_email').focus();
+
+    // Functions for showing messages
+    function showSuccess(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+
+        const formbgInner = document.querySelector('.formbg-inner');
+        formbgInner.insertBefore(alertDiv, formbgInner.firstChild);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    function showError(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${message}`;
+
+        const formbgInner = document.querySelector('.formbg-inner');
+        formbgInner.insertBefore(alertDiv, formbgInner.firstChild);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+</script>
+{% endblock %}

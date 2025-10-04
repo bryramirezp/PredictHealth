@@ -1,0 +1,348 @@
+<!-- /frontend\templates\admin\admin_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictHealth Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.jpg') }}" type="image/jpg">
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_dashboard.js') }}" defer></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth Logo" class="sidebar-logo-img">
+                <span class="sidebar-logo-text">PredictHealth</span>
+            </div>
+            <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
+                <span class="toggle-icon">◀</span>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3 class="nav-section-title">Dashboard</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-section="overview">
+                            <span class="nav-icon">📊</span>
+                            <span class="nav-text">Overview</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h3 class="nav-section-title">Management</h3>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="admins">
+                            <span class="nav-icon">👥</span>
+                            <span class="nav-text">Administrators</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="institutions">
+                            <span class="nav-icon">🏥</span>
+                            <span class="nav-text">Institutions</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="doctors">
+                            <span class="nav-icon">👨‍⚕️</span>
+                            <span class="nav-text">Doctors</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="patients">
+                            <span class="nav-icon">👤</span>
+                            <span class="nav-text">Patients</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="microservices">
+                            <span class="nav-icon">🔧</span>
+                            <span class="nav-text">Microservices Health</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div id="main-content" class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <button id="mobile-sidebar-toggle" class="mobile-sidebar-toggle" aria-label="Toggle sidebar">
+                    <span class="hamburger">☰</span>
+                </button>
+                <div class="header-title">
+                    <h1>Admin Dashboard</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <span id="current-user">Loading...</span>
+                        <button id="logout-btn" class="btn-logout" onclick="logout()">
+                            <span class="logout-icon">🚪</span>
+                            <span class="logout-text">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Overview Section -->
+            <section id="overview-section" class="content-section active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                    <p>System metrics and key statistics</p>
+                </div>
+
+                <!-- Stats Cards Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon admins">
+                            <span>👥</span>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="admins-count">0</h3>
+                            <p>Administrators</p>
+                            <span class="stat-trend positive">+2 this month</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon institutions">
+                            <span>🏥</span>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="institutions-count">0</h3>
+                            <p>Institutions</p>
+                            <span class="stat-trend positive">+5 this month</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon doctors">
+                            <span>👨‍⚕️</span>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="doctors-count">0</h3>
+                            <p>Doctors</p>
+                            <span class="stat-trend positive">+12 this month</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon patients">
+                            <span>👤</span>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="patients-count">0</h3>
+                            <p>Patients</p>
+                            <span class="stat-trend positive">+45 this month</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-container">
+                        <h3>User Growth Trend</h3>
+                        <canvas id="growth-chart" width="400" height="200"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <h3>System Activity</h3>
+                        <canvas id="activity-chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </section>
+            </section>
+
+            <!-- Management Sections -->
+            <section id="admins-section" class="content-section">
+                <div class="section-header">
+                    <h2>Administrator Management</h2>
+                    <button class="btn-primary" onclick="showCreateModal('admin')">
+                        <span class="btn-icon">+</span> Add Administrator
+                    </button>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="admins-table" role="table" aria-label="Administrators table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Employee ID</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admins-tbody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="institutions-section" class="content-section">
+                <div class="section-header">
+                    <h2>Institution Management</h2>
+                    <button class="btn-primary" onclick="showCreateModal('institution')">
+                        <span class="btn-icon">+</span> Add Institution
+                    </button>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="institutions-table" role="table" aria-label="Institutions table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Contact Email</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="institutions-tbody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="doctors-section" class="content-section">
+                <div class="section-header">
+                    <h2>Doctor Management</h2>
+                    <div class="filters">
+                        <select id="doctor-institution-filter" aria-label="Filter by institution">
+                            <option value="">All Institutions</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="doctors-table" role="table" aria-label="Doctors table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Specialty</th>
+                                <th>Institution</th>
+                                <th>License</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctors-tbody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="patients-section" class="content-section">
+                <div class="section-header">
+                    <h2>Patient Management</h2>
+                    <div class="filters">
+                        <select id="patient-doctor-filter" aria-label="Filter by doctor">
+                            <option value="">All Doctors</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table" id="patients-table" role="table" aria-label="Patients table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Date of Birth</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patients-tbody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="microservices-section" class="content-section">
+                <div class="section-header">
+                    <h2>Microservices Health Status</h2>
+                    <div class="filters">
+                        <button class="btn btn-secondary" onclick="dashboard.refreshMicroservicesHealth()">
+                            <i class="fas fa-sync-alt"></i> Refresh Status
+                        </button>
+                    </div>
+                </div>
+
+                <div class="microservices-grid" id="microservices-grid">
+                    <!-- Microservices health cards will be populated by JavaScript -->
+                </div>
+
+                <!-- Logs Modal -->
+                <div id="logs-modal" class="modal-overlay hidden">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 id="logs-modal-title">Service Logs</h3>
+                            <button class="modal-close" onclick="dashboard.closeLogsModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <pre id="logs-content" class="logs-content">Loading logs...</pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" onclick="dashboard.closeLogsModal()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <h3 id="modal-title">Create/Edit</h3>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="entity-form">
+                    <!-- Form fields will be populated by JavaScript -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="modal-submit-btn" onclick="submitForm()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner hidden" role="status" aria-label="Loading">
+        <div class="spinner"></div>
+        <span>Loading...</span>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Hidden form for file uploads if needed -->
+    <input type="file" id="file-input" style="display: none;" accept=".csv,.json">
+</body>
+</html>

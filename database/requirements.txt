@@ -1,0 +1,6 @@
+# /database\requirements.txt
+# /database/requirements.txt
+# Dependencias específicas para el script de migración de base de datos
+
+psycopg2-binary>=2.9.0
+python-dotenv>=0.19.0

@@ -1,0 +1,261 @@
+<!-- /frontend\templates\admin_login.html -->
+{% extends "base.html" %}
+
+{% block title %}PredictHealth - Admin Login{% endblock %}
+
+{% block app_class %}login-root{% endblock %}
+
+{% block header %}
+<div class="box-root padding-top--48 padding-bottom--24 flex-flex flex-justifyContent--center">
+    <div class="predicthealth-header">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth Logo" class="predicthealth-logo">
+        <h1 class="predicthealth-title">PredictHealth</h1>
+        <div class="admin-badge">
+            <i class="fas fa-shield-alt me-1"></i>
+            System Administrator
+        </div>
+        <p class="predicthealth-subtitle">Secure access for system administrators</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">
+    <i class="fas fa-arrow-left"></i>
+    Back to Home
+</a>
+
+<div class="formbg-outer">
+    <div class="formbg">
+        <div class="formbg-inner padding-horizontal--48">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Demo Credentials Notice -->
+            <div class="demo-credentials">
+                <div class="demo-header">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Demo Credentials</strong>
+                </div>
+                <div class="demo-details">
+                    <div class="credential-item">
+                        <strong>Email:</strong> <code>admin@predicthealth.com</code>
+                    </div>
+                    <div class="credential-item">
+                        <strong>Password:</strong> <code>Admin123!</code>
+                    </div>
+                </div>
+            </div>
+
+            <span class="padding-bottom--15">Sign in to your administrator account</span>
+            <form id="adminLoginForm">
+                <div class="field padding-bottom--24">
+                    <label for="email">Administrator Email</label>
+                    <input type="email" id="email" name="email" placeholder="admin@predicthealth.com" autocomplete="username" required>
+                </div>
+                <div class="field padding-bottom--24">
+                    <div class="grid--50-50">
+                        <label for="password">Password</label>
+                        <div class="reset-pass">
+                            <a href="#" onclick="alert('Contact system administrator for password recovery')">Forgot password?</a>
+                        </div>
+                    </div>
+                    <div class="password-input-container">
+                        <input type="password" id="password" name="password" placeholder="Your password" autocomplete="current-password" data-lpignore="true" required>
+                        <button type="button" id="togglePassword" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="field field-checkbox padding-bottom--24 flex-flex align-center">
+                    <label for="checkbox">
+                        <input type="checkbox" name="checkbox" id="rememberMe"> Keep me signed in for one week
+                    </label>
+                </div>
+                <div class="field padding-bottom--24">
+                    <input type="submit" name="submit" value="Sign In">
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="footer-link padding-top--24">
+        <div class="user-type-links">
+            <a href="institution_login.html">
+                <i class="fas fa-hospital me-1"></i>
+                Institution Login
+            </a>
+            <a href="doctor_login.html">
+                <i class="fas fa-user-md me-1"></i>
+                Doctor Login
+            </a>
+            <a href="patient_login.html">
+                <i class="fas fa-user me-1"></i>
+                Patient Login
+            </a>
+        </div>
+        <div class="listing padding-top--24 padding-bottom--24 flex-flex center-center">
+            <span><a href="#">© 2024 PredictHealth</a></span>
+            <span><a href="#">Privacy</a></span>
+            <span><a href="#">Terms</a></span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Admin login function - uses SessionAuthManager
+    async function loginAdmin(email, password) {
+        try {
+            console.log('🔐 Admin login:', email);
+
+            // Use SessionAuthManager for login
+            const result = await window.AuthManager.login(email, password, 'admin');
+
+            if (result.success) {
+                console.log('✅ Admin login successful');
+                return {
+                    success: true,
+                    user: result.user,
+                    redirect: '/admin_dashboard.html'
+                };
+            } else {
+                console.error('❌ Admin login failed:', result.error);
+                return {
+                    success: false,
+                    error: result.error || 'Invalid credentials'
+                };
+            }
+
+        } catch (error) {
+            console.error('❌ Admin login error:', error);
+            return {
+                success: false,
+                error: 'Connection error'
+            };
+        }
+    }
+
+    // Form validation and JWT login
+    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const requiredFields = ['email', 'password'];
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            const input = document.getElementById(field);
+            if (!input.value.trim()) {
+                isValid = false;
+                input.style.borderColor = '#ef4444';
+            } else {
+                input.style.borderColor = '';
+            }
+        });
+
+        // Email validation
+        const email = document.getElementById('email').value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            isValid = false;
+            document.getElementById('email').style.borderColor = '#ef4444';
+        }
+
+        if (!isValid) {
+            showError('Please fill in all fields correctly.');
+            return;
+        }
+
+        // Add loading state
+        const submitBtn = e.target.querySelector('input[type="submit"]');
+        const originalValue = submitBtn.value;
+        submitBtn.value = 'Signing in...';
+        submitBtn.disabled = true;
+
+        try {
+            // Admin login - call JWT service directly
+            const result = await loginAdmin(email, document.getElementById('password').value);
+
+            if (result.success) {
+                showSuccess('Login successful');
+                setTimeout(() => {
+                    window.location.href = '/admin_dashboard.html';
+                }, 1500);
+            } else {
+                showError(result.error);
+                submitBtn.value = originalValue;
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            showError('Connection error. Please try again.');
+            submitBtn.value = originalValue;
+            submitBtn.disabled = false;
+        }
+    });
+
+    // Real-time validation
+    document.querySelectorAll('input[type="email"], input[type="password"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                this.style.borderColor = '#10b981';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+    });
+
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = this.querySelector('i');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    });
+
+    // Auto-focus on email field
+    document.getElementById('email').focus();
+
+    // Functions for showing messages
+    function showSuccess(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+
+        const formbgInner = document.querySelector('.formbg-inner');
+        formbgInner.insertBefore(alertDiv, formbgInner.firstChild);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+
+    function showError(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${message}`;
+
+        const formbgInner = document.querySelector('.formbg-inner');
+        formbgInner.insertBefore(alertDiv, formbgInner.firstChild);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+</script>
+{% endblock %}

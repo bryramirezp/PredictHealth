@@ -1,0 +1,15 @@
+# Requirements for backend-flask service
+
+# --- Producción ---
+Flask==2.3.3
+Flask-CORS==4.0.0     # Para CORS con cookies
+requests==2.31.0
+python-dotenv==1.0.0
+pydantic[email]==2.5.0
+PyJWT==2.8.0          # Para validación de tokens en el gateway
+bcrypt==4.2.0               # Usar bcrypt
+redis==5.0.1          # Para verificación de sesiones en el gateway
+
+# --- Desarrollo ---
+pytest==7.4.3
+pytest-flask==1.3.0

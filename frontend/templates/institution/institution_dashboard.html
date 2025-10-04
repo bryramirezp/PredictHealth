@@ -1,0 +1,629 @@
+<!-- /frontend\templates\institution_dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictHealth - Dashboard Institucional</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background: var(--gradient-primary);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-link:hover {
+            opacity: 0.8;
+            color: white;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .institution-badge {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #7c3aed 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.doctors {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .stat-icon.patients {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .stat-icon.predictions {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-icon.recommendations {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .action-icon.manage-doctors {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .action-icon.view-patients {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .action-icon.analytics {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .action-icon.settings {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+
+        .action-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .recent-activity {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            color: white;
+        }
+
+        .activity-icon.doctor-registered {
+            background: #10b981;
+        }
+
+        .activity-icon.patient-added {
+            background: #3b82f6;
+        }
+
+        .activity-icon.prediction-generated {
+            background: #f59e0b;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .navbar-nav {
+                gap: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <a href="/" class="navbar-brand">
+                <i class="fas fa-hospital"></i>
+                PredictHealth
+            </a>
+            <div class="navbar-nav">
+                <span class="nav-link">
+                    <i class="fas fa-building me-1"></i>
+                    <span class="institution-name">Institución</span>
+                    <span class="institution-type"></span>
+                </span>
+                <button type="button" class="logout-btn" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">
+                <i class="fas fa-hospital me-2"></i>
+                Dashboard Institucional
+            </h1>
+            <p class="welcome-subtitle">
+                Bienvenido, <span class="institution-name">Institución</span>
+            </p>
+            <div class="institution-badge">
+                <i class="fas fa-building me-1"></i>
+                <span class="institution-type">Tipo de Institución</span>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon doctors">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="stat-number" id="doctors-count">0</div>
+                <div class="stat-label">Doctores Registrados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon patients">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number" id="patients-count">0</div>
+                <div class="stat-label">Pacientes Atendidos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon predictions">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-number" id="predictions-count">0</div>
+                <div class="stat-label">Predicciones Generadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon recommendations">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-number" id="recommendations-count">0</div>
+                <div class="stat-label">Recomendaciones Activas</div>
+            </div>
+        </div>
+
+        <!-- Actions Grid -->
+        <div class="actions-grid">
+            <div class="action-card" onclick="window.location.href='/institution/doctors'">
+                <div class="action-icon manage-doctors">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3 class="action-title">Gestionar Doctores</h3>
+                <p class="action-description">
+                    Administra los doctores de tu institución, revisa sus perfiles y especialidades.
+                </p>
+            </div>
+            <div class="action-card" onclick="window.location.href='/institution/patients'">
+                <div class="action-icon view-patients">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="action-title">Ver Pacientes</h3>
+                <p class="action-description">
+                    Revisa los pacientes atendidos por los doctores de tu institución.
+                </p>
+            </div>
+            <div class="action-card" onclick="window.location.href='/institution/analytics'">
+                <div class="action-icon analytics">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3 class="action-title">Analíticas</h3>
+                <p class="action-description">
+                    Visualiza estadísticas y tendencias de salud de tus pacientes.
+                </p>
+            </div>
+            <div class="action-card" onclick="window.location.href='/institution/settings'">
+                <div class="action-icon settings">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3 class="action-title">Configuración</h3>
+                <p class="action-description">
+                    Administra la configuración de tu institución y preferencias.
+                </p>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="recent-activity">
+            <h2 class="section-title">
+                <i class="fas fa-clock"></i>
+                Actividad Reciente
+            </h2>
+            <div id="recent-activity-list">
+                <div class="activity-item">
+                    <div class="activity-icon doctor-registered">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Nuevo doctor registrado</div>
+                        <div class="activity-time">Hace 2 horas</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon patient-added">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">5 nuevos pacientes agregados</div>
+                        <div class="activity-time">Hace 4 horas</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon prediction-generated">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">12 predicciones de riesgo generadas</div>
+                        <div class="activity-time">Hace 6 horas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Cargar estadísticas al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInstitutionStats();
+        });
+
+
+        async function loadInstitutionStats() {
+            try {
+                // Verificar autenticación
+                if (!authManager.isLoggedIn()) {
+                    console.error('Usuario no autenticado');
+                    window.location.href = '/institution_login.html';
+                    return;
+                }
+
+                // Obtener token de autenticación
+                const token = authManager.getToken();
+                
+                // Llamar al endpoint JWT del dashboard
+                const response = await fetch('/api/web/institution/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const dashboardData = data.data;
+                    
+                    // Actualizar estadísticas con datos reales
+                    animateNumber('doctors-count', dashboardData.statistics.total_doctors);
+                    animateNumber('patients-count', dashboardData.statistics.total_patients);
+                    animateNumber('predictions-count', dashboardData.statistics.active_appointments);
+                    animateNumber('recommendations-count', dashboardData.statistics.pending_reviews);
+                    
+                    // Actualizar información de la institución
+                    if (dashboardData.institution) {
+                        document.querySelector('.institution-name').textContent = dashboardData.institution.nombre || 'Institución';
+                        document.querySelector('.institution-type').textContent = dashboardData.institution.tipo_institucion || '';
+                    }
+                    
+                } else if (response.status === 401) {
+                    // Token expirado o inválido - el interceptor HTTP ya manejará esto
+                    console.error('Token expirado o inválido');
+                    return; // El interceptor HTTP se encargará del resto
+                } else {
+                    console.error('Error cargando datos del dashboard:', response.status);
+                    // Usar datos simulados como fallback
+                    loadFallbackStats();
+                }
+
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                // Usar datos simulados como fallback
+                loadFallbackStats();
+            }
+        }
+
+        function loadFallbackStats() {
+            // Datos simulados como fallback
+            const stats = {
+                doctors: 12,
+                patients: 156,
+                predictions: 89,
+                recommendations: 23
+            };
+
+            animateNumber('doctors-count', stats.doctors);
+            animateNumber('patients-count', stats.patients);
+            animateNumber('predictions-count', stats.predictions);
+            animateNumber('recommendations-count', stats.recommendations);
+        }
+
+        function animateNumber(elementId, targetNumber) {
+            const element = document.getElementById(elementId);
+            const duration = 2000; // 2 segundos
+            const startTime = performance.now();
+            const startNumber = 0;
+
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Usar easing function para suavizar la animación
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const currentNumber = Math.floor(startNumber + (targetNumber - startNumber) * easeOutQuart);
+                
+                element.textContent = currentNumber;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+
+            requestAnimationFrame(updateNumber);
+        }
+
+        // Manejar clics en las tarjetas de acción
+        document.querySelectorAll('.action-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Agregar efecto de click
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Función para manejar logout
+        async function handleLogout() {
+            try {
+                const result = await authManager.logout();
+                if (result.success) {
+                    window.location.href = '/institution_login.html';
+                } else {
+                    console.error('Error en logout:', result.error);
+                    // Forzar logout local si falla el del servidor
+                    authManager.clearTokens();
+                    window.location.href = '/institution_login.html';
+                }
+            } catch (error) {
+                console.error('Error en logout:', error);
+                // Forzar logout local si hay error
+                authManager.clearTokens();
+                window.location.href = '/institution_login.html';
+            }
+        }
+    </script>
+</body>
+</html>

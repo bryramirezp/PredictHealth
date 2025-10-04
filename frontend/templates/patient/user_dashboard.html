@@ -1,0 +1,294 @@
+<!-- /frontend\templates\user_dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard — PredictHealth</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="user_dashboard.html">
+        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth" width="32" height="32" class="me-2">
+        <span class="fw-bold text-primary">PredictHealth</span>
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="user_dashboard.html">
+              <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="user_profile.html">
+              <i class="fas fa-user me-1"></i>Perfil
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="lifestyle.html">
+              <i class="fas fa-heartbeat me-1"></i>Hábitos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="measurements.html">
+              <i class="fas fa-chart-line me-1"></i>Medidas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="notifications.html">
+              <i class="fas fa-bell me-1"></i>Notificaciones
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="recommendations.html">
+              <i class="fas fa-lightbulb me-1"></i>Recomendaciones
+            </a>
+          </li>
+        </ul>
+        
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fas fa-user-circle me-1"></i>Usuario
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="register_user.html">Mi Perfil</a></li>
+              <li><a class="dropdown-item" href="#">Configuración</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="btnLogout">Cerrar sesión</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container-fluid py-4">
+      <!-- Welcome Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="welcome-card">
+            <div class="welcome-content">
+              <h1 class="welcome-title">¡Bienvenido de vuelta!</h1>
+              <p class="welcome-subtitle">Aquí tienes un resumen de tu salud y progreso</p>
+              <div class="last-update">
+                <i class="fas fa-clock me-1"></i>
+                Última actualización: <span id="lastUpdate">Cargando...</span>
+              </div>
+            </div>
+            <div class="welcome-actions">
+              <button class="btn btn-outline-primary" onclick="window.fetchDashboard()">
+                <i class="fas fa-sync-alt me-1"></i>Actualizar datos
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Overview -->
+      <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+          <div class="card risk-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-exclamation-triangle me-2"></i>Mapa de Riesgo General
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="risk-overview">
+                <div class="risk-level high">
+                  <div class="risk-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                  <div class="risk-info">
+                    <h4>Riesgo Alto</h4>
+                    <p>Se recomienda atención médica</p>
+                  </div>
+                </div>
+                <div class="risk-factors">
+                  <h5>Factores de riesgo identificados:</h5>
+                  <ul id="factorsList" class="risk-factors-list">
+                    <li>IMC elevado</li>
+                    <li>Sedentarismo</li>
+                    <li>Historial familiar</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+          <div class="card kpi-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-pie me-2"></i>Indicadores Clave
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="kpi-grid">
+                <div class="kpi-item">
+                  <div class="kpi-icon diabetes">
+                    <i class="fas fa-tint"></i>
+                  </div>
+                  <div class="kpi-content">
+                    <h4 id="kpiDiabetes">17%</h4>
+                    <p>Riesgo de Diabetes</p>
+                    <div class="kpi-trend up">
+                      <i class="fas fa-arrow-up"></i> +2%
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="kpi-item">
+                  <div class="kpi-icon hypertension">
+                    <i class="fas fa-heartbeat"></i>
+                  </div>
+                  <div class="kpi-content">
+                    <h4 id="kpiHyper">12%</h4>
+                    <p>Riesgo de Hipertensión</p>
+                    <div class="kpi-trend down">
+                      <i class="fas fa-arrow-down"></i> -1%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-line me-2"></i>Evolución de Indicadores
+              </h3>
+              <div class="chart-controls">
+                <select class="form-select form-select-sm">
+                  <option>Últimos 6 meses</option>
+                  <option>Último año</option>
+                  <option>Últimos 2 años</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body">
+              <canvas id="evolutionChart" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-chart-donut me-2"></i>Distribución de Riesgo
+              </h3>
+            </div>
+            <div class="card-body">
+              <canvas id="distChart" height="300"></canvas>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-color high"></span>
+                  <span>Alto (22%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color medium"></span>
+                  <span>Medio (48%)</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color low"></span>
+                  <span>Bajo (30%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card quick-actions-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions-grid">
+                <a href="measurements.html" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-plus"></i>
+                  </div>
+                  <h5>Registrar Medidas</h5>
+                  <p>Agregar nuevas mediciones de salud</p>
+                </a>
+                
+                <a href="lifestyle.html" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-running"></i>
+                  </div>
+                  <h5>Actualizar Hábitos</h5>
+                  <p>Modificar tu estilo de vida</p>
+                </a>
+                
+                <a href="recommendations.html" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-lightbulb"></i>
+                  </div>
+                  <h5>Ver Recomendaciones</h5>
+                  <p>Consejos personalizados</p>
+                </a>
+                
+                <a href="notifications.html" class="quick-action">
+                  <div class="quick-action-icon">
+                    <i class="fas fa-bell"></i>
+                  </div>
+                  <h5>Notificaciones</h5>
+                  <p>Recordatorios y alertas</p>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set initial timestamp
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('es-ES');
+      
+      // Load dashboard data
+      if (window.fetchDashboard) {
+        window.fetchDashboard();
+      }
+    });
+  </script>
+</body>
+</html>

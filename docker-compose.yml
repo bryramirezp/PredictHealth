@@ -1,0 +1,201 @@
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    build:
+      context: .
+      dockerfile: database/postgresql/Dockerfile
+    container_name: predicthealth-postgres
+    environment:
+      POSTGRES_DB: predicthealth_db
+      POSTGRES_USER: predictHealth_user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U predictHealth_user -d predicthealth_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para caché y sesiones
+  redis:
+    build:
+      context: ./database/redis
+      dockerfile: Dockerfile
+    container_name: predicthealth-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Auth-JWT Service (Authentication & JWT Token Management)
+  servicio-auth-jwt:
+    build:
+      context: .
+      dockerfile: microservices/auth-jwt-service/Dockerfile
+    container_name: predicthealth-auth-jwt
+    env_file:
+      - microservices/auth-jwt-service/.env
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Servicio de Doctores
+  servicio-doctores:
+    build:
+      context: .
+      dockerfile: microservices/service-doctors/Dockerfile
+    container_name: predicthealth-doctores
+    env_file:
+      - microservices/service-doctors/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      servicio-auth-jwt:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de Pacientes
+  servicio-pacientes:
+    build:
+      context: .
+      dockerfile: microservices/service-patients/Dockerfile
+    container_name: predicthealth-pacientes
+    env_file:
+      - microservices/service-patients/.env
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      servicio-auth-jwt:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de Instituciones
+  servicio-instituciones:
+    build:
+      context: .
+      dockerfile: microservices/service-institutions/Dockerfile
+    container_name: predicthealth-instituciones
+    env_file:
+      - microservices/service-institutions/.env
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      servicio-auth-jwt:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de Administradores
+  servicio-admins:
+    build:
+      context: .
+      dockerfile: microservices/service-admins/Dockerfile
+    container_name: predicthealth-admins
+    env_file:
+      - microservices/service-admins/.env
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      servicio-auth-jwt:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+  # Backend Flask (API Gateway)
+  backend-flask:
+    build:
+      context: .
+      dockerfile: backend-flask/Dockerfile
+    container_name: predicthealth-backend
+    env_file:
+      - backend-flask/.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      servicio-auth-jwt:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  predicthealth-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

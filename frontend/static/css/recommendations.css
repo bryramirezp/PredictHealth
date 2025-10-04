@@ -1,0 +1,16 @@
+/* /frontend\static\css\recommendations.css */
+.container {
+    max-width: 800px;
+    margin: 2rem auto
+}
+
+.card {
+    background: #fff;
+    padding: 1.4rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(2, 6, 23, .06)
+}
+
+h3 {
+    margin-top: 1rem
+}

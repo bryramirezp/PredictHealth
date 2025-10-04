@@ -1,0 +1,21 @@
+# /database\.pylintrc
+# .pylintrc para el directorio database
+# Configuración específica para scripts de migración de base de datos
+
+[MESSAGES CONTROL]
+# Suprimir advertencias específicas para dependencias externas
+disable=import-error,no-member
+
+[IMPORTS]
+# Ignorar módulos que pueden no estar disponibles en el entorno de desarrollo
+ignored-modules=psycopg2
+
+[FORMAT]
+# Configuración de formato
+max-line-length=120
+indent-string='    '
+
+[VARIABLES]
+# Variables que pueden no estar definidas en el entorno de desarrollo
+additional-builtins=psycopg2
+

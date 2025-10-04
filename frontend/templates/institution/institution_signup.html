@@ -1,0 +1,526 @@
+<!-- /frontend\templates\institution_signup.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictHealth - Registro Institución Médica</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow-y: auto;
+            padding: 2rem 0;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("{{ url_for('static', filename='images/background.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            opacity: 0.1;
+            z-index: 1;
+        }
+
+        .register-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 700px;
+            padding: 2rem;
+        }
+
+        .register-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            margin-bottom: 2rem;
+        }
+
+        .logo-section img {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-section p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .institution-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-register:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+            font-size: 0.875rem;
+        }
+
+        .login-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .login-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: opacity 0.3s ease;
+            z-index: 3;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+            color: white;
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .institution-type-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .institution-info {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .institution-info h4 {
+            color: #0369a1;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .institution-info p {
+            color: #0c4a6e;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        @media (max-width: 576px) {
+            .register-container {
+                padding: 1rem;
+            }
+            
+            .register-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .back-link {
+                top: 1rem;
+                left: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Volver al inicio
+    </a>
+
+    <div class="register-container">
+        <div class="register-card">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="PredictHealth Logo">
+                <h1>Institution Registration</h1>
+                <div class="institution-badge">
+                    <i class="fas fa-hospital me-1"></i>
+                    Medical Institution
+                </div>
+                <p>Join our network of healthcare institutions</p>
+            </div>
+
+            <div class="institution-info">
+                <h4><i class="fas fa-info-circle me-1"></i>What type of institution are you?</h4>
+                <p>• <strong>Preventive Clinic:</strong> Preventive medicine and wellness centers<br>
+                • <strong>Insurer:</strong> Health insurance companies<br>
+                • <strong>Public Health:</strong> Government health institutions<br>
+                • <strong>Hospital:</strong> Hospitals and clinics<br>
+                • <strong>Health Center:</strong> Primary care centers</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form id="institutionRegisterForm" onsubmit="handleInstitutionRegister(event)">
+                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                <div id="success-message" class="alert alert-success" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="name" class="form-label">Institution Name</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g., City General Hospital" required autocomplete="organization">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="institution_type" class="form-label">Institution Type</label>
+                        <select id="institution_type" name="institution_type" class="form-control institution-type-select" required>
+                            <option value="">Select type</option>
+                            <option value="preventive_clinic">Preventive Clinic</option>
+                            <option value="insurer">Insurer</option>
+                            <option value="public_health">Public Health</option>
+                            <option value="hospital">Hospital</option>
+                            <option value="health_center">Health Center</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="region_state" class="form-label">Region/State</label>
+                        <input type="text" id="region_state" name="region_state" class="form-control" placeholder="e.g., Mexico City" required autocomplete="address-level1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Address</label>
+                    <input type="text" id="address" name="address" class="form-control" placeholder="e.g., 123 Reforma Ave, Centro" required autocomplete="street-address">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_email" class="form-label">Contact Email</label>
+                    <input type="email" id="contact_email" name="contact_email" class="form-control" placeholder="contact@institution.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="password-input-container" style="position: relative;">
+                        <input type="password" id="password" name="password" class="form-control" placeholder="At least 8 characters" required autocomplete="new-password">
+                        <button type="button" id="togglePassword" class="password-toggle" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.1rem;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-hospital me-2"></i>
+                    Register Institution
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>or</span>
+            </div>
+
+            <p class="mb-0">
+                Already have an institutional account? 
+                <a href="institution_login.html" class="login-link">Sign in here</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Institution type change handler
+        document.getElementById('institution_type').addEventListener('change', function() {
+            const regionInput = document.getElementById('region_state');
+            if (this.value === 'public_health') {
+                regionInput.placeholder = 'e.g., State Health Department';
+            } else if (this.value === 'insurer') {
+                regionInput.placeholder = 'e.g., National coverage area';
+            } else {
+                regionInput.placeholder = 'e.g., Mexico City';
+            }
+        });
+
+        // Password toggle functionality
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Real-time validation
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = '#10b981';
+                } else {
+                    this.style.borderColor = '';
+                }
+            });
+        });
+
+        // Institution registration handler
+        async function handleInstitutionRegister(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Show loading
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registering...';
+
+            try {
+                const response = await fetch('/api/v1/auth/institutions/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Store tokens if provided
+                    if (result.access_token) {
+                        localStorage.setItem('predicthealth_token', result.access_token);
+                        localStorage.setItem('predicthealth_refresh_token', result.refresh_token);
+                        localStorage.setItem('predicthealth_user', JSON.stringify({
+                            user_id: result.institution_id,
+                            user_type: 'institution',
+                            email: formData.get('contact_email')
+                        }));
+                    }
+
+                    // Show success message
+                    const successDiv = document.getElementById('success-message');
+                    successDiv.textContent = 'Institution registered successfully!';
+                    successDiv.style.display = 'block';
+
+                    // Hide error message
+                    document.getElementById('error-message').style.display = 'none';
+
+                    // Reset form
+                    form.reset();
+
+                    // Redirect to dashboard if tokens are available, otherwise to login
+                    setTimeout(() => {
+                        if (result.access_token) {
+                            window.location.href = '/institution_dashboard.html';
+                        } else {
+                            window.location.href = '/institution_login.html';
+                        }
+                    }, 3000);
+
+                } else {
+                    // Show error message
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = result.detail || result.message || 'Registration failed';
+                    errorDiv.style.display = 'block';
+
+                    // Hide success message
+                    document.getElementById('success-message').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+                document.getElementById('success-message').style.display = 'none';
+            } finally {
+                // Hide loading
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        }
+    </script>
+</body>
+</html>

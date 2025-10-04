@@ -1,0 +1,623 @@
+<!-- /frontend\templates\doctor_dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictHealth - Dashboard del Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-dark: #6d28d9;
+            --secondary-color: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background: var(--gradient-primary);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-left: auto;
+        }
+
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item:hover {
+            opacity: 0.8;
+        }
+
+        .doctor-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+
+        .doctor-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .doctor-type {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .welcome-section {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.patients {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .stat-icon.appointments {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .stat-icon.reviews {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .stat-icon.schedule {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .main-panel {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .patient-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .patient-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+        }
+
+        .patient-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 1rem;
+        }
+
+        .patient-details h4 {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .patient-details p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quick-actions {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+        }
+
+        .action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .pending-reviews {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .review-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .review-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .review-icon {
+            color: #f59e0b;
+            margin-right: 0.75rem;
+        }
+
+        .review-text {
+            color: #92400e;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <i class="fas fa-heartbeat"></i>
+            PredictHealth
+        </a>
+        <div class="navbar-nav">
+            <div class="doctor-info">
+                <span class="doctor-name">Doctor</span>
+                <span class="doctor-type">Portal del Doctor</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt me-1"></i>
+                Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="welcome-section">
+            <h1 class="welcome-title">¡Bienvenido Doctor!</h1>
+            <p class="welcome-subtitle">Gestiona tus pacientes y citas desde tu panel profesional</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon patients">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-number" id="patients-count">0</div>
+                <div class="stat-label">Pacientes Asignados</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon appointments">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="stat-number" id="appointments-count">0</div>
+                <div class="stat-label">Citas de Hoy</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon reviews">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                </div>
+                <div class="stat-number" id="reviews-count">0</div>
+                <div class="stat-label">Revisiones Pendientes</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon schedule">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-number" id="schedule-count">0</div>
+                <div class="stat-label">Horas Disponibles</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="main-panel">
+                <h2 class="panel-title">
+                    <i class="fas fa-users"></i>
+                    Mis Pacientes
+                </h2>
+                <div id="patients-list">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Cargando pacientes...
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="quick-actions">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">
+                        <i class="fas fa-bolt me-2"></i>
+                        Acciones Rápidas
+                    </h3>
+                    <button class="action-btn" onclick="scheduleAppointment()">
+                        <i class="fas fa-calendar-plus"></i>
+                        Programar Cita
+                    </button>
+                    <button class="action-btn" onclick="viewPatientHistory()">
+                        <i class="fas fa-file-medical"></i>
+                        Ver Historial
+                    </button>
+                    <button class="action-btn" onclick="updateProfile()">
+                        <i class="fas fa-user-edit"></i>
+                        Actualizar Perfil
+                    </button>
+                    <button class="action-btn" onclick="contactPatient()">
+                        <i class="fas fa-comments"></i>
+                        Contactar Paciente
+                    </button>
+                </div>
+
+                <div class="pending-reviews">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">
+                        <i class="fas fa-clipboard-check me-2"></i>
+                        Revisiones Pendientes
+                    </h3>
+                    <div id="reviews-list">
+                        <div class="review-item">
+                            <i class="fas fa-info-circle review-icon"></i>
+                            <span class="review-text">No hay revisiones pendientes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Verificar autenticación al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authManager.isLoggedIn()) {
+                window.location.href = '/doctor_login.html';
+                return;
+            }
+
+            const userInfo = authManager.getUserInfo();
+            if (userInfo.user_type !== 'doctor') {
+                window.location.href = '/';
+                return;
+            }
+
+            // Actualizar información del usuario en la navbar
+            document.querySelector('.doctor-name').textContent = userInfo.email || 'Doctor';
+            
+            // Cargar datos del dashboard
+            loadDoctorStats();
+        });
+
+        // Cargar estadísticas del doctor
+        async function loadDoctorStats() {
+            try {
+                const token = authManager.getToken();
+                if (!token) {
+                    window.location.href = '/doctor_login.html';
+                    return;
+                }
+
+                const response = await fetch('/api/web/doctor/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboard(data.data);
+                } else if (response.status === 401) {
+                    // Token expirado o inválido
+                    authManager.clearTokens();
+                    window.location.href = '/doctor_login.html';
+                } else {
+                    console.error('Error cargando dashboard:', response.status);
+                    showError('Error cargando datos del dashboard');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Actualizar el dashboard con los datos recibidos
+        function updateDashboard(data) {
+            // Actualizar estadísticas
+            document.getElementById('patients-count').textContent = data.statistics?.total_patients || 0;
+            document.getElementById('appointments-count').textContent = data.statistics?.total_appointments || 0;
+            document.getElementById('reviews-count').textContent = data.statistics?.total_reviews || 0;
+            document.getElementById('schedule-count').textContent = data.statistics?.available_hours || 0;
+
+            // Actualizar lista de pacientes
+            const patientsList = document.getElementById('patients-list');
+            if (data.patients && data.patients.length > 0) {
+                patientsList.innerHTML = data.patients.map(patient => `
+                    <div class="patient-item">
+                        <div class="patient-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="patient-details">
+                            <h4>${patient.nombre || 'Paciente Sin Nombre'}</h4>
+                            <p>${patient.email || 'Sin email'} - ${patient.telefono || 'Sin teléfono'}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                patientsList.innerHTML = `
+                    <div class="loading">
+                        <i class="fas fa-user-times me-2"></i>
+                        No hay pacientes asignados
+                    </div>
+                `;
+            }
+
+            // Actualizar revisiones pendientes
+            const reviewsList = document.getElementById('reviews-list');
+            if (data.reviews && data.reviews.length > 0) {
+                reviewsList.innerHTML = data.reviews.map(review => `
+                    <div class="review-item">
+                        <i class="fas fa-clipboard-check review-icon"></i>
+                        <span class="review-text">${review.message}</span>
+                    </div>
+                `).join('');
+            } else {
+                reviewsList.innerHTML = `
+                    <div class="review-item">
+                        <i class="fas fa-info-circle review-icon"></i>
+                        <span class="review-text">No hay revisiones pendientes</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Funciones de acciones rápidas
+        function scheduleAppointment() {
+            alert('Función de programar cita en desarrollo');
+        }
+
+        function viewPatientHistory() {
+            alert('Función de ver historial de paciente en desarrollo');
+        }
+
+        function updateProfile() {
+            alert('Función de actualizar perfil en desarrollo');
+        }
+
+        function contactPatient() {
+            alert('Función de contactar paciente en desarrollo');
+        }
+
+        // Función de logout
+        function handleLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                authManager.clearTokens();
+                window.location.href = '/';
+            }
+        }
+
+        // Función para mostrar errores
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>
+                ${message}
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(errorDiv, mainContent.firstChild);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

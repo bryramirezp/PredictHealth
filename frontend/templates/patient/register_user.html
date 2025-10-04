@@ -1,0 +1,80 @@
+<!-- /frontend\templates\register_user.html -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Registro — PredictHealth</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register_user.css') }}" />
+    <script src="{{ url_for('static', filename='js/validations.js') }}" defer></script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="user_dashboard.html" class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="logo" width="24" height="24" style="vertical-align: middle;">
+            <strong style="vertical-align: middle; margin-left: 8px;">PredictHealth</strong>
+        </a>
+      </div>
+      <div class="menu">
+        <a href="user_dashboard.html">Dashboard</a>
+        <a href="register_user.html">Registro de usuario</a>
+        <a href="lifestyle.html">Hábitos</a>
+        <a href="measurements.html">Medidas</a>
+        <a href="notifications.html">Notificaciones</a>
+        <a href="recommendations.html">Recomendaciones</a>
+        <a href="patient_login.html">Cerrar sesión</a>
+      </div>
+    </nav>
+
+    <br>
+    <main class="card container">
+      <h1>Registro de Usuario</h1>
+      <form id="registerForm" method="POST" action="/auth/register">
+        <div class="row">
+          <label>Nombre <input type="text" name="firstName" required /></label>
+          <label>Apellido <input type="text" name="lastName" required /></label>
+        </div>
+
+        <div class="row">
+          <label
+            >Edad <input type="number" name="age" min="0" max="120" required
+          /></label>
+          <label
+            >Sexo
+            <select name="gender" required>
+              <option value="">Selecciona...</option>
+              <option value="female">Femenino</option>
+              <option value="male">Masculino</option>
+              <option value="other">Otro</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label
+            >Peso (kg) <input type="number" step="0.1" name="weight" required
+          /></label>
+          <label
+            >Altura (cm) <input type="number" step="0.1" name="height" required
+          /></label>
+        </div>
+
+        <label
+          >Historial médico / alergias
+          <textarea
+            name="medicalHistory"
+            rows="4"
+            placeholder="Antecedentes relevantes"
+          ></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="btn primary">Guardar y continuar</button>
+          <a class="btn ghost" href="user_dashboard.html">Omitir por ahora</a>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

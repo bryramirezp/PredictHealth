@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Documentación Técnica | PredictHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+            color: #1d1d1d;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #3a3e61;
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            color: #4dd9d6;
+        }
+
+        .back-btn {
+            padding: 0.5rem 1.25rem;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #3a3e61;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            border-color: #4dd9d6;
+        }
+
+        /* Main Layout */
+        .docs-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 65px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem 1rem;
+            overflow-y: auto;
+            position: sticky;
+            top: 65px;
+            height: calc(100vh - 65px);
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            padding: 0 0.75rem;
+        }
+
+        .sidebar-links {
+            list-style: none;
+        }
+
+        .sidebar-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-link:hover {
+            background: #f3f4f6;
+            color: #1d1d1d;
+        }
+
+        .sidebar-link.active {
+            background: #e0f2f1;
+            color: #00897b;
+            font-weight: 600;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 3rem;
+            max-width: 900px;
+            background: white;
+            margin: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1d1d1d;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .content h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1d1d1d;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .content h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .content p {
+            color: #4b5563;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        .content ul, .content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #4b5563;
+        }
+
+        .content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .content code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #ef4444;
+        }
+
+        .content pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .content pre code {
+            background: none;
+            padding: 0;
+            color: #e2e8f0;
+        }
+
+        /* Cards */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tech-card {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            border-color: #4dd9d6;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(77, 217, 214, 0.15);
+            background: white;
+        }
+
+        .tech-card h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1d1d1d;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tech-card p {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e0f2f1;
+            color: #00897b;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .docs-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+            }
+
+            .content {
+                padding: 1.5rem;
+                margin: 0.5rem;
+            }
+
+            .content h1 {
+                font-size: 2rem;
+            }
+
+            .header-content {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <i class="fas fa-heartbeat"></i>
+                PredictHealth Docs
+            </a>
+            <a href="/" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="docs-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Introducción</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs" class="sidebar-link active">Visión General</a></li>
+                    <li><a href="/docs/arquitectura" class="sidebar-link">Arquitectura del Sistema</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Backend</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/backend/flask" class="sidebar-link">Flask API</a></li>
+                    <li><a href="/docs/backend/microservicios" class="sidebar-link">Microservicios</a></li>
+                    <li><a href="/docs/backend/autenticacion" class="sidebar-link">Autenticación JWT</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Frontend</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/frontend/estructura" class="sidebar-link">Estructura</a></li>
+                    <li><a href="/docs/frontend/componentes" class="sidebar-link">Componentes</a></li>
+                    <li><a href="/docs/frontend/estilos" class="sidebar-link">Estilos y Diseño</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Base de Datos</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/database/schema" class="sidebar-link">Esquema</a></li>
+                    <li><a href="/docs/database/redis" class="sidebar-link">Redis Cache</a></li>
+                    <li><a href="/docs/database/migraciones" class="sidebar-link">Migraciones</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Machine Learning</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/ml/modelos" class="sidebar-link">Modelos Predictivos</a></li>
+                    <li><a href="/docs/ml/entrenamiento" class="sidebar-link">Entrenamiento</a></li>
+                    <li><a href="/docs/ml/deployment" class="sidebar-link">Despliegue</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Dispositivos</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/devices/mobile" class="sidebar-link">App Móvil</a></li>
+                    <li><a href="/docs/devices/leap-motion" class="sidebar-link">Leap Motion</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Deployment</div>
+                <ul class="sidebar-links">
+                    <li><a href="/docs/deploy/docker" class="sidebar-link">Docker</a></li>
+                    <li><a href="/docs/deploy/produccion" class="sidebar-link">Producción</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="content">
+            <h1>
+                <span style="font-size: 2rem;">📚</span>
+                Documentación Técnica
+            </h1>
+
+            <p>
+                Bienvenido a la documentación técnica de PredictHealth. Aquí encontrarás información detallada
+                sobre la arquitectura, tecnologías, y componentes del sistema de analítica predictiva de salud.
+            </p>
+
+            <h2>¿Qué es PredictHealth?</h2>
+            <p>
+                PredictHealth es una plataforma de analítica predictiva que combina machine learning avanzado
+                con datos clínicos para predecir riesgos de salud antes de que se manifiesten. El sistema está
+                diseñado para prevenir enfermedades cardiovasculares y diabetes mediante predicciones tempranas
+                basadas en datos.
+            </p>
+
+            <h2>Stack Tecnológico</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-server" style="color: #4dd9d6;"></i> Backend</h4>
+                    <p>Flask, Python, SQLAlchemy, Redis</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-desktop" style="color: #667eea;"></i> Frontend</h4>
+                    <p>HTML5, CSS3, JavaScript, Bootstrap</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-database" style="color: #f59e0b;"></i> Base de Datos</h4>
+                    <p>PostgreSQL, Redis Cache</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-brain" style="color: #8b5cf6;"></i> Machine Learning</h4>
+                    <p>TensorFlow, Scikit-learn, Pandas</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-mobile-alt" style="color: #10b981;"></i> Móvil</h4>
+                    <p>React Native, Expo</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-hand-paper" style="color: #ef4444;"></i> IoT</h4>
+                    <p>Leap Motion Controller</p>
+                </div>
+            </div>
+
+            <h2>Características Principales</h2>
+
+            <h3>🔐 Autenticación y Autorización</h3>
+            <p>
+                Sistema robusto de autenticación basado en JWT (JSON Web Tokens) con roles diferenciados
+                para pacientes, doctores e instituciones médicas.
+            </p>
+
+            <h3>🤖 Modelos Predictivos</h3>
+            <p>
+                Modelos de machine learning entrenados con datos clínicos reales para predecir:
+            </p>
+            <ul>
+                <li>Riesgo de enfermedades cardiovasculares</li>
+                <li>Probabilidad de desarrollar diabetes tipo 2</li>
+                <li>Factores de riesgo personalizados</li>
+            </ul>
+
+            <h3>📊 Dashboard Interactivo</h3>
+            <p>
+                Visualización de datos en tiempo real con gráficas interactivas, métricas clave y
+                recomendaciones personalizadas.
+            </p>
+
+            <h3>🔄 Arquitectura de Microservicios</h3>
+            <p>
+                Sistema modular y escalable diseñado para manejar múltiples servicios independientes:
+            </p>
+            <ul>
+                <li>Servicio de autenticación</li>
+                <li>Servicio de predicciones ML</li>
+                <li>Servicio de gestión de pacientes</li>
+                <li>Servicio de análisis de datos</li>
+            </ul>
+
+            <h2>Tecnologías Detalladas</h2>
+
+            <h3>Backend</h3>
+            <div>
+                <span class="badge">Python 3.11+</span>
+                <span class="badge">Flask 3.0</span>
+                <span class="badge">SQLAlchemy</span>
+                <span class="badge">JWT</span>
+                <span class="badge">Redis</span>
+                <span class="badge">Celery</span>
+            </div>
+
+            <h3>Machine Learning</h3>
+            <div>
+                <span class="badge">TensorFlow 2.x</span>
+                <span class="badge">Scikit-learn</span>
+                <span class="badge">Pandas</span>
+                <span class="badge">NumPy</span>
+                <span class="badge">Matplotlib</span>
+            </div>
+
+            <h3>Frontend</h3>
+            <div>
+                <span class="badge">HTML5</span>
+                <span class="badge">CSS3</span>
+                <span class="badge">JavaScript ES6+</span>
+                <span class="badge">Bootstrap 5</span>
+                <span class="badge">Chart.js</span>
+            </div>
+
+            <h2>Arquitectura del Sistema</h2>
+            <p>
+                El sistema sigue una arquitectura de tres capas con separación clara de responsabilidades:
+            </p>
+
+            <ol>
+                <li><strong>Capa de Presentación:</strong> Interfaces web y móvil para usuarios finales</li>
+                <li><strong>Capa de Lógica de Negocio:</strong> API REST con Flask y microservicios</li>
+                <li><strong>Capa de Datos:</strong> PostgreSQL para persistencia y Redis para caché</li>
+            </ol>
+
+            <h2>Primeros Pasos</h2>
+            <p>
+                Para comenzar a trabajar con PredictHealth, te recomendamos seguir estos pasos:
+            </p>
+
+            <ol>
+                <li>Revisar la <a href="/docs/arquitectura" style="color: #4dd9d6; text-decoration: none; font-weight: 600;">arquitectura del sistema</a></li>
+                <li>Configurar el <a href="/docs/backend/flask" style="color: #4dd9d6; text-decoration: none; font-weight: 600;">backend Flask</a></li>
+                <li>Entender los <a href="/docs/ml/modelos" style="color: #4dd9d6; text-decoration: none; font-weight: 600;">modelos de ML</a></li>
+                <li>Explorar el <a href="/docs/frontend/estructura" style="color: #4dd9d6; text-decoration: none; font-weight: 600;">frontend</a></li>
+            </ol>
+
+            <p style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; color: #6b7280;">
+                <i class="fas fa-info-circle"></i>
+                Esta documentación está en constante actualización. Si encuentras algún error o tienes
+                sugerencias, no dudes en contactarnos.
+            </p>
+        </main>
+    </div>
+</body>
+</html>
