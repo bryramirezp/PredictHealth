@@ -577,16 +577,10 @@
         }
 
         // Handle form submission
-        document.getElementById('doctorForm').addEventListener('submit', function(e) {
+        document.getElementById('doctorForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
-            const token = authManager.getToken();
-
-            if (!token) {
-                showAlert('No se encontró token de autenticación', 'error');
-                return;
-            }
 
             // Validaciones adicionales del lado cliente
             const password = formData.get('password');
@@ -617,17 +611,19 @@
 
             console.log('Enviando datos del doctor:', doctorData);
 
-            fetch('/api/web/institution/doctors', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(doctorData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
+            try {
+                const response = await fetch('/api/web/institution/doctors', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // Incluir cookies automáticamente
+                    body: JSON.stringify(doctorData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
                     showAlert(data.message || 'Doctor registrado exitosamente', 'success');
                     this.reset();
                     toggleAddDoctorForm();
@@ -635,10 +631,9 @@
                 } else {
                     throw new Error(data.message || 'Error al registrar doctor');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 showAlert('Error al registrar doctor: ' + error.message, 'error');
-            });
+            }
         });
 
         function showAlert(message, type) {
@@ -662,37 +657,30 @@
             }, 5000);
         }
 
-        function loadDoctors() {
-            // Obtener token de autenticación usando AuthManager
-            const token = authManager.getToken();
+        async function loadDoctors() {
+            try {
+                const response = await fetch('/api/web/institution/doctors', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Incluir cookies automáticamente
+                });
 
-            if (!token) {
-                showAlert('No se encontró token de autenticación', 'error');
-                return;
-            }
+                const data = await response.json();
 
-            fetch('/api/web/institution/doctors', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
+                if (response.ok && data.status === 'success') {
                     const doctors = data.doctors || [];
                     displayDoctors(doctors);
                 } else {
                     throw new Error(data.message || 'Error al cargar doctores');
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error loading doctors:', error);
                 showAlert('Error al cargar doctores: ' + error.message, 'error');
                 // Mostrar datos de ejemplo si falla la carga
                 displayDoctors([]);
-            });
+            }
         }
 
         function displayDoctors(doctors) {
@@ -742,29 +730,28 @@
             showAlert('Función de ver perfil en desarrollo', 'info');
         }
 
-        function deleteDoctor(doctorId, doctorName) {
+        async function deleteDoctor(doctorId, doctorName) {
             if (confirm(`¿Estás seguro de que deseas eliminar al Dr. ${doctorName}?`)) {
-                const token = authManager.getToken();
+                try {
+                    const response = await fetch(`/api/web/institution/doctors/${doctorId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include' // Incluir cookies automáticamente
+                    });
 
-                fetch(`/api/web/institution/doctors/${doctorId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
+                    const data = await response.json();
+
+                    if (response.ok && data.status === 'success') {
                         showAlert(data.message || 'Doctor eliminado exitosamente', 'success');
                         loadDoctors();
                     } else {
                         throw new Error(data.message || 'Error al eliminar doctor');
                     }
-                })
-                .catch(error => {
+                } catch (error) {
                     showAlert('Error al eliminar doctor: ' + error.message, 'error');
-                });
+                }
             }
         }
 

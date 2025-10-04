@@ -5,7 +5,7 @@
 class SessionAuthManager {
     constructor() {
         this.baseURL = window.location.origin;
-        this.apiURL = `${this.baseURL}/api/v1/auth`;
+        this.apiURL = `${this.baseURL}/api/web/auth`;
         this.isAuthenticated = false;
         this.currentUser = null;
 
@@ -75,7 +75,7 @@ class SessionAuthManager {
 
         this.isAuthenticated = false;
         this.currentUser = null;
-        window.location.href = '/patient_login.html';
+        window.location.href = '/';
     }
 
     setupHTTPInterceptors() {
@@ -103,11 +103,14 @@ class SessionAuthManager {
     handleSessionExpired() {
         this.isAuthenticated = false;
         this.currentUser = null;
-        window.location.href = '/patient_login.html';
+        window.location.href = '/';
     }
 
     // Métodos públicos
-    getCurrentUser() { return this.currentUser; }
+    async getUserInfo() {
+        await this.validateSession();
+        return this.currentUser;
+    }
     async isLoggedIn() {
         // Siempre validar con el servidor, no depender del estado local
         return await this.validateSession();

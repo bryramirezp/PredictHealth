@@ -10,6 +10,7 @@ import re
 
 from app.services.proxy_service import ProxyService
 from app.middleware import require_auth, get_current_user, is_authenticated
+from app.middleware.jwt_middleware import jwt_middleware
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,103 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 # ============================================================================
 # ENDPOINTS DE AUTENTICACIÓN POR TIPO DE USUARIO
 # ============================================================================
+
+@web_bp.route('/auth/login', methods=['POST'])
+def generic_login():
+    """Endpoint genérico que usa el servicio JWT para determinar tipo de usuario automáticamente"""
+    try:
+        login_data = request.get_json()
+
+        if not login_data:
+            return web_controller._handle_auth_error("Datos JSON requeridos")
+
+        email = login_data.get('email')
+        password = login_data.get('password')
+
+        if not email or not password:
+            return web_controller._handle_auth_error("Email y password son requeridos")
+
+        # Preparar datos para servicio JWT (sin especificar user_type - el servicio lo determina)
+        auth_data = {
+            "email": email,
+            "password": password
+        }
+
+        # Call JWT service for authentication (determina user_type automáticamente)
+        auth_response = web_controller.proxy_service.call_jwt_service(
+            "POST", "/auth/login", auth_data
+        )
+
+        # Guardar el access_token para usarlo en llamadas a servicios que requieren Bearer tokens
+        access_token = auth_response['data'].get("access_token")
+
+        if auth_response.get('status_code') == 200:
+            # Usar el access_token para la cookie de sesión
+            access_token = auth_response['data'].get("access_token")
+            if not access_token:
+                logger.error("❌ Auth-JWT Service did not provide access_token")
+                return web_controller._handle_auth_error("Token creation failed", 503)
+
+            # Responder con cookie HTTP-only usando el access_token del Auth-JWT Service
+            from flask import make_response
+            resp = make_response(web_controller._handle_success({
+                "user_id": auth_response['data']['user_id'],
+                "user_type": auth_response['data']['user_type'],  # El servicio JWT determina esto
+                "access_token": access_token,
+                "expires_in": auth_response['data']['expires_in']
+            }, "Login exitoso"))
+
+            # Cookie segura con access_token del Auth-JWT Service
+            resp.set_cookie(
+                'predicthealth_session',
+                access_token,
+                httponly=True,
+                secure=False,  # True en producción con HTTPS
+                samesite='Strict',
+                max_age=15*60  # 15 minutos (expiración del token)
+            )
+
+            logger.info(f"✅ Login successful, session cookie set")
+            return resp
+        else:
+            return web_controller._handle_auth_error(
+                auth_response.get('message', 'Error de autenticación'),
+                auth_response.get('status_code', 401)
+            )
+
+    except Exception as e:
+        logger.error(f"Error en generic_login: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+
+@web_bp.route('/auth/session/validate', methods=['GET'])
+def validate_session():
+    """Validar sesión JWT activa"""
+    try:
+        # Obtener token de la cookie
+        token = request.cookies.get('predicthealth_session')
+
+        if not token:
+            return web_controller._handle_auth_error("No active session", 401)
+
+        # Validar token usando el middleware JWT
+        session_data = jwt_middleware.validate_session(token)
+        if not session_data:
+            return web_controller._handle_auth_error("Token expired or invalid", 401)
+
+        response_data = {
+            "valid": True,
+            "user": {
+                "user_id": session_data["user_id"],
+                "user_type": session_data["user_type"],
+                "email": session_data["email"]
+            }
+        }
+        return web_controller._handle_success(response_data)
+
+    except Exception as e:
+        logger.error(f"Error en validate_session: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+
 
 @web_bp.route('/auth/patient/login', methods=['POST'])
 def patient_login():

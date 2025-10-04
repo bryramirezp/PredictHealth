@@ -69,14 +69,18 @@ class SecurityUtils:
         # Verify with bcrypt
         return bcrypt.checkpw(password_bytes, hashed_password.encode('utf-8'))
 
-# Header-based authentication (token verified by API Gateway)
-class HeaderValidator:
-    """Extractor de información de usuario desde headers HTTP (verificado por API Gateway)"""
+# JWT Bearer token authentication
+class JWTValidator:
+    """Extractor de información de usuario desde JWT Bearer token"""
+
+    # JWT Configuration (same as auth-jwt service)
+    JWT_SECRET_KEY = "your-default-secure-secret"  # Should match auth-jwt service
+    JWT_ALGORITHM = "HS256"
 
     @staticmethod
-    def extract_user_info_from_headers(request_headers: Dict[str, str]) -> Dict[str, Any]:
+    def extract_user_info_from_jwt(request_headers: Dict[str, str]) -> Dict[str, Any]:
         """
-        Extrae información del usuario de los headers HTTP añadidos por el API Gateway
+        Extrae información del usuario del JWT Bearer token
 
         Args:
             request_headers: Headers de la petición HTTP
@@ -85,57 +89,91 @@ class HeaderValidator:
             Dict[str, Any]: Información del usuario
 
         Raises:
-            HTTPException: Si los headers requeridos no están presentes
+            HTTPException: Si el token no es válido o está ausente
         """
         try:
-            # Extraer información de los headers añadidos por el gateway
-            user_id = request_headers.get("X-User-ID")
-            user_type = request_headers.get("X-User-Type")
-            email = request_headers.get("X-User-Email")
-            roles_str = request_headers.get("X-User-Roles", "[]")
-            metadata_str = request_headers.get("X-User-Metadata", "{}")
+            import jwt
+
+            # Extraer token del header Authorization
+            auth_header = request_headers.get("Authorization", "")
+            if not auth_header.startswith("Bearer "):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token Bearer requerido. Formato: 'Authorization: Bearer <token>'",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            token = auth_header.replace("Bearer ", "")
+
+            # Decodificar JWT token
+            try:
+                payload = jwt.decode(token, JWTValidator.JWT_SECRET_KEY, algorithms=[JWTValidator.JWT_ALGORITHM])
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token expirado",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            except jwt.InvalidTokenError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Token inválido: {str(e)}",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            # Extraer información del usuario del payload
+            user_id = payload.get("user_id")
+            user_type = payload.get("user_type")
+            email = payload.get("email")
+            roles = payload.get("roles", [])
+            reference_id = payload.get("reference_id")
 
             if not all([user_id, user_type, email]):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Información de usuario no encontrada en headers (verificación faltante por gateway)",
+                    detail="Token no contiene información completa del usuario",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
-
-            # Parsear roles y metadata
-            try:
-                roles = eval(roles_str) if roles_str else []
-                metadata = eval(metadata_str) if metadata_str else {}
-            except:
-                roles = []
-                metadata = {}
 
             user_info = {
                 "user_id": user_id,
                 "user_type": user_type,
                 "email": email,
                 "roles": roles,
-                "metadata": metadata,
+                "reference_id": reference_id,
+                "metadata": payload.get("metadata", {}),
             }
 
-            logger.info(f"✅ Información de usuario extraída de headers para {email} (tipo: {user_type})")
+            logger.info(f"✅ Información de usuario extraída de JWT para {email} (tipo: {user_type})")
 
             return user_info
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"❌ Error extrayendo información del usuario de headers: {str(e)}")
+            logger.error(f"❌ Error procesando JWT token: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Error extrayendo información del usuario de headers",
+                detail="Error procesando token de autenticación",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-# Dependencia FastAPI para obtener el usuario actual desde headers
+# Legacy header-based validator (for backward compatibility)
+class HeaderValidator:
+    """Extractor de información de usuario desde headers HTTP (LEGACY)"""
+
+    @staticmethod
+    def extract_user_info_from_headers(request_headers: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Extrae información del usuario de los headers HTTP añadidos por el API Gateway
+        """
+        logger.warning("⚠️ Usando método legacy de headers. Se recomienda usar JWT Bearer tokens.")
+        return JWTValidator.extract_user_info_from_jwt(request_headers)
+
+# Dependencia FastAPI para obtener el usuario actual desde JWT Bearer token
 async def get_current_user(request: Request) -> Dict[str, Any]:
     """
-    Dependencia FastAPI para obtener el usuario actual desde headers HTTP
+    Dependencia FastAPI para obtener el usuario actual desde JWT Bearer token
 
     Args:
         request: Objeto Request de FastAPI
@@ -144,10 +182,10 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
         Dict[str, Any]: Información del usuario autenticado
 
     Raises:
-        HTTPException: Si la información no está disponible
+        HTTPException: Si el token no es válido
     """
     try:
-        user_info = HeaderValidator.extract_user_info_from_headers(dict(request.headers))
+        user_info = JWTValidator.extract_user_info_from_jwt(dict(request.headers))
         return user_info
     except HTTPException:
         raise
@@ -155,7 +193,7 @@ async def get_current_user(request: Request) -> Dict[str, Any]:
         logger.error(f"❌ Error obteniendo usuario actual: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Error obteniendo usuario actual",
+            detail="Error obteniendo usuario actual. Token Bearer requerido.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

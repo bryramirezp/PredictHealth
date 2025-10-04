@@ -116,12 +116,12 @@ class AuthFormsHandler {
             
             if (result.success) {
                 this.showSuccess('Login exitoso');
-                
+
                 // Redirigir después de un breve delay
                 setTimeout(() => {
-                    window.location.href = result.redirect;
+                    window.location.href = '/';
                 }, 1000);
-                
+
             } else {
                 this.showError(result.error || 'Error en el login');
             }
@@ -151,12 +151,12 @@ class AuthFormsHandler {
             
             if (result.success) {
                 this.showSuccess('Sesión cerrada exitosamente');
-                
+
                 // Redirigir a login
                 setTimeout(() => {
-                    window.location.href = '/patient_login.html';
+                    window.location.href = '/';
                 }, 1000);
-                
+
             } else {
                 this.showError('Error al cerrar sesión');
             }
@@ -197,15 +197,16 @@ class AuthFormsHandler {
         }
     }
     
-    checkAuthStatus() {
+    async checkAuthStatus() {
         /** Verificar estado de autenticación al cargar la página */
         try {
-            if (this.authManager.isLoggedIn()) {
-                this.updateUIAfterLogin(this.authManager.getCurrentUser(), true);
+            if (await this.authManager.isLoggedIn()) {
+                const user = await this.authManager.getUserInfo();
+                this.updateUIAfterLogin(user, true);
             } else {
                 this.updateUIAfterLogout();
             }
-            
+
         } catch (error) {
             console.error('❌ Error verificando estado de autenticación:', error);
         }
@@ -304,12 +305,12 @@ class AuthFormsHandler {
         /* Manejar token expirado */
         try {
             this.showError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-            
+
             // Redirigir a login después de un delay
             setTimeout(() => {
-                window.location.href = '/patient_login.html';
+                window.location.href = '/';
             }, 3000);
-            
+
         } catch (error) {
             console.error('❌ Error manejando token expirado:', error);
         }

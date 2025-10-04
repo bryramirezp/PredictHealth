@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Support both legacy '.user-type-option' and current '.user-type-card' anchors
   const userTypeCards = document.querySelectorAll('.user-type-card, .user-type-option');
 
-  // Login page URLs for each user type
+  // Single login modal for all user types
   const loginUrls = {
-    patient: 'patient_login.html',
-    doctor: 'doctor_login.html',
-    institution: 'institution_login.html'
+    patient: '#',
+    doctor: '#',
+    institution: '#'
   };
 
   // Show modal when login buttons are clicked
@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       // Derive target either from data-type or href
       const userType = this.getAttribute('data-type');
-      const href = this.getAttribute('href') || '';
 
       // Optional visual selection for legacy tiles
       try {
@@ -61,19 +60,16 @@ document.addEventListener('DOMContentLoaded', function() {
         this.classList?.add('selected');
       } catch {}
 
-      // Determine destination
-      let targetUrl = null;
-      if (userType && loginUrls[userType]) {
-        targetUrl = loginUrls[userType];
-      } else if (href) {
-        targetUrl = href; // current markup uses direct anchors to pages
-      }
-
-      // Close modal then navigate
+      // For all user types, show the generic login modal
+      // Close the user type modal and show the login modal
       hideUserTypeModal();
-      if (targetUrl) {
-        setTimeout(() => { window.location.href = targetUrl; }, 200);
-      }
+      setTimeout(() => {
+        // Trigger the login button to show the login modal
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+          loginBtn.click();
+        }
+      }, 200);
     });
   });
   
@@ -103,30 +99,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Handle footer login links
+  // Handle footer login links - all show the generic login modal
   const patientLoginLink = document.getElementById('patientLoginLink');
   const doctorLoginLink = document.getElementById('doctorLoginLink');
   const institutionLoginLink = document.getElementById('institutionLoginLink');
-  
+
+  function showLoginModal(e) {
+    e.preventDefault();
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+      loginBtn.click();
+    }
+  }
+
   if (patientLoginLink) {
-    patientLoginLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = loginUrls.patient;
-    });
+    patientLoginLink.addEventListener('click', showLoginModal);
   }
-  
+
   if (doctorLoginLink) {
-    doctorLoginLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = loginUrls.doctor;
-    });
+    doctorLoginLink.addEventListener('click', showLoginModal);
   }
-  
+
   if (institutionLoginLink) {
-    institutionLoginLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = loginUrls.institution;
-    });
+    institutionLoginLink.addEventListener('click', showLoginModal);
   }
   
   // Smooth scrolling for navigation links
@@ -182,46 +177,6 @@ document.addEventListener('DOMContentLoaded', function() {
     navbar.style.transition = 'transform 0.3s ease-in-out';
   }
   
-  // Limpiar datos de prueba del localStorage si existen
-  function clearTestData() {
-    const testTokens = [
-      'predicthealth_access_token',
-      'predicthealth_refresh_token',
-      'predicthealth_user'
-    ];
-
-    let clearedData = false;
-    testTokens.forEach(key => {
-      const value = localStorage.getItem(key);
-      if (value) {
-        // Limpiar tokens inválidos o datos corruptos
-        if (key === 'predicthealth_refresh_token' && value === 'null') {
-          localStorage.removeItem(key);
-          clearedData = true;
-        } else if (key === 'predicthealth_user') {
-          try {
-            const userData = JSON.parse(value);
-            // Verificar si los datos del usuario son válidos
-            if (!userData.user_id || !userData.email) {
-              localStorage.removeItem(key);
-              clearedData = true;
-            }
-          } catch (e) {
-            // Si no se puede parsear, eliminarlo
-            localStorage.removeItem(key);
-            clearedData = true;
-          }
-        }
-      }
-    });
-
-    if (clearedData) {
-      console.log('Datos de prueba eliminados del localStorage');
-    }
-  }
-
-  // Limpiar datos de prueba al cargar la página
-  clearTestData();
 
   console.log('PredictHealth Landing Page loaded successfully');
 });

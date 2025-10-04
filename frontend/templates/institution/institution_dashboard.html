@@ -495,53 +495,54 @@
     <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
     <script>
         // Cargar estadísticas al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            const isLoggedIn = await authManager.isLoggedIn();
+            if (!isLoggedIn) {
+                window.location.href = '/institution_login.html';
+                return;
+            }
+
+            const userInfo = await authManager.getUserInfo();
+            if (userInfo.user_type !== 'institution') {
+                window.location.href = '/';
+                return;
+            }
+
             loadInstitutionStats();
         });
 
 
         async function loadInstitutionStats() {
             try {
-                // Verificar autenticación
-                if (!authManager.isLoggedIn()) {
-                    console.error('Usuario no autenticado');
-                    window.location.href = '/institution_login.html';
-                    return;
-                }
-
-                // Obtener token de autenticación
-                const token = authManager.getToken();
-                
-                // Llamar al endpoint JWT del dashboard
+                // Llamar al endpoint del dashboard con sesión
                 const response = await fetch('/api/web/institution/dashboard', {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
-                    }
+                    },
+                    credentials: 'include' // Incluir cookies automáticamente
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     const dashboardData = data.data;
-                    
+
                     // Actualizar estadísticas con datos reales
                     animateNumber('doctors-count', dashboardData.statistics.total_doctors);
                     animateNumber('patients-count', dashboardData.statistics.total_patients);
                     animateNumber('predictions-count', dashboardData.statistics.active_appointments);
                     animateNumber('recommendations-count', dashboardData.statistics.pending_reviews);
-                    
+
                     // Actualizar información de la institución
                     if (dashboardData.institution) {
                         document.querySelector('.institution-name').textContent = dashboardData.institution.nombre || 'Institución';
                         document.querySelector('.institution-type').textContent = dashboardData.institution.tipo_institucion || '';
                     }
-                    
+
                 } else if (response.status === 401) {
-                    // Token expirado o inválido - el interceptor HTTP ya manejará esto
-                    console.error('Token expirado o inválido');
-                    return; // El interceptor HTTP se encargará del resto
+                    // Sesión expirada o inválida
+                    window.location.href = '/institution_login.html';
                 } else {
                     console.error('Error cargando datos del dashboard:', response.status);
                     // Usar datos simulados como fallback
@@ -614,13 +615,11 @@
                 } else {
                     console.error('Error en logout:', result.error);
                     // Forzar logout local si falla el del servidor
-                    authManager.clearTokens();
                     window.location.href = '/institution_login.html';
                 }
             } catch (error) {
                 console.error('Error en logout:', error);
                 // Forzar logout local si hay error
-                authManager.clearTokens();
                 window.location.href = '/institution_login.html';
             }
         }

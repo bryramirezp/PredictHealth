@@ -300,66 +300,51 @@
             loadPatients();
         });
 
-        function loadPatientStats() {
-            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-            
-            if (!token) {
-                console.error('No se encontró token de autenticación');
-                return;
-            }
+        async function loadPatientStats() {
+            try {
+                const response = await fetch('/api/web/institution/patients/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Incluir cookies automáticamente
+                });
 
-            fetch('/api/web/institution/patients/stats', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
                 if (response.ok) {
-                    return response.json();
+                    const data = await response.json();
+                    updateStats(data);
+                } else if (response.status === 401) {
+                    window.location.href = '/';
                 } else {
-                    throw new Error('Error al cargar estadísticas');
+                    console.error('Error cargando estadísticas');
                 }
-            })
-            .then(data => {
-                updateStats(data);
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error loading patient stats:', error);
-                // Mantener valores en 0 si falla la carga
-            });
+            }
         }
 
-        function loadPatients() {
-            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-            
-            if (!token) {
-                console.error('No se encontró token de autenticación');
-                return;
-            }
+        async function loadPatients() {
+            try {
+                const response = await fetch('/api/web/institution/patients', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include' // Incluir cookies automáticamente
+                });
 
-            fetch('/api/web/institution/patients', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
                 if (response.ok) {
-                    return response.json();
+                    const data = await response.json();
+                    displayPatients(data.patients || []);
+                } else if (response.status === 401) {
+                    window.location.href = '/';
                 } else {
                     throw new Error('Error al cargar pacientes');
                 }
-            })
-            .then(data => {
-                displayPatients(data.patients || []);
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error loading patients:', error);
                 displayPatients([]);
-            });
+            }
         }
 
         function updateStats(stats) {

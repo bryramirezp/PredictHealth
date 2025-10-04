@@ -65,18 +65,15 @@ class ProxyService:
             return None
 
     def _get_auth_headers(self) -> Dict[str, str]:
-        """Obtener headers de autenticación de la sesión actual"""
+        """Obtener headers de autenticación con JWT Bearer token"""
         headers = {}
 
-        # Agregar información del usuario de la sesión (validada por middleware)
-        if hasattr(g, 'current_user') and g.current_user:
-            user_info = g.current_user
-            headers['X-User-ID'] = str(user_info.get('user_id', ''))
-            headers['X-User-Type'] = user_info.get('user_type', '')
-            headers['X-User-Email'] = user_info.get('email', '')
-            logger.info(f"👤 Headers de usuario agregados para: {user_info.get('email')} ({user_info.get('user_type')})")
+        # JWT token como Bearer en TODAS las solicitudes
+        if hasattr(g, 'token') and g.token:
+            headers['Authorization'] = f'Bearer {g.token}'
+            logger.info("🔑 JWT Bearer token agregado a headers")
         else:
-            logger.warning("⚠️ No hay información de usuario en la sesión para proxy")
+            logger.warning("⚠️ No hay token JWT disponible para autenticación")
 
         # Headers estándar
         headers.update({
@@ -305,9 +302,7 @@ class ProxyService:
     def call_jwt_service(self, method: str, endpoint: str, data: Optional[Dict] = None,
                          headers: Optional[Dict] = None) -> Dict[str, Any]:
         """Llamada específica al servicio JWT"""
-        # El router del JWT service ya tiene el prefijo /tokens, así que agregamos el prefijo al endpoint
-        if not endpoint.startswith('/tokens/'):
-            endpoint = f"/tokens{endpoint}"
+        # El router del JWT service usa /auth/... para login, no /tokens
         return self._proxy_request('jwt', endpoint, method, data, headers=headers)
 
     def call_patients_service(self, method: str, endpoint: str, data: Optional[Dict] = None,

@@ -54,11 +54,6 @@ def index():
     """Página de aterrizaje (landing page)."""
     return render_template('index.html')
 
-@app.route('/institution_login.html')
-def institution_login_page():
-    """Página de inicio de sesión para instituciones médicas."""
-    return render_template('institution/institution_login.html')
-
 @app.route('/institution_signup.html')
 def institution_signup_page():
     """Página de registro para instituciones médicas."""
@@ -68,16 +63,6 @@ def institution_signup_page():
 def institution_dashboard_page():
     """Panel principal de la institución médica."""
     return render_template('institution/institution_dashboard.html')
-
-@app.route('/patient_login.html')
-def patient_login_page():
-    """Página de inicio de sesión para pacientes."""
-    return render_template('patient/patient_login.html')
-
-@app.route('/doctor_login.html')
-def doctor_login_page():
-    """Página de inicio de sesión para doctores."""
-    return render_template('doctor/doctor_login.html')
 
 @app.route('/patient_dashboard.html')
 def patient_dashboard_page():
@@ -108,11 +93,6 @@ def institution_doctors_page():
 def institution_patients_page():
     """Página de visualización de pacientes para instituciones."""
     return render_template('institution/institution_patients.html')
-
-@app.route('/admin_login.html')
-def admin_login_page():
-    """Página de inicio de sesión para administradores."""
-    return render_template('admin/admin_login.html')
 
 @app.route('/admin_dashboard.html')
 def admin_dashboard_page():

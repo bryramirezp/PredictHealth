@@ -475,13 +475,14 @@
     <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
     <script>
         // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!authManager.isLoggedIn()) {
+        document.addEventListener('DOMContentLoaded', async function() {
+            const isLoggedIn = await authManager.isLoggedIn();
+            if (!isLoggedIn) {
                 window.location.href = '/doctor_login.html';
                 return;
             }
 
-            const userInfo = authManager.getUserInfo();
+            const userInfo = await authManager.getUserInfo();
             if (userInfo.user_type !== 'doctor') {
                 window.location.href = '/';
                 return;
@@ -489,7 +490,7 @@
 
             // Actualizar información del usuario en la navbar
             document.querySelector('.doctor-name').textContent = userInfo.email || 'Doctor';
-            
+
             // Cargar datos del dashboard
             loadDoctorStats();
         });
@@ -497,25 +498,19 @@
         // Cargar estadísticas del doctor
         async function loadDoctorStats() {
             try {
-                const token = authManager.getToken();
-                if (!token) {
-                    window.location.href = '/doctor_login.html';
-                    return;
-                }
-
                 const response = await fetch('/api/web/doctor/dashboard', {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
-                    }
+                    },
+                    credentials: 'include' // Incluir cookies automáticamente
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     updateDashboard(data.data);
                 } else if (response.status === 401) {
-                    // Token expirado o inválido
-                    authManager.clearTokens();
+                    // Sesión expirada o inválida
                     window.location.href = '/doctor_login.html';
                 } else {
                     console.error('Error cargando dashboard:', response.status);
@@ -595,10 +590,10 @@
         }
 
         // Función de logout
-        function handleLogout() {
+        async function handleLogout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                authManager.clearTokens();
-                window.location.href = '/';
+                await authManager.logout();
+                window.location.href = '/doctor_login.html';
             }
         }
 

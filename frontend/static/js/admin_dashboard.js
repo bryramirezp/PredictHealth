@@ -30,7 +30,7 @@ class AdminDashboard {
             console.error('Initialization error:', error);
             this.showToast('Authentication failed. Please login again.', 'error');
             setTimeout(() => {
-                window.location.href = '/admin_login.html';
+                window.location.href = '/';
             }, 2000);
         }
     }
@@ -50,7 +50,7 @@ class AdminDashboard {
             }
 
             // Obtener información del usuario de la sesión
-            this.currentUser = window.AuthManager.getCurrentUser();
+            this.currentUser = await window.AuthManager.getUserInfo();
             if (this.currentUser) {
                 document.getElementById('current-user').textContent =
                     `${this.currentUser.first_name || 'Admin'} ${this.currentUser.last_name || 'User'}`;
@@ -576,7 +576,7 @@ class AdminDashboard {
         try {
             this.showLoading();
             const response = await this.apiCall('/api/v1/admins/audit/logs');
-            this.renderAuditTable(response.logs || []);
+            this.renderAuditTable(response.logs || response.data || []);
         } catch (error) {
             console.error('Failed to load audit logs:', error);
             this.showToast('Failed to load audit logs', 'error');
@@ -813,6 +813,11 @@ class AdminDashboard {
 
     renderAuditTable(logs) {
         const tbody = document.getElementById('audit-tbody');
+        if (!tbody) {
+            console.warn('Audit tbody element not found');
+            return;
+        }
+
         tbody.innerHTML = '';
 
         if (logs.length === 0) {
@@ -1050,7 +1055,7 @@ class AdminDashboard {
             window.AuthManager.logout();
         } else {
             // Fallback: redirigir directamente
-            window.location.href = '/admin_login.html';
+            window.location.href = '/';
         }
     }
 }

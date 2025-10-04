@@ -74,7 +74,7 @@ def require_session(f):
             }), 401
 
         # Validar token en Redis
-        session_data = session_middleware.validate_session(token)
+        session_data = jwt_middleware.validate_session(token)
         if not session_data:
             logger.warning("⚠️ Invalid token")
             return jsonify({
@@ -98,7 +98,7 @@ def optional_session(f):
         token = request.cookies.get('predicthealth_session')
 
         if token:
-            session_data = session_middleware.validate_session(token)
+            session_data = jwt_middleware.validate_session(token)
             if session_data:
                 g.current_user = session_data
                 g.token = token
@@ -121,7 +121,7 @@ def require_auth(required_user_type=None):
                 }), 401
 
             # Validar token
-            session_data = session_middleware.validate_session(token)
+            session_data = jwt_middleware.validate_session(token)
             if not session_data:
                 return jsonify({
                     "error": "Token inválido",
