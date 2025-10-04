@@ -1,10 +1,10 @@
-# PredictHealth Platform
+# Plataforma PredictHealth
 
-## Overview
+## Descripción General
 
-PredictHealth is a comprehensive health platform designed with a microservices architecture to manage various aspects of patient care, doctor interactions, institution management, and administrative tasks. It provides a robust and scalable solution for healthcare data management and user interaction.
+PredictHealth es una plataforma integral de salud diseñada con una arquitectura de microservicios para gestionar diversos aspectos del cuidado del paciente, interacciones con médicos, gestión de instituciones y tareas administrativas. Proporciona una solución robusta y escalable para la gestión de datos de salud y la interacción con usuarios.
 
-## Technologies
+## Tecnologías
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
@@ -15,67 +15,67 @@ PredictHealth is a comprehensive health platform designed with a microservices a
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-## Architecture Deep Dive
+## Análisis Profundo de la Arquitectura
 
-The PredictHealth platform is built upon a microservices architecture, orchestrated using Docker Compose. This design ensures modularity, scalability, and independent deployment of services.
+La plataforma PredictHealth está construida sobre una arquitectura de microservicios, orquestada mediante Docker Compose. Este diseño garantiza modularidad, escalabilidad y despliegue independiente de servicios.
 
 ### Frontend
 
-The frontend of the application is composed of static HTML, CSS, and JavaScript files. These files are served directly by the `backend-flask` application, which acts as the main web server for the user interface. The frontend provides various dashboards and forms for patients, doctors, institutions, and administrators.
+El frontend de la aplicación está compuesto por archivos estáticos de HTML, CSS y JavaScript. Estos archivos son servidos directamente por la aplicación `backend-flask`, que actúa como el servidor web principal para la interfaz de usuario. El frontend proporciona varios paneles de control y formularios para pacientes, médicos, instituciones y administradores.
 
 ### Backend (API Gateway)
 
-The `backend-flask` service acts as the central API Gateway for the entire application. It is responsible for:
-*   Serving the static frontend files (HTML, CSS, JS).
-*   Routing incoming API requests to the appropriate microservices.
-*   Handling session management and integrating with the `auth-jwt-service` for authentication.
-*   Implementing JWT middleware to protect API endpoints.
+El servicio `backend-flask` actúa como el API Gateway central para toda la aplicación. Es responsable de:
+*   Servir los archivos estáticos del frontend (HTML, CSS, JS).
+*   Enrutar las solicitudes API entrantes a los microservicios apropiados.
+*   Gestionar sesiones e integrarse con el `auth-jwt-service` para la autenticación.
+*   Implementar middleware JWT para proteger los endpoints de la API.
 
-### Microservices
+### Microservicios
 
-The core business logic is distributed across several specialized microservices, each responsible for a specific domain:
+La lógica de negocio central está distribuida entre varios microservicios especializados, cada uno responsable de un dominio específico:
 
-*   **`auth-jwt-service`**: This service is dedicated to user authentication and JSON Web Token (JWT) management. It handles user login, token generation, token validation, and token revocation. It interacts with PostgreSQL for user data and Redis for token blacklisting or session management.
+*   **`auth-jwt-service`**: Este servicio está dedicado a la autenticación de usuarios y la gestión de JSON Web Tokens (JWT). Maneja el inicio de sesión de usuarios, generación de tokens, validación de tokens y revocación de tokens. Interactúa con PostgreSQL para datos de usuarios y Redis para la lista negra de tokens o gestión de sesiones.
 
-*   **`service-admins`**: Manages functionalities related to system administrators, including user management, system configuration, and monitoring.
+*   **`service-admins`**: Gestiona funcionalidades relacionadas con los administradores del sistema, incluyendo gestión de usuarios, configuración del sistema y monitoreo.
 
-*   **`service-doctors`**: Provides features specific to doctors, such as managing patient records, viewing patient health data, and making recommendations.
+*   **`service-doctors`**: Proporciona características específicas para médicos, como gestionar registros de pacientes, ver datos de salud de pacientes y hacer recomendaciones.
 
-*   **`service-institutions`**: Handles the management of medical institutions, including registering new institutions, managing their doctors and patients, and providing institutional analytics.
+*   **`service-institutions`**: Maneja la gestión de instituciones médicas, incluyendo el registro de nuevas instituciones, gestión de sus médicos y pacientes, y proporcionar análisis institucionales.
 
-*   **`service-patients`**: Focuses on patient-centric functionalities, allowing patients to view their health data, lifestyle information, notifications, and recommendations.
+*   **`service-patients`**: Se centra en funcionalidades centradas en el paciente, permitiendo a los pacientes ver sus datos de salud, información de estilo de vida, notificaciones y recomendaciones.
 
-### Database and Caching
+### Base de Datos y Caché
 
-*   **PostgreSQL**: Serves as the primary relational database for the entire platform. Each microservice interacts with PostgreSQL to store and retrieve its respective data, ensuring data persistence and integrity.
+*   **PostgreSQL**: Sirve como la base de datos relacional principal para toda la plataforma. Cada microservicio interactúa con PostgreSQL para almacenar y recuperar sus datos respectivos, asegurando la persistencia e integridad de los datos.
 
-*   **Redis**: Utilized as an in-memory data store for caching and session management. It enhances application performance by reducing the load on the primary database and provides a fast mechanism for storing temporary data like JWT tokens for revocation.
+*   **Redis**: Utilizado como un almacén de datos en memoria para caché y gestión de sesiones. Mejora el rendimiento de la aplicación al reducir la carga en la base de datos principal y proporciona un mecanismo rápido para almacenar datos temporales como tokens JWT para revocación.
 
-## Getting Started
+## Primeros Pasos
 
-To get the PredictHealth platform up and running locally, follow these simple steps:
+Para poner en funcionamiento la plataforma PredictHealth localmente, sigue estos sencillos pasos:
 
-1.  **Clone the repository:**
+1.  **Clonar el repositorio:**
     ```bash
     git clone https://github.com/bryramirezp/PredictHealth.git
     cd PredictHealth
     ```
 
-2.  **Build and run the services using Docker Compose:**
+2.  **Construir y ejecutar los servicios usando Docker Compose:**
     ```bash
     docker-compose up --build
     ```
-    This command will build the Docker images for all services (PostgreSQL, Redis, backend-flask, and all microservices) and start them in the correct order, respecting their dependencies.
+    Este comando construirá las imágenes Docker para todos los servicios (PostgreSQL, Redis, backend-flask y todos los microservicios) y los iniciará en el orden correcto, respetando sus dependencias.
 
-3.  **Access the application:**
-    Once all services are up and healthy, you can access the frontend application by navigating to `http://localhost:5000` in your web browser.
+3.  **Acceder a la aplicación:**
+    Una vez que todos los servicios estén activos y saludables, puedes acceder a la aplicación frontend navegando a `http://localhost:5000` en tu navegador web.
 
-## Project Structure
+## Estructura del Proyecto
 
-The project is organized into the following main directories:
+El proyecto está organizado en los siguientes directorios principales:
 
-*   `backend-flask/`: Contains the Flask API Gateway application and its related configurations, middleware, and API blueprints.
-*   `database/`: Holds Dockerfiles and initialization scripts for PostgreSQL and Redis.
-*   `frontend/`: Contains all static assets (CSS, JS, images) and HTML templates for the user interface.
-*   `microservices/`: Houses the individual microservices, each in its own subdirectory (e.g., `auth-jwt-service`, `service-admins`, `service-doctors`, `service-institutions`, `service-patients`).
-*   `docker-compose.yml`: Defines the multi-container Docker application, specifying how all services are configured and linked.
+*   `backend-flask/`: Contiene la aplicación Flask API Gateway y sus configuraciones relacionadas, middleware y blueprints de API.
+*   `database/`: Contiene Dockerfiles y scripts de inicialización para PostgreSQL y Redis.
+*   `frontend/`: Contiene todos los recursos estáticos (CSS, JS, imágenes) y plantillas HTML para la interfaz de usuario.
+*   `microservices/`: Alberga los microservicios individuales, cada uno en su propio subdirectorio (por ejemplo, `auth-jwt-service`, `service-admins`, `service-doctors`, `service-institutions`, `service-patients`).
+*   `docker-compose.yml`: Define la aplicación Docker multi-contenedor, especificando cómo se configuran y vinculan todos los servicios.
