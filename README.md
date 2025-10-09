@@ -86,8 +86,7 @@ graph TB
     DOCTORS --> POSTGRES
     PATIENTS --> POSTGRES
     INSTITUTIONS --> POSTGRES
-    
-``
+```
 
 ### 🏛️ **Principios Arquitectónicos**
 
