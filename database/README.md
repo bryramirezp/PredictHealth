@@ -214,7 +214,6 @@ erDiagram
     cms_role_permissions {
         int role_id FK
         int permission_id FK
-        PK(role_id, permission_id)
     }
 
     system_settings {
