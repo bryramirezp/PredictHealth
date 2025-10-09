@@ -1,11 +1,11 @@
 # 🏥 PredictHealth - Plataforma de Salud Predictiva
 
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-Latest-green.svg)](https://redis.io/)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![Flask](https://img.shields.io/badge/Flask-2.3+-blue.svg)](https://flask.palletsprojects.com/)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
 
 > **Transformando la atención médica con inteligencia predictiva avanzada.** Anticipa riesgos y ofrece cuidados personalizados a través de una plataforma integral de salud digital.
 
@@ -180,7 +180,6 @@ python cms-backend/app.py &
 
 | Componente | Documentación | Descripción |
 |------------|---------------|-------------|
-| 🏗️ **Arquitectura General** | [📋 Ver Docs](docs/arquitectura.md) | Diseño del sistema y componentes |
 | 🗄️ **Base de Datos** | [📊 Ver README](database/README.md) | Esquema PostgreSQL y Redis |
 | 🚪 **API Gateway** | [🔧 Ver README](backend-flask/README.md) | Backend Flask y enrutamiento |
 | 🏥 **Microservicios** | [⚙️ Ver README](microservices/README.md) | Servicios especializados |
@@ -368,8 +367,5 @@ services:
 
 **🚀 PredictHealth - Transformando la atención médica con tecnología inteligente**
 
-[🌐 Sitio Web](https://predicthealth.com) • [📧 Contacto](mailto:info@predicthealth.com) • [🐙 GitHub](https://github.com/your-org/predicthealth)
-
-*Hecho con ❤️ para una atención médica mejor*
 
 </div>
