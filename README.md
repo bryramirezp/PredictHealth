@@ -87,14 +87,14 @@ graph TB
     PATIENTS --> POSTGRES
     INSTITUTIONS --> POSTGRES
 
-    style WEB fill:#e1f5fe
-    style GATEWAY fill:#f3e5f5
-    style AUTH fill:#e8f5e8
-    style DOCTORS fill:#e8f5e8
-    style PATIENTS fill:#e8f5e8
-    style INSTITUTIONS fill:#e8f5e8
-    style POSTGRES fill:#fff3e0
-    style REDIS fill:#fff3e0
+    style WEB fill:#2d3748
+    style GATEWAY fill:#2d3748
+    style AUTH fill:#2d3748
+    style DOCTORS fill:#2d3748
+    style PATIENTS fill:#2d3748
+    style INSTITUTIONS fill:#2d3748
+    style POSTGRES fill:#2d3748
+    style REDIS fill:#2d3748
 ```
 
 ### 🏛️ **Principios Arquitectónicos**

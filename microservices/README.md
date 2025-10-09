@@ -299,43 +299,43 @@ docker-compose logs service-name
 open http://localhost:SERVICE_PORT/docs
 ```
 
-## Service Communication
+## Comunicación entre Servicios
 
-### Inter-Service Calls
+### Llamadas Inter-Servicio
 
-Services communicate through HTTP APIs:
-- **Auth Service**: Provides authentication for other services
-- **Doctors Service**: Manages doctor data for patients and institutions
-- **Institutions Service**: Provides institution data for doctors and patients
-- **Patients Service**: Integrates with doctors and institutions services
+Los servicios se comunican a través de APIs HTTP:
+- **Servicio de Autenticación**: Proporciona autenticación para otros servicios
+- **Servicio de Doctores**: Gestiona datos de doctores para pacientes e instituciones
+- **Servicio de Instituciones**: Proporciona datos de instituciones para doctores y pacientes
+- **Servicio de Pacientes**: Se integra con servicios de doctores e instituciones
 
-### API Gateway Pattern
+### Patrón API Gateway
 
-While not implemented in this architecture, services are designed to work with an API gateway for:
-- Request routing and load balancing
-- Authentication middleware
-- Rate limiting and security
-- Request/response transformation
+Aunque no está implementado en esta arquitectura, los servicios están diseñados para trabajar con un API gateway para:
+- Enrutamiento de solicitudes y balanceo de carga
+- Middleware de autenticación
+- Limitación de tasa y seguridad
+- Transformación de solicitud/respuesta
 
-## Testing Strategy
+## Estrategia de Testing
 
-### Unit Tests
+### Pruebas Unitarias
 
-- **Model Testing**: Database model validation
-- **Service Testing**: Business logic verification
-- **API Testing**: Endpoint functionality testing
+- **Testing de Modelos**: Validación de modelos de base de datos
+- **Testing de Servicios**: Verificación de lógica de negocio
+- **Testing de API**: Testing de funcionalidad de endpoints
 
-### Integration Tests
+### Pruebas de Integración
 
-- **Database Integration**: Data persistence and retrieval
-- **Service Communication**: Inter-service API calls
-- **Authentication Flow**: Complete authentication workflows
+- **Integración de Base de Datos**: Persistencia y recuperación de datos
+- **Comunicación entre Servicios**: Llamadas API inter-servicio
+- **Flujo de Autenticación**: Flujos completos de autenticación
 
-### Load Testing
+### Pruebas de Carga
 
-- **Performance Benchmarks**: Response time validation
-- **Concurrency Testing**: Multi-user scenario simulation
-- **Resource Usage**: Memory and CPU monitoring
+- **Benchmarks de Rendimiento**: Validación de tiempos de respuesta
+- **Testing de Concurrencia**: Simulación de escenarios multi-usuario
+- **Uso de Recursos**: Monitoreo de memoria y CPU
 
 ## Solución de Problemas
 

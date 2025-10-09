@@ -208,7 +208,7 @@ erDiagram
         varchar resource
         varchar action
         text description
-        unique(resource, action)
+        UK "unique(resource, action)"
     }
 
     cms_role_permissions {
@@ -337,67 +337,6 @@ La base de datos sirve a los siguientes microservicios con patrones optimizados 
 
 Cada microservicio mantiene conexiones optimizadas tanto a PostgreSQL (datos persistentes) como a Redis (caché/sesiones).
 
-## Diagrama de Arquitectura
-
-```mermaid
-graph TB
-    subgraph "Database Infrastructure"
-        PG[PostgreSQL 15<br/>3NF Normalized<br/>Persistent Storage]
-        RD[Redis<br/>Cache & Sessions<br/>1GB LRU]
-    end
-
-    subgraph "Microservices"
-        AUTH[auth-jwt-service<br/>Authentication]
-        CMS[cms-backend<br/>Administration]
-        DOCTORS[service-doctors<br/>Healthcare Providers]
-        INSTITUTIONS[service-institutions<br/>Medical Facilities]
-        PATIENTS[service-patients<br/>Patient Management]
-    end
-
-    subgraph "Core Healthcare Data"
-        USERS[users<br/>Central Auth]
-        INST[medical_institutions]
-        DOCS[doctors]
-        PATS[patients]
-        HEALTH[health_profiles]
-        SPEC[doctor_specialties]
-    end
-
-    subgraph "CMS Administration"
-        CMS_USERS[cms_users<br/>Admin Accounts]
-        CMS_ROLES[cms_roles<br/>Role Definitions]
-        PERMS[cms_permissions<br/>Access Control]
-        SETTINGS[system_settings<br/>Configuration]
-    end
-
-    AUTH --> USERS
-    CMS --> CMS_USERS
-    CMS --> CMS_ROLES
-    CMS --> PERMS
-    CMS --> SETTINGS
-    DOCTORS --> DOCS
-    DOCTORS --> SPEC
-    INSTITUTIONS --> INST
-    PATIENTS --> PATS
-    PATIENTS --> HEALTH
-
-    USERS --> PG
-    INST --> PG
-    DOCS --> PG
-    PATS --> PG
-    HEALTH --> PG
-    SPEC --> PG
-    CMS_USERS --> PG
-    CMS_ROLES --> PG
-    PERMS --> PG
-    SETTINGS --> PG
-
-    AUTH --> RD
-    CMS --> RD
-    DOCTORS --> RD
-    INSTITUTIONS --> RD
-    PATIENTS --> RD
-```
 
 ## Mantenimiento y Operaciones
 
