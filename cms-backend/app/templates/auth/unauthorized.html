@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - PredictHealth CMS{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --unauthorized-primary: #ef4444;
+        --unauthorized-secondary: #64748b;
+        --unauthorized-accent: #f8fafc;
+    }
+
+    body {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .unauthorized-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        overflow: hidden;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        position: relative;
+    }
+
+    .unauthorized-header {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        padding: 3rem 2rem 2rem;
+        position: relative;
+    }
+
+    .unauthorized-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+    }
+
+    .unauthorized-title {
+        margin: 0 0 0.5rem;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .unauthorized-subtitle {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .unauthorized-body {
+        padding: 2rem;
+    }
+
+    .error-details {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: left;
+    }
+
+    .error-details h4 {
+        margin: 0 0 1rem;
+        color: #374151;
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    .error-details p {
+        margin: 0.5rem 0;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .error-details strong {
+        color: #374151;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary {
+        background: var(--unauthorized-primary);
+        border-color: var(--unauthorized-primary);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: white;
+        border: 2px solid #e5e7eb;
+        color: #6b7280;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #374151;
+    }
+
+    .unauthorized-footer {
+        background: #f9fafb;
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .unauthorized-footer p {
+        margin: 0;
+        color: #9ca3af;
+        font-size: 0.875rem;
+    }
+
+    .help-links {
+        margin-top: 1rem;
+    }
+
+    .help-links a {
+        color: var(--unauthorized-primary);
+        text-decoration: none;
+        font-weight: 500;
+        margin: 0 0.5rem;
+    }
+
+    .help-links a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .unauthorized-container {
+            margin: 1rem;
+            max-width: none;
+        }
+
+        .unauthorized-header {
+            padding: 2rem 1.5rem 1.5rem;
+        }
+
+        .unauthorized-body {
+            padding: 1.5rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .unauthorized-container {
+        animation: fadeInUp 0.6s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="unauthorized-container">
+    <div class="unauthorized-header">
+        <div class="unauthorized-icon">
+            <i class="bi bi-shield-x"></i>
+        </div>
+        <h1 class="unauthorized-title">Access Denied</h1>
+        <p class="unauthorized-subtitle">
+            You don't have permission to access this resource
+        </p>
+    </div>
+
+    <div class="unauthorized-body">
+        <div class="error-details">
+            <h4>Access Restriction Details</h4>
+            <p><strong>Resource:</strong> {{ request.path }}</p>
+            <p><strong>Method:</strong> {{ request.method }}</p>
+            <p><strong>User:</strong> {{ current_user.email if current_user.is_authenticated else 'Not authenticated' }}</p>
+            <p><strong>Role:</strong> {{ current_user.user_type if current_user.is_authenticated else 'N/A' }}</p>
+            <p><strong>Time:</strong> <span id="currentTime"></span></p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{{ url_for('dashboard.index') }}" class="btn-primary">
+                <i class="bi bi-house-door"></i>
+                Go to Dashboard
+            </a>
+            <a href="javascript:history.back()" class="btn-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Go Back
+            </a>
+        </div>
+
+        {% if current_user.is_authenticated %}
+        <div class="action-buttons" style="margin-top: 1rem;">
+            <a href="{{ url_for('auth.logout') }}" class="btn-secondary">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout & Sign In Again
+            </a>
+        </div>
+        {% else %}
+        <div class="action-buttons" style="margin-top: 1rem;">
+            <a href="{{ url_for('auth.login') }}" class="btn-primary">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Sign In
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="unauthorized-footer">
+        <p>If you believe this is an error, please contact your system administrator.</p>
+        <div class="help-links">
+            <a href="mailto:admin@predicthealth.com">Contact Admin</a>
+            <a href="{{ url_for('auth.login') }}">Try Login Again</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update current time
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString();
+    document.getElementById('currentTime').textContent = timeString;
+}
+
+// Update time immediately and then every second
+updateTime();
+setInterval(updateTime, 1000);
+
+// Add some interactive effects
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click effect to buttons
+    const buttons = document.querySelectorAll('.btn-primary, .btn-secondary');
+    buttons.forEach(button => {
+        button.addEventListener('mousedown', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+
+        button.addEventListener('mouseup', function() {
+            this.style.transform = 'scale(1)';
+        });
+
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    // Auto-redirect after 5 minutes of inactivity
+    let redirectTimer;
+    function resetTimer() {
+        clearTimeout(redirectTimer);
+        redirectTimer = setTimeout(() => {
+            window.location.href = '{{ url_for("auth.login") }}';
+        }, 5 * 60 * 1000); // 5 minutes
+    }
+
+    // Reset timer on any activity
+    document.addEventListener('mousemove', resetTimer);
+    document.addEventListener('keypress', resetTimer);
+    document.addEventListener('click', resetTimer);
+    document.addEventListener('scroll', resetTimer);
+
+    resetTimer(); // Start the timer
+});
+</script>
+{% endblock %}

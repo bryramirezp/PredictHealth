@@ -136,30 +136,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Servicio de Administradores
-  servicio-admins:
-    build:
-      context: .
-      dockerfile: microservices/service-admins/Dockerfile
-    container_name: predicthealth-admins
-    env_file:
-      - microservices/service-admins/.env
-    ports:
-      - "8006:8006"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      servicio-auth-jwt:
-        condition: service_healthy
-    networks:
-      - predicthealth-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
 
   # Backend Flask (API Gateway)
   backend-flask:
@@ -178,11 +154,39 @@ services:
         condition: service_healthy
       servicio-auth-jwt:
         condition: service_healthy
+      servicio-doctores:
+        condition: service_healthy
+      servicio-pacientes:
+        condition: service_healthy
+      servicio-instituciones:
+        condition: service_healthy
     networks:
       - predicthealth-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # CMS Backend (Content Management System)
+  cms-backend:
+    build:
+      context: ./cms-backend
+      dockerfile: Dockerfile
+    container_name: predicthealth-cms
+    env_file:
+      - cms-backend/.env
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - predicthealth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -199,3 +203,12 @@ networks:
     ipam:
       config:
         - subnet: 172.20.0.0/16
+
+# Comandos rápidos para acceder a PostgreSQL:
+# - Desde el host (si tienes psql instalado):
+#   psql -h localhost -p 5432 -U predictHealth_user -d predicthealth_db
+#   (te pedirá la contraseña: password)
+# - Entrar al contenedor directamente:
+#   docker exec -it predicthealth-postgres psql -U predictHealth_user -d predicthealth_db
+# - Usando docker-compose (desde la carpeta del proyecto):
+#   docker-compose -f e:\PredictHealth\PredictHealth\docker-compose.yml exec postgres psql -U predictHealth_user -d predicthealth_db

@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+
+{% block title %}Institutions Management - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Institutions Management{% endblock %}
+
+{% block page_subtitle %}Manage medical institutions and healthcare facilities.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .entity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .entity-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .entity-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .entity-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .entity-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .entity-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .entity-type {
+        color: var(--primary-color);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin: 0.25rem 0;
+    }
+
+    .entity-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+
+    .entity-stats {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .entity-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .entity-actions .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .view-toggle button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .view-toggle button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Table specific styles */
+    .table td {
+        vertical-align: middle;
+    }
+
+    .institution-name-cell {
+        max-width: 200px;
+    }
+
+    .institution-name-cell .entity-name {
+        margin: 0;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .type-cell {
+        max-width: 150px;
+    }
+
+    .status-cell {
+        min-width: 100px;
+    }
+
+    /* Form styles */
+    .entity-form {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .form-section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control.is-invalid {
+        border-color: #ef4444;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .invalid-feedback {
+        display: none;
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-control.is-invalid + .invalid-feedback {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .entity-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .entity-actions {
+            justify-content: center;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .entity-card .entity-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header with Actions -->
+<div class="entity-header">
+    <div>
+        <h1>Institutions Management</h1>
+        <p>Manage medical institutions and healthcare facilities.</p>
+    </div>
+    <div class="entity-actions">
+        <a href="{{ url_for('entities.institutions') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+        </a>
+        <a href="{{ url_for('entities.create_institution_form') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add Institution
+        </a>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <form method="GET" class="filters-form">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label class="form-label">Search</label>
+                <input type="text"
+                       name="q"
+                       class="form-control"
+                       placeholder="Search institutions..."
+                       value="{{ request.args.get('q', '') }}">
+            </div>
+
+            {{ filter_dropdown('Type', 'type', [
+                {'value': 'hospital', 'text': 'Hospital'},
+                {'value': 'clinic', 'text': 'Clinic'},
+                {'value': 'health_center', 'text': 'Health Center'},
+                {'value': 'insurer', 'text': 'Insurer'},
+                {'value': 'public_health', 'text': 'Public Health'}
+            ], request.args.get('type')) }}
+
+            {{ filter_dropdown('Status', 'status', [
+                {'value': 'active', 'text': 'Active'},
+                {'value': 'inactive', 'text': 'Inactive'}
+            ], request.args.get('status')) }}
+
+            <div class="form-group">
+                <label class="form-label">Region</label>
+                <input type="text"
+                       name="region"
+                       class="form-control"
+                       placeholder="Filter by region"
+                       value="{{ request.args.get('region', '') }}">
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-search me-1"></i>
+                Search
+            </button>
+            <a href="{{ url_for('entities.institutions') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i>
+                Clear Filters
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- View Toggle -->
+<div class="view-toggle">
+    <button id="tableView" class="active">
+        <i class="bi bi-table me-1"></i>
+        Table View
+    </button>
+    <button id="cardView">
+        <i class="bi bi-card-text me-1"></i>
+        Card View
+    </button>
+</div>
+
+<!-- Institutions Table View -->
+<div id="tableViewContainer">
+    <div class="table-responsive">
+        <table class="table table-hover" id="institutionsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Contact Email</th>
+                    <th>Address</th>
+                    <th>Region</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for institution in institutions %}
+                <tr data-id="{{ institution.id }}">
+                    <td class="institution-name-cell">
+                        <div>
+                            <div class="entity-name">{{ institution.name }}</div>
+                            <small class="text-muted">{{ institution.contact_email }}</small>
+                        </div>
+                    </td>
+                    <td class="type-cell">
+                        <span class="badge bg-primary">{{ institution.institution_type.replace('_', ' ').title() }}</span>
+                    </td>
+                    <td>{{ institution.contact_email }}</td>
+                    <td>{{ institution.address or '-' }}</td>
+                    <td>{{ institution.region_state or '-' }}</td>
+                    <td class="status-cell">
+                        {% if institution.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ institution.created_at.strftime('%b %d, %Y') }}</td>
+                    <td>
+                        <div class="entity-actions">
+                            <a href="{{ url_for('entities.view_institution', institution_id=institution.id) }}" class="btn btn-outline-info btn-sm" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('entities.edit_institution', institution_id=institution.id) }}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('entities.delete_institution', institution_id=institution.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar institución {{ institution.name }}?')" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {{ pagination(current_page, total_pages, url_for_page) }}
+
+    {% if not institutions %}
+    <div class="empty-state">
+        <i class="bi bi-building"></i>
+        <h3>No institutions found</h3>
+        <p>Get started by adding your first medical institution.</p>
+        <button onclick="showCreateModal()" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add First Institution
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Institutions Card View -->
+<div id="cardViewContainer" style="display: none;">
+    {% if institutions %}
+    <div class="row">
+        {% for institution in institutions %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="entity-card">
+                <div class="entity-header-row">
+                    <div>
+                        <h3 class="entity-name">{{ institution.name }}</h3>
+                        <p class="entity-type">{{ institution.institution_type.replace('_', ' ').title() }}</p>
+                    </div>
+                    {% if institution.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </div>
+
+                <div class="entity-meta">
+                    <span><i class="bi bi-envelope me-1"></i>{{ institution.contact_email }}</span>
+                    <span><i class="bi bi-geo-alt me-1"></i>{{ institution.region_state or 'No region' }}</span>
+                    <span><i class="bi bi-telephone me-1"></i>{{ institution.phone or 'No phone' }}</span>
+                </div>
+
+                <div class="entity-stats">
+                    <span><i class="bi bi-calendar me-1"></i>Created: {{ institution.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+
+                <div class="entity-actions">
+                    <a href="{{ url_for('entities.view_institution', institution_id=institution.id) }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye me-1"></i>
+                        View
+                    </a>
+                    <a href="{{ url_for('entities.edit_institution', institution_id=institution.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>
+                        Edit
+                    </a>
+                    <form action="{{ url_for('entities.delete_institution', institution_id=institution.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar institución {{ institution.name }}?')">
+                            <i class="bi bi-trash me-1"></i>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination for cards -->
+    {{ pagination(current_page, total_pages, url_for_page) }}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-building"></i>
+        <h3>No institutions found</h3>
+        <p>Get started by adding your first medical institution.</p>
+        <a href="{{ url_for('entities.create_institution_form') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add First Institution
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

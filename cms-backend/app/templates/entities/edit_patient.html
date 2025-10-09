@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Patient - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Edit Patient{% endblock %}
+
+{% block page_subtitle %}Update information for {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="entity-form">
+      <form action="{{ url_for('entities.edit_patient', patient_id=patient.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <!-- Sección 1: Información Personal Básica -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-person"></i>
+            </div>
+            <h3 class="form-section-title">Personal Information</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="first_name" class="form-label">First Name *</label>
+              <input type="text" id="first_name" name="first_name" class="form-control" required maxlength="100" value="{{ patient.first_name }}">
+              <div class="invalid-feedback">First name is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="last_name" class="form-label">Last Name *</label>
+              <input type="text" id="last_name" name="last_name" class="form-control" required maxlength="100" value="{{ patient.last_name }}">
+              <div class="invalid-feedback">Last name is required.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address *</label>
+              <input type="email" id="email" name="email" class="form-control" required maxlength="255" value="{{ patient.email }}">
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone Number *</label>
+              <input type="tel" id="phone" name="phone" class="form-control" required pattern="^\+?[0-9\s\-\(\)]{10,}$" value="{{ patient.phone }}">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date_of_birth" class="form-label">Date of Birth *</label>
+              <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" required max="{{ 'now'|date:'Y-m-d' }}" value="{{ patient.date_of_birth.isoformat() if patient.date_of_birth else '' }}">
+              <div class="invalid-feedback">Date of birth is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="gender" class="form-label">Gender</label>
+              <select id="gender" name="gender" class="form-control">
+                <option value="">Select gender...</option>
+                <option value="male" {{ 'selected' if patient.gender == 'male' else '' }}>Male</option>
+                <option value="female" {{ 'selected' if patient.gender == 'female' else '' }}>Female</option>
+                <option value="other" {{ 'selected' if patient.gender == 'other' else '' }}>Other</option>
+                <option value="prefer_not_to_say" {{ 'selected' if patient.gender == 'prefer_not_to_say' else '' }}>Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Asociación Médica -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-hospital"></i>
+            </div>
+            <h3 class="form-section-title">Medical Association</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="doctor_id" class="form-label">Primary Doctor</label>
+              <select id="doctor_id" name="doctor_id" class="form-control">
+                <option value="">Select doctor...</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.id }}" {{ 'selected' if doctor.id == patient.doctor_id else '' }}>{{ doctor.first_name }} {{ doctor.last_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="institution_id" class="form-label">Medical Institution</label>
+              <select id="institution_id" name="institution_id" class="form-control">
+                <option value="">Select institution...</option>
+                {% for institution in institutions %}
+                <option value="{{ institution.id }}" {{ 'selected' if institution.id == patient.institution_id else '' }}>{{ institution.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <small class="form-text text-muted">At least one medical association (doctor or institution) is required.</small>
+        </div>
+
+        <!-- Sección 3: Contacto de Emergencia -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-telephone"></i>
+            </div>
+            <h3 class="form-section-title">Emergency Contact</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+              <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="form-control" maxlength="200" value="{{ patient.emergency_contact_name or '' }}">
+            </div>
+
+            <div class="form-group">
+              <label for="emergency_contact_phone" class="form-label">Emergency Contact Phone</label>
+              <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" class="form-control" pattern="^\+?[0-9\s\-\(\)]{10,}$" value="{{ patient.emergency_contact_phone or '' }}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 4: Información de Salud Básica (Opcional) -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-heart-pulse"></i>
+            </div>
+            <h3 class="form-section-title">Basic Health Information (Optional)</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="height_cm" class="form-label">Height (cm)</label>
+              <input type="number" id="height_cm" name="height_cm" class="form-control" min="50" max="300" step="0.1" value="{{ health_profile.height_cm if health_profile and health_profile.height_cm else '' }}">
+            </div>
+
+            <div class="form-group">
+              <label for="weight_kg" class="form-label">Weight (kg)</label>
+              <input type="number" id="weight_kg" name="weight_kg" class="form-control" min="1" max="500" step="0.1" value="{{ health_profile.weight_kg if health_profile and health_profile.weight_kg else '' }}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="blood_type" class="form-label">Blood Type</label>
+              <select id="blood_type" name="blood_type" class="form-control">
+                <option value="">Select blood type...</option>
+                <option value="A+" {{ 'selected' if health_profile and health_profile.blood_type == 'A+' else '' }}>A+</option>
+                <option value="A-" {{ 'selected' if health_profile and health_profile.blood_type == 'A-' else '' }}>A-</option>
+                <option value="B+" {{ 'selected' if health_profile and health_profile.blood_type == 'B+' else '' }}>B+</option>
+                <option value="B-" {{ 'selected' if health_profile and health_profile.blood_type == 'B-' else '' }}>B-</option>
+                <option value="AB+" {{ 'selected' if health_profile and health_profile.blood_type == 'AB+' else '' }}>AB+</option>
+                <option value="AB-" {{ 'selected' if health_profile and health_profile.blood_type == 'AB-' else '' }}>AB-</option>
+                <option value="O+" {{ 'selected' if health_profile and health_profile.blood_type == 'O+' else '' }}>O+</option>
+                <option value="O-" {{ 'selected' if health_profile and health_profile.blood_type == 'O-' else '' }}>O-</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <!-- Espacio vacío para mantener el layout -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-section">
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('entities.view_patient', patient_id=patient.id) }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Patient</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+
+{% block title %}Content Reports - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Content Reports{% endblock %}
+
+{% block page_subtitle %}Analyze content performance, publication trends, and engagement metrics.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .charts-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .chart-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .data-table-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .export-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+    }
+
+    .btn-export {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #374151;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.2s;
+    }
+
+    .btn-export:hover {
+        background: #f9fafb;
+        text-decoration: none;
+        color: #374151;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .summary-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .export-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filters Section -->
+<div class="filters-section">
+    <form method="GET" class="filters-form">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label class="form-label">Date Range</label>
+                <select name="period" class="form-control">
+                    <option value="7d" {% if request.args.get('period') == '7d' %}selected{% endif %}>Last 7 days</option>
+                    <option value="30d" {% if request.args.get('period') == '30d' or not request.args.get('period') %}selected{% endif %}>Last 30 days</option>
+                    <option value="90d" {% if request.args.get('period') == '90d' %}selected{% endif %}>Last 90 days</option>
+                    <option value="1y" {% if request.args.get('period') == '1y' %}selected{% endif %}>Last year</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All statuses</option>
+                    <option value="published" {% if request.args.get('status') == 'published' %}selected{% endif %}>Published</option>
+                    <option value="draft" {% if request.args.get('status') == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="archived" {% if request.args.get('status') == 'archived' %}selected{% endif %}>Archived</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-control">
+                    <option value="">All categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.args.get('category') == category.id|string %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Author</label>
+                <select name="author" class="form-control">
+                    <option value="">All authors</option>
+                    {% for author in authors %}
+                    <option value="{{ author.id }}" {% if request.args.get('author') == author.id|string %}selected{% endif %}>
+                        {{ author.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-search me-1"></i>
+                Generate Report
+            </button>
+            <button class="btn btn-outline-secondary" onclick="window.location.reload()">
+                <i class="bi bi-x-circle me-1"></i>
+                Clear Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-cards">
+    <div class="summary-card">
+        <div class="summary-value" id="totalArticles">0</div>
+        <div class="summary-label">Total Articles</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value" id="publishedArticles">0</div>
+        <div class="summary-label">Published Articles</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value" id="draftArticles">0</div>
+        <div class="summary-label">Draft Articles</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value" id="avgEngagement">0%</div>
+        <div class="summary-label">Avg. Engagement</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts-section">
+    <!-- Publication Trends -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Publication Trends</h3>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="publicationTrendsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Content by Category -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Content by Category</h3>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts -->
+<div class="charts-section">
+    <!-- Status Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Article Status Distribution</h3>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Authors -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Top Authors</h3>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="authorsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="data-table-section">
+    <div class="export-actions">
+        <a href="?export=csv" class="btn-export">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            Export CSV
+        </a>
+        <a href="?export=pdf" class="btn-export">
+            <i class="bi bi-file-earmark-pdf"></i>
+            Export PDF
+        </a>
+        <button onclick="window.print()" class="btn-export">
+            <i class="bi bi-printer"></i>
+            Print Report
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="contentReportTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Published Date</th>
+                    <th>Views</th>
+                    <th>Engagement</th>
+                </tr>
+            </thead>
+            <tbody id="reportTableBody">
+                <!-- Data will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadContentReport();
+});
+
+async function loadContentReport() {
+    try {
+        // Simulate API call - in real app, fetch from backend
+        const data = await simulateContentReport();
+
+        updateSummaryCards(data.summary);
+        updateCharts(data.charts);
+        updateTable(data.articles);
+
+    } catch (error) {
+        console.error('Error loading content report:', error);
+    }
+}
+
+async function simulateContentReport() {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    return {
+        summary: {
+            totalArticles: 89,
+            publishedArticles: 72,
+            draftArticles: 17,
+            avgEngagement: 68
+        },
+        charts: {
+            publicationTrends: [
+                { date: '2024-01', count: 8 },
+                { date: '2024-02', count: 12 },
+                { date: '2024-03', count: 15 },
+                { date: '2024-04', count: 18 },
+                { date: '2024-05', count: 22 },
+                { date: '2024-06', count: 14 }
+            ],
+            categoryData: [
+                { category: 'Health Tips', count: 25 },
+                { category: 'Announcements', count: 18 },
+                { category: 'Guides', count: 22 },
+                { category: 'News', count: 15 },
+                { category: 'General', count: 9 }
+            ],
+            statusData: [
+                { status: 'Published', count: 72, color: '#10b981' },
+                { status: 'Draft', count: 17, color: '#f59e0b' }
+            ],
+            topAuthors: [
+                { name: 'Dr. Smith', articles: 15 },
+                { name: 'Dr. Johnson', articles: 12 },
+                { name: 'Dr. Williams', articles: 10 },
+                { name: 'Dr. Brown', articles: 8 },
+                { name: 'Dr. Davis', articles: 6 }
+            ]
+        },
+        articles: [
+            {
+                title: 'COVID-19 Prevention Guide',
+                author: 'Dr. Smith',
+                category: 'Health Tips',
+                status: 'Published',
+                publishedDate: '2024-01-15',
+                views: 1250,
+                engagement: 78
+            },
+            {
+                title: 'Healthy Eating Habits',
+                author: 'Dr. Johnson',
+                category: 'Guides',
+                status: 'Published',
+                publishedDate: '2024-01-20',
+                views: 980,
+                engagement: 65
+            }
+            // More articles...
+        ]
+    };
+}
+
+function updateSummaryCards(summary) {
+    document.getElementById('totalArticles').textContent = summary.totalArticles;
+    document.getElementById('publishedArticles').textContent = summary.publishedArticles;
+    document.getElementById('draftArticles').textContent = summary.draftArticles;
+    document.getElementById('avgEngagement').textContent = summary.avgEngagement + '%';
+}
+
+function updateCharts(charts) {
+    // Publication Trends
+    createLineChart('publicationTrendsChart', charts.publicationTrends, 'Articles Published');
+
+    // Category Distribution
+    createPieChart('categoryChart', charts.categoryData);
+
+    // Status Distribution
+    createBarChart('statusChart', charts.statusData, 'Articles');
+
+    // Top Authors
+    createHorizontalBarChart('authorsChart', charts.topAuthors);
+}
+
+function updateTable(articles) {
+    const tbody = document.getElementById('reportTableBody');
+
+    if (articles.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No articles found for the selected criteria.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = articles.map(article => `
+        <tr>
+            <td>${article.title}</td>
+            <td>${article.author}</td>
+            <td>${article.category}</td>
+            <td><span class="badge bg-${article.status === 'Published' ? 'success' : 'warning'}">${article.status}</span></td>
+            <td>${article.publishedDate || 'Not published'}</td>
+            <td>${article.views.toLocaleString()}</td>
+            <td>${article.engagement}%</td>
+        </tr>
+    `).join('');
+}
+
+// Chart creation functions (same as dashboard)
+function createLineChart(canvasId, data, label) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(item => item.date || item.month),
+            datasets: [{
+                label: label,
+                data: data.map(item => item.count),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+function createPieChart(canvasId, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: data.map(item => item.category),
+            datasets: [{
+                data: data.map(item => item.count),
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function createBarChart(canvasId, data, label) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.status),
+            datasets: [{
+                label: label,
+                data: data.map(item => item.count),
+                backgroundColor: data.map(item => item.color)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
+
+function createHorizontalBarChart(canvasId, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.name),
+            datasets: [{
+                label: 'Articles',
+                data: data.map(item => item.articles || item.count),
+                backgroundColor: '#8b5cf6'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+}
+</script>
+{% endblock %}

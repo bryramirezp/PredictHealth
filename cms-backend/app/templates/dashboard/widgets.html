@@ -1,0 +1,241 @@
+{# Jinja2 Macros for reusable UI components #}
+
+{# Data Table Macro #}
+{% macro data_table(headers, data, actions=true) %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+                {% if actions %}
+                <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+                {% if actions %}
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info btn-sm">View</button>
+                        <button class="btn btn-outline-primary btn-sm">Edit</button>
+                        <button class="btn btn-outline-danger btn-sm">Delete</button>
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endmacro %}
+
+{# Pagination Macro #}
+{% macro pagination(current_page, total_pages, url_for_page) %}
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {# Previous button #}
+        {% if current_page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for_page(current_page - 1) }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </span>
+        </li>
+        {% endif %}
+
+        {# Page numbers #}
+        {% for page_num in range(max(1, current_page - 2), min(total_pages + 1, current_page + 3)) %}
+        <li class="page-item {{ 'active' if page_num == current_page else '' }}">
+            <a class="page-link" href="{{ url_for_page(page_num) }}">{{ page_num }}</a>
+        </li>
+        {% endfor %}
+
+        {# Next button #}
+        {% if current_page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for_page(current_page + 1) }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{# Search Form Macro #}
+{% macro search_form(placeholder="Search...", action_url="", method="GET") %}
+<form method="{{ method }}" action="{{ action_url }}" class="d-flex gap-2 mb-3">
+    <input type="text" name="q" class="form-control" placeholder="{{ placeholder }}" value="{{ request.args.get('q', '') }}">
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-search me-1"></i>
+        Search
+    </button>
+</form>
+{% endmacro %}
+
+{# Filter Dropdown Macro #}
+{% macro filter_dropdown(label, name, options, selected_value="") %}
+<div class="form-group">
+    <label class="form-label">{{ label }}</label>
+    <select name="{{ name }}" class="form-control">
+        <option value="">All {{ label|lower }}</option>
+        {% for option in options %}
+        <option value="{{ option.value }}" {{ 'selected' if option.value == selected_value else '' }}>
+            {{ option.text }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+{# Action Card Macro #}
+{% macro action_card(title, description, icon, url, color="primary") %}
+<div class="col-md-6 col-lg-4 mb-4">
+    <div class="card h-100 border-{{ color }}">
+        <div class="card-body text-center">
+            <div class="mb-3">
+                <i class="bi bi-{{ icon }} fs-1 text-{{ color }}"></i>
+            </div>
+            <h5 class="card-title">{{ title }}</h5>
+            <p class="card-text text-muted">{{ description }}</p>
+            <a href="{{ url }}" class="btn btn-{{ color }}">{{ title }}</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Status Badge Macro #}
+{% macro status_badge(status, type="default") %}
+{% if type == "user_status" %}
+    {% if status == "active" %}
+        <span class="badge bg-success">Active</span>
+    {% elif status == "inactive" %}
+        <span class="badge bg-secondary">Inactive</span>
+    {% elif status == "pending" %}
+        <span class="badge bg-warning">Pending</span>
+    {% else %}
+        <span class="badge bg-light text-dark">{{ status|title }}</span>
+    {% endif %}
+{% elif type == "content_status" %}
+    {% if status == "published" %}
+        <span class="badge bg-success">Published</span>
+    {% elif status == "draft" %}
+        <span class="badge bg-secondary">Draft</span>
+    {% elif status == "archived" %}
+        <span class="badge bg-warning">Archived</span>
+    {% else %}
+        <span class="badge bg-light text-dark">{{ status|title }}</span>
+    {% endif %}
+{% else %}
+    <span class="badge bg-{{ type if type != 'default' else 'secondary' }}">{{ status|title }}</span>
+{% endif %}
+{% endmacro %}
+
+{# Modal Macro #}
+{% macro modal(id, title, body, footer) %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ body|safe }}
+            </div>
+            <div class="modal-footer">
+                {{ footer|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Confirm Dialog Macro #}
+{% macro confirm_dialog(id, title, message, confirm_text, confirm_type="danger") %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}Label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="{{ id }}Label">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ message }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-{{ confirm_type }}" id="{{ id }}ConfirmBtn">{{ confirm_text }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Loading Spinner Macro #}
+{% macro loading_spinner(text="Loading...") %}
+<div class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">{{ text }}</span>
+    </div>
+    <p class="mt-2 text-muted">{{ text }}</p>
+</div>
+{% endmacro %}
+
+{# Empty State Macro #}
+{% macro empty_state(icon, title, description, action_text="", action_url="") %}
+<div class="text-center py-5">
+    <div class="mb-3">
+        <i class="bi bi-{{ icon }} fs-1 text-muted"></i>
+    </div>
+    <h4 class="text-muted">{{ title }}</h4>
+    <p class="text-muted mb-4">{{ description }}</p>
+    {% if action_text and action_url %}
+    <a href="{{ action_url }}" class="btn btn-primary">{{ action_text }}</a>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Stats Card Macro #}
+{% macro stats_card(title, value, icon, trend="", trend_type="") %}
+<div class="col-md-6 col-lg-3 mb-4">
+    <div class="card h-100">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="card-title text-muted mb-1">{{ title }}</h6>
+                    <h3 class="mb-0">{{ value }}</h3>
+                    {% if trend %}
+                    <small class="text-{{ 'success' if trend_type == 'positive' else 'danger' if trend_type == 'negative' else 'muted' }}">
+                        {{ trend }}
+                    </small>
+                    {% endif %}
+                </div>
+                <div class="text-primary">
+                    <i class="bi bi-{{ icon }} fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

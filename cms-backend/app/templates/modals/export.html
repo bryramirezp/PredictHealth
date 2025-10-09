@@ -1,0 +1,295 @@
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="mb-4">
+                        <h6>Export Format</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="formatCSV" value="csv" checked>
+                            <label class="form-check-label" for="formatCSV">
+                                <strong>CSV</strong> - Comma-separated values, compatible with Excel
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="formatPDF" value="pdf">
+                            <label class="form-check-label" for="formatPDF">
+                                <strong>PDF</strong> - Formatted report with charts and tables
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportFormat" id="formatJSON" value="json">
+                            <label class="form-check-label" for="formatJSON">
+                                <strong>JSON</strong> - Raw data for developers
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Date Range</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="exportStartDate" class="form-label">From</label>
+                                <input type="date" class="form-control" id="exportStartDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="exportEndDate" class="form-label">To</label>
+                                <input type="date" class="form-control" id="exportEndDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Filters</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="exportStatus" class="form-label">Status</label>
+                                <select class="form-control" id="exportStatus">
+                                    <option value="">All Statuses</option>
+                                    <option value="published">Published</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="exportAuthor" class="form-label">Author</label>
+                                <select class="form-control" id="exportAuthor">
+                                    <option value="">All Authors</option>
+                                    <!-- Authors will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Include in Export</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeMetadata" checked>
+                            <label class="form-check-label" for="includeMetadata">
+                                Include metadata (creation date, author, etc.)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeCharts" checked>
+                            <label class="form-check-label" for="includeCharts">
+                                Include charts and statistics (PDF only)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="compressExport">
+                            <label class="form-check-label" for="compressExport">
+                                Compress exported file
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="export-preview">
+                        <h6>Export Preview</h6>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span id="exportPreviewText">Ready to export 0 records</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-progress mt-3" id="exportProgress" style="display: none;">
+                    <div class="progress mb-2">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="exportStatus">Preparing export...</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="startExportBtn">
+                    <i class="bi bi-download me-1"></i>
+                    Start Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.export-options .form-check {
+    margin-bottom: 0.5rem;
+}
+
+.export-options .form-check-label {
+    font-weight: 500;
+}
+
+.export-preview {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.export-preview h6 {
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+</style>
+
+<script>
+let exportConfig = {
+    format: 'csv',
+    startDate: '',
+    endDate: '',
+    status: '',
+    author: '',
+    includeMetadata: true,
+    includeCharts: true,
+    compressExport: false
+};
+
+function showExportModal(dataType = 'content', options = {}) {
+    // Reset form
+    document.querySelector('input[name="exportFormat"][value="csv"]').checked = true;
+    document.getElementById('exportStartDate').value = '';
+    document.getElementById('exportEndDate').value = '';
+    document.getElementById('exportStatus').value = '';
+    document.getElementById('exportAuthor').value = '';
+    document.getElementById('includeMetadata').checked = true;
+    document.getElementById('includeCharts').checked = true;
+    document.getElementById('compressExport').checked = false;
+
+    document.getElementById('exportProgress').style.display = 'none';
+    document.getElementById('exportModalLabel').textContent = `Export ${dataType.charAt(0).toUpperCase() + dataType.slice(1)} Data`;
+
+    // Populate authors if available
+    populateExportAuthors(options.authors || []);
+
+    // Update preview
+    updateExportPreview();
+
+    const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+    modal.show();
+
+    // Set up event listeners
+    setupExportListeners();
+}
+
+function setupExportListeners() {
+    // Format change
+    document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            exportConfig.format = this.value;
+            updateExportPreview();
+
+            // Hide charts option for non-PDF formats
+            const chartsOption = document.getElementById('includeCharts').closest('.form-check');
+            chartsOption.style.display = this.value === 'pdf' ? 'block' : 'none';
+        });
+    });
+
+    // Date changes
+    document.getElementById('exportStartDate').addEventListener('change', function() {
+        exportConfig.startDate = this.value;
+        updateExportPreview();
+    });
+
+    document.getElementById('exportEndDate').addEventListener('change', function() {
+        exportConfig.endDate = this.value;
+        updateExportPreview();
+    });
+
+    // Filter changes
+    document.getElementById('exportStatus').addEventListener('change', function() {
+        exportConfig.status = this.value;
+        updateExportPreview();
+    });
+
+    document.getElementById('exportAuthor').addEventListener('change', function() {
+        exportConfig.author = this.value;
+        updateExportPreview();
+    });
+
+    // Option changes
+    document.getElementById('includeMetadata').addEventListener('change', function() {
+        exportConfig.includeMetadata = this.checked;
+    });
+
+    document.getElementById('includeCharts').addEventListener('change', function() {
+        exportConfig.includeCharts = this.checked;
+    });
+
+    document.getElementById('compressExport').addEventListener('change', function() {
+        exportConfig.compressExport = this.checked;
+    });
+}
+
+function populateExportAuthors(authors) {
+    const select = document.getElementById('exportAuthor');
+    select.innerHTML = '<option value="">All Authors</option>';
+
+    authors.forEach(author => {
+        const option = document.createElement('option');
+        option.value = author.id;
+        option.textContent = author.name;
+        select.appendChild(option);
+    });
+}
+
+function updateExportPreview() {
+    // Simulate record count based on filters
+    let recordCount = 150; // Base count
+
+    if (exportConfig.startDate) recordCount = Math.floor(recordCount * 0.7);
+    if (exportConfig.endDate) recordCount = Math.floor(recordCount * 0.8);
+    if (exportConfig.status) recordCount = Math.floor(recordCount * 0.6);
+    if (exportConfig.author) recordCount = Math.floor(recordCount * 0.4);
+
+    const formatName = exportConfig.format.toUpperCase();
+    document.getElementById('exportPreviewText').textContent =
+        `Ready to export ${recordCount} records in ${formatName} format`;
+}
+
+document.getElementById('startExportBtn').addEventListener('click', async function() {
+    const progress = document.getElementById('exportProgress');
+    const progressBar = progress.querySelector('.progress-bar');
+    const status = document.getElementById('exportStatus');
+
+    progress.style.display = 'block';
+    this.disabled = true;
+
+    try {
+        // Simulate export process
+        const steps = [
+            'Preparing data...',
+            'Applying filters...',
+            'Generating file...',
+            'Finalizing export...'
+        ];
+
+        for (let i = 0; i < steps.length; i++) {
+            status.textContent = steps[i];
+            const progressPercent = ((i + 1) / steps.length) * 100;
+            progressBar.style.width = progressPercent + '%';
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        status.textContent = 'Export completed successfully!';
+        CMS.utils.showAlert(`Data exported successfully as ${exportConfig.format.toUpperCase()}!`, 'success');
+
+        // Close modal after success
+        setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+        }, 1500);
+
+    } catch (error) {
+        status.textContent = 'Export failed';
+        CMS.utils.showAlert('Export failed. Please try again.', 'error');
+        this.disabled = false;
+    }
+});
+
+// Global function for easy access
+window.showExportModal = showExportModal;
+</script>

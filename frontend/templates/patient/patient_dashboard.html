@@ -592,8 +592,23 @@
         // Función de logout
         async function handleLogout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                await authManager.logout();
-                window.location.href = '/patient_login.html';
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        // Logout exitoso, redirigir al login
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Error en logout:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error de conexión en logout:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
+                }
             }
         }
 

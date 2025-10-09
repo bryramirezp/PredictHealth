@@ -338,9 +338,9 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Base de Datos</div>
                 <ul class="sidebar-links">
-                    <li><a href="/docs/database/schema" class="sidebar-link">Esquema</a></li>
+                    <li><a href="/docs/database/postgresql" class="sidebar-link">PostgreSQL</a></li>
                     <li><a href="/docs/database/redis" class="sidebar-link">Redis Cache</a></li>
-                    <li><a href="/docs/database/migraciones" class="sidebar-link">Migraciones</a></li>
+                    <li><a href="/docs/database/firebase" class="sidebar-link">Firebase</a></li>
                 </ul>
             </div>
 
@@ -384,43 +384,67 @@
 
             <h2>¿Qué es PredictHealth?</h2>
             <p>
-                PredictHealth es una plataforma de analítica predictiva que combina machine learning avanzado
-                con datos clínicos para predecir riesgos de salud antes de que se manifiesten. El sistema está
-                diseñado para prevenir enfermedades cardiovasculares y diabetes mediante predicciones tempranas
-                basadas en datos.
+                PredictHealth es una plataforma de IA para predicción de enfermedades crónicas (Equipo 3).
+                Plataforma que predice riesgos de enfermedades como diabetes e hipertensión usando IA y datos
+                personales de salud. El objetivo es implementar medidas preventivas personalizadas para reducir
+                enfermedades crónicas.
             </p>
+
+            <h3>Datos Utilizados</h3>
+            <ul>
+                <li>Historial médico</li>
+                <li>Estilo de vida</li>
+                <li>Datos genéticos</li>
+                <li>GPS</li>
+            </ul>
+
+            <h3>Tecnologías</h3>
+            <ul>
+                <li>Backend: Flask, microservicios en FastAPI</li>
+                <li>Bases de datos: Firebase + PostgreSQL + Redis</li>
+                <li>App móvil: Android Java</li>
+                <li>Procesamiento de Datos: Modelos ML en Hadoop para clasificar riesgo</li>
+                <li>Visualización: Paneles personalizados y simulación con LeapMotion</li>
+            </ul>
+
+            <h3>Aplicación Real</h3>
+            <ul>
+                <li>Clínicas preventivas</li>
+                <li>Aseguradoras</li>
+                <li>Salud pública</li>
+            </ul>
 
             <h2>Stack Tecnológico</h2>
 
             <div class="tech-grid">
                 <div class="tech-card">
                     <h4><i class="fas fa-server" style="color: #4dd9d6;"></i> Backend</h4>
-                    <p>Flask, Python, SQLAlchemy, Redis</p>
+                    <p>Flask, FastAPI, Python</p>
                 </div>
 
                 <div class="tech-card">
                     <h4><i class="fas fa-desktop" style="color: #667eea;"></i> Frontend</h4>
-                    <p>HTML5, CSS3, JavaScript, Bootstrap</p>
+                    <p>HTML5, CSS3, JavaScript</p>
                 </div>
 
                 <div class="tech-card">
                     <h4><i class="fas fa-database" style="color: #f59e0b;"></i> Base de Datos</h4>
-                    <p>PostgreSQL, Redis Cache</p>
+                    <p>Firebase, PostgreSQL, Redis</p>
                 </div>
 
                 <div class="tech-card">
                     <h4><i class="fas fa-brain" style="color: #8b5cf6;"></i> Machine Learning</h4>
-                    <p>TensorFlow, Scikit-learn, Pandas</p>
+                    <p>Hadoop, Modelos ML</p>
                 </div>
 
                 <div class="tech-card">
                     <h4><i class="fas fa-mobile-alt" style="color: #10b981;"></i> Móvil</h4>
-                    <p>React Native, Expo</p>
+                    <p>Android Java</p>
                 </div>
 
                 <div class="tech-card">
                     <h4><i class="fas fa-hand-paper" style="color: #ef4444;"></i> IoT</h4>
-                    <p>Leap Motion Controller</p>
+                    <p>Leap Motion, GPS</p>
                 </div>
             </div>
 
@@ -463,21 +487,19 @@
 
             <h3>Backend</h3>
             <div>
-                <span class="badge">Python 3.11+</span>
-                <span class="badge">Flask 3.0</span>
+                <span class="badge">Python</span>
+                <span class="badge">Flask</span>
+                <span class="badge">FastAPI</span>
                 <span class="badge">SQLAlchemy</span>
                 <span class="badge">JWT</span>
-                <span class="badge">Redis</span>
-                <span class="badge">Celery</span>
+                <span class="badge">Microservicios</span>
             </div>
 
             <h3>Machine Learning</h3>
             <div>
-                <span class="badge">TensorFlow 2.x</span>
-                <span class="badge">Scikit-learn</span>
-                <span class="badge">Pandas</span>
-                <span class="badge">NumPy</span>
-                <span class="badge">Matplotlib</span>
+                <span class="badge">Hadoop</span>
+                <span class="badge">Modelos ML</span>
+                <span class="badge">Clasificación de Riesgo</span>
             </div>
 
             <h3>Frontend</h3>
@@ -485,8 +507,12 @@
                 <span class="badge">HTML5</span>
                 <span class="badge">CSS3</span>
                 <span class="badge">JavaScript ES6+</span>
-                <span class="badge">Bootstrap 5</span>
-                <span class="badge">Chart.js</span>
+            </div>
+
+            <h3>Móvil</h3>
+            <div>
+                <span class="badge">Android</span>
+                <span class="badge">Java</span>
             </div>
 
             <h2>Arquitectura del Sistema</h2>

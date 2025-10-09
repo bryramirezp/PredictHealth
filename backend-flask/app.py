@@ -54,6 +54,11 @@ def index():
     """Página de aterrizaje (landing page)."""
     return render_template('index.html')
 
+@app.route('/login')
+def login_page():
+    """Página de login - redirige a la página principal con el modal de login."""
+    return render_template('index.html')
+
 @app.route('/institution_signup.html')
 def institution_signup_page():
     """Página de registro para instituciones médicas."""
@@ -103,6 +108,72 @@ def admin_dashboard_page():
 def docs_page():
     """Página de documentación técnica."""
     return render_template('docs/docs.html')
+
+@app.route('/docs/arquitectura')
+def docs_arquitectura():
+    """Página de arquitectura del sistema."""
+    return render_template('docs/arquitectura.html')
+
+@app.route('/docs/backend/<path:subpath>')
+def docs_backend(subpath):
+    """Páginas de documentación del backend."""
+    return render_template(f'docs/backend/{subpath}.html')
+
+@app.route('/docs/frontend/<path:subpath>')
+def docs_frontend(subpath):
+    """Páginas de documentación del frontend."""
+    return render_template(f'docs/frontend/{subpath}.html')
+
+@app.route('/docs/database/<path:subpath>')
+def docs_database(subpath):
+    """Páginas de documentación de base de datos."""
+    return render_template(f'docs/database/{subpath}.html')
+
+@app.route('/docs/ml/<path:subpath>')
+def docs_ml(subpath):
+    """Páginas de documentación de machine learning."""
+    return render_template(f'docs/ml/{subpath}.html')
+
+@app.route('/docs/devices/<path:subpath>')
+def docs_devices(subpath):
+    """Páginas de documentación de dispositivos."""
+    return render_template(f'docs/devices/{subpath}.html')
+
+@app.route('/docs/deploy/<path:subpath>')
+def docs_deploy(subpath):
+    """Páginas de documentación de deployment."""
+    return render_template(f'docs/deploy/{subpath}.html')
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    """Endpoint de logout que elimina el token de Redis"""
+    jwt_token = request.cookies.get('predicthealth_session')
+
+    if jwt_token:
+        try:
+            # Eliminar el token de Redis usando el formato de clave
+            import redis
+            redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+            redis_client = redis.from_url(redis_url, decode_responses=True)
+
+            # Intentar eliminar tanto access_token como refresh_token
+            access_key = f"access_token:{jwt_token}"
+            refresh_key = f"refresh_token:{jwt_token}"
+
+            deleted_access = redis_client.delete(access_key)
+            deleted_refresh = redis_client.delete(refresh_key)
+
+            if deleted_access or deleted_refresh:
+                logger.info(f"✅ Token revoked from Redis: {access_key[:50]}...")
+            else:
+                logger.warning(f"⚠️ Token not found in Redis for revocation")
+        except Exception as e:
+            logger.error(f"❌ Error deleting token from Redis: {str(e)}")
+
+    # Eliminar cookie de todos modos
+    resp = jsonify({"success": True, "message": "Sesión cerrada exitosamente"})
+    resp.set_cookie('predicthealth_session', '', expires=0, httponly=True, secure=False, samesite='Strict')
+    return resp
 
 # --- Health endpoint for docker-compose healthcheck ---
 @app.route('/health')

@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% from "dashboard/widgets.html" import action_card %}
+
+{% block title %}Reports Dashboard - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block page_subtitle %}Comprehensive insights and analytics for your healthcare platform.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .reports-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .overview-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .overview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .overview-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+    }
+
+    .overview-icon.content { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+    .overview-icon.analytics { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+
+    .overview-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .overview-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .reports-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        max-width: 800px;
+        margin: 0 auto 3rem;
+        gap: 2rem;
+    }
+
+    .report-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .section-icon.content { background: #dbeafe; color: #2563eb; }
+
+    .report-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .report-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .report-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .report-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .report-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .report-icon.content { background: #dbeafe; color: #2563eb; }
+    .report-icon.analytics { background: #fef3c7; color: #ca8a04; }
+    .report-icon.export { background: #f3e8ff; color: #7c3aed; }
+
+    .report-details {
+        flex: 1;
+    }
+
+    .report-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .report-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-report {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .btn-report:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+        text-decoration: none;
+        color: #374151;
+    }
+
+    .btn-report.primary {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .btn-report.primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: white;
+    }
+
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .recent-reports {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .recent-reports-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .recent-reports-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .recent-reports-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .recent-report-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .recent-report-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-report-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .recent-report-icon.content { background: #dbeafe; color: #2563eb; }
+    .recent-report-icon.analytics { background: #fef3c7; color: #ca8a04; }
+
+    .recent-report-info {
+        flex: 1;
+    }
+
+    .recent-report-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .recent-report-meta {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .reports-overview {
+            grid-template-columns: 1fr;
+        }
+
+        .reports-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .report-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .report-actions {
+            width: 100%;
+            justify-content: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="quick-stats">
+    <div class="stat-box">
+        <div class="stat-value" id="totalReports">0</div>
+        <div class="stat-label">Total Reports Generated</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value" id="activeUsers">0</div>
+        <div class="stat-label">Active Users This Month</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value" id="contentItems">0</div>
+        <div class="stat-label">Content Items</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-value" id="systemHealth">98%</div>
+        <div class="stat-label">System Health</div>
+    </div>
+</div>
+
+<!-- Reports Overview -->
+<div class="reports-overview">
+    <div class="overview-card">
+        <div class="overview-icon content">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <h3 class="overview-title">Content Reports</h3>
+        <p class="overview-description">
+            Analyze article performance, publication trends, and content engagement metrics.
+        </p>
+    </div>
+
+
+    <div class="overview-card">
+        <div class="overview-icon analytics">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <h3 class="overview-title">Advanced Analytics</h3>
+        <p class="overview-description">
+            Deep insights with custom queries and advanced data visualization.
+        </p>
+    </div>
+</div>
+
+<!-- Report Categories -->
+<div class="reports-grid">
+    <!-- Content Reports -->
+    <div class="report-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <div class="section-icon content">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                Content Reports
+            </h3>
+            <button class="btn btn-primary btn-sm" disabled>
+                Content Reports <i class="bi bi-check-circle"></i>
+            </button>
+        </div>
+
+        <ul class="report-list">
+            <li class="report-item">
+                <div class="report-info">
+                    <div class="report-icon content">
+                        <i class="bi bi-bar-chart"></i>
+                    </div>
+                    <div class="report-details">
+                        <div class="report-name">Publication Trends</div>
+                        <div class="report-description">Articles published over time with growth analysis</div>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="btn-report primary" disabled>
+                        <i class="bi bi-eye"></i>
+                        View
+                    </button>
+                </div>
+            </li>
+
+            <li class="report-item">
+                <div class="report-info">
+                    <div class="report-icon analytics">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <div class="report-details">
+                        <div class="report-name">Category Performance</div>
+                        <div class="report-description">Content distribution and engagement by category</div>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="btn-report primary" disabled>
+                        <i class="bi bi-eye"></i>
+                        View
+                    </button>
+                </div>
+            </li>
+
+            <li class="report-item">
+                <div class="report-info">
+                    <div class="report-icon export">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                    </div>
+                    <div class="report-details">
+                        <div class="report-name">Content Export</div>
+                        <div class="report-description">Export content data in CSV/PDF format</div>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="btn-report" disabled>
+                        <i class="bi bi-download"></i>
+                        Export
+                    </button>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+
+    <!-- Recent Reports -->
+    <div class="recent-reports">
+        <div class="recent-reports-header">
+            <h3 class="recent-reports-title">Recent Reports</h3>
+            <a href="#" class="text-primary" style="font-size: 0.875rem;">View Report History</a>
+        </div>
+
+        <ul class="recent-reports-list">
+            <li class="recent-report-item">
+                <div class="recent-report-icon content">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div class="recent-report-info">
+                    <div class="recent-report-name">Monthly Content Report</div>
+                    <div class="recent-report-meta">Generated 2 hours ago • PDF (2.3 MB)</div>
+                </div>
+            </li>
+
+            <li class="recent-report-item">
+                <div class="recent-report-icon content">
+                    <i class="bi bi-bar-chart"></i>
+                </div>
+                <div class="recent-report-info">
+                    <div class="recent-report-name">Publication Trends Analysis</div>
+                    <div class="recent-report-meta">Generated yesterday • CSV (1.8 MB)</div>
+                </div>
+            </li>
+
+            <li class="recent-report-item">
+                <div class="recent-report-icon analytics">
+                    <i class="bi bi-tags"></i>
+                </div>
+                <div class="recent-report-info">
+                    <div class="recent-report-name">Category Performance Report</div>
+                    <div class="recent-report-meta">Generated 3 days ago • PDF (856 KB)</div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load dashboard statistics
+document.addEventListener('DOMContentLoaded', function() {
+    loadReportStats();
+});
+
+async function loadReportStats() {
+    try {
+        // In a real app, fetch from API
+        // const response = await fetch('/api/reports/stats');
+        // const data = await response.json();
+
+        // Simulate API call
+        const data = await simulateApiCall();
+
+        updateStats(data);
+
+    } catch (error) {
+        console.error('Error loading report stats:', error);
+    }
+}
+
+async function simulateApiCall() {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    return {
+        totalReports: 47,
+        activeUsers: 1250,
+        contentItems: 89,
+        systemHealth: '98%'
+    };
+}
+
+function updateStats(stats) {
+    document.getElementById('totalReports').textContent = stats.totalReports;
+    document.getElementById('activeUsers').textContent = stats.activeUsers.toLocaleString();
+    document.getElementById('contentItems').textContent = stats.contentItems;
+    document.getElementById('systemHealth').textContent = stats.systemHealth;
+}
+
+// Add click tracking for report items
+document.querySelectorAll('.report-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        // If clicked on a link, don't track
+        if (e.target.tagName === 'A') return;
+
+        const link = this.querySelector('.btn-report.primary');
+        if (link) {
+            link.click();
+        }
+    });
+});
+</script>
+{% endblock %}

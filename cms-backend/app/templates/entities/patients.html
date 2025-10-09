@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+
+{% block title %}Patients Management - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Patients Management{% endblock %}
+
+{% block page_subtitle %}Manage patient information and healthcare records.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .entity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .entity-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .entity-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .entity-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .entity-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .entity-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .entity-specialty {
+        color: var(--primary-color);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin: 0.25rem 0;
+    }
+
+    .entity-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+
+    .entity-stats {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .entity-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .entity-actions .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .view-toggle button {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .view-toggle button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Table specific styles */
+    .table td {
+        vertical-align: middle;
+    }
+
+    .patient-name-cell {
+        max-width: 200px;
+    }
+
+    .patient-name-cell .entity-name {
+        margin: 0;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .doctor-cell {
+        max-width: 150px;
+    }
+
+    .status-cell {
+        min-width: 120px;
+    }
+
+    /* Form styles */
+    .entity-form {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .form-section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control.is-invalid {
+        border-color: #ef4444;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .invalid-feedback {
+        display: none;
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-control.is-invalid + .invalid-feedback {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .entity-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .entity-actions {
+            justify-content: center;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .entity-card .entity-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header with Actions -->
+<div class="entity-header">
+    <div>
+        <h1>Patients Management</h1>
+        <p>Manage patient information and healthcare records.</p>
+    </div>
+    <div class="entity-actions">
+        <a href="{{ url_for('entities.patients') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+        </a>
+        <a href="{{ url_for('entities.create_patient_form') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add Patient
+        </a>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <form method="GET" class="filters-form">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label class="form-label">Search</label>
+                <input type="text"
+                       name="q"
+                       class="form-control"
+                       placeholder="Search patients..."
+                       value="{{ request.args.get('q', '') }}">
+            </div>
+
+            {{ filter_dropdown('Doctor', 'doctor', doctors, request.args.get('doctor')) }}
+
+            {{ filter_dropdown('Institution', 'institution', institutions, request.args.get('institution')) }}
+
+            {{ filter_dropdown('Validation Status', 'validation_status', [
+                {'value': 'pending', 'text': 'Pending'},
+                {'value': 'doctor_validated', 'text': 'Doctor Validated'},
+                {'value': 'institution_validated', 'text': 'Institution Validated'},
+                {'value': 'full_access', 'text': 'Full Access'}
+            ], request.args.get('validation_status')) }}
+
+            {{ filter_dropdown('Gender', 'gender', [
+                {'value': 'male', 'text': 'Male'},
+                {'value': 'female', 'text': 'Female'},
+                {'value': 'other', 'text': 'Other'},
+                {'value': 'prefer_not_to_say', 'text': 'Prefer not to say'}
+            ], request.args.get('gender')) }}
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-search me-1"></i>
+                Search
+            </button>
+            <a href="{{ url_for('entities.patients') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i>
+                Clear Filters
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- View Toggle -->
+<div class="view-toggle">
+    <button id="tableView" class="active">
+        <i class="bi bi-table me-1"></i>
+        Table View
+    </button>
+    <button id="cardView">
+        <i class="bi bi-card-text me-1"></i>
+        Card View
+    </button>
+</div>
+
+<!-- Patients Table View -->
+<div id="tableViewContainer">
+    <div class="table-responsive">
+        <table class="table table-hover" id="patientsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Date of Birth</th>
+                    <th>Gender</th>
+                    <th>Doctor</th>
+                    <th>Institution</th>
+                    <th>Validation Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr data-id="{{ patient.id }}">
+                    <td class="patient-name-cell">
+                        <div>
+                            <div class="entity-name">{{ patient.first_name }} {{ patient.last_name }}</div>
+                            <small class="text-muted">{{ patient.email }}</small>
+                        </div>
+                    </td>
+                    <td>{{ patient.email }}</td>
+                    <td>{{ patient.date_of_birth.strftime('%b %d, %Y') if patient.date_of_birth else '-' }}</td>
+                    <td>{{ patient.gender.title() if patient.gender else '-' }}</td>
+                    <td class="doctor-cell">{{ patient.doctor_name or 'Not assigned' }}</td>
+                    <td>{{ patient.institution_name or 'Not assigned' }}</td>
+                    <td class="status-cell">
+                        {% if patient.validation_status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% elif patient.validation_status == 'doctor_validated' %}
+                            <span class="badge bg-info">Doctor Validated</span>
+                        {% elif patient.validation_status == 'institution_validated' %}
+                            <span class="badge bg-primary">Institution Validated</span>
+                        {% else %}
+                            <span class="badge bg-success">Full Access</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="entity-actions">
+                            <a href="{{ url_for('entities.view_patient', patient_id=patient.id) }}" class="btn btn-outline-info btn-sm" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('entities.edit_patient', patient_id=patient.id) }}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('entities.delete_patient', patient_id=patient.id) }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar paciente {{ patient.first_name }} {{ patient.last_name }}?')" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {{ pagination(current_page, total_pages, url_for_page) }}
+
+    {% if not patients %}
+    <div class="empty-state">
+        <i class="bi bi-person"></i>
+        <h3>No patients found</h3>
+        <p>Get started by adding your first patient.</p>
+        <button onclick="showCreateModal()" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add First Patient
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Patients Card View -->
+<div id="cardViewContainer" style="display: none;">
+    {% if patients %}
+    <div class="row">
+        {% for patient in patients %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="entity-card">
+                <div class="entity-header-row">
+                    <div>
+                        <h3 class="entity-name">{{ patient.first_name }} {{ patient.last_name }}</h3>
+                        <p class="entity-specialty">{{ patient.email }}</p>
+                    </div>
+                    {% if patient.validation_status == 'full_access' %}
+                        <span class="badge bg-success">Full Access</span>
+                    {% elif patient.validation_status == 'institution_validated' %}
+                        <span class="badge bg-primary">Institution Validated</span>
+                    {% elif patient.validation_status == 'doctor_validated' %}
+                        <span class="badge bg-info">Doctor Validated</span>
+                    {% else %}
+                        <span class="badge bg-warning">Pending</span>
+                    {% endif %}
+                </div>
+
+                <div class="entity-meta">
+                    <span><i class="bi bi-calendar me-1"></i>{{ patient.date_of_birth.strftime('%b %d, %Y') if patient.date_of_birth else 'No DOB' }}</span>
+                    <span><i class="bi bi-gender-{{ 'male' if patient.gender == 'male' else 'female' if patient.gender == 'female' else 'ambiguous' }} me-1"></i>{{ patient.gender.title() if patient.gender else 'Not specified' }}</span>
+                    <span><i class="bi bi-telephone me-1"></i>{{ patient.phone or 'No phone' }}</span>
+                </div>
+
+                <div class="entity-stats">
+                    <span><i class="bi bi-person-hearts me-1"></i>{{ patient.doctor_name or 'No doctor' }}</span>
+                    <span><i class="bi bi-building me-1"></i>{{ patient.institution_name or 'No institution' }}</span>
+                </div>
+
+                <div class="entity-actions">
+                    <a href="{{ url_for('entities.view_patient', patient_id=patient.id) }}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-eye me-1"></i>
+                        View
+                    </a>
+                    <a href="{{ url_for('entities.edit_patient', patient_id=patient.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>
+                        Edit
+                    </a>
+                    <form action="{{ url_for('entities.delete_patient', patient_id=patient.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar paciente {{ patient.first_name }} {{ patient.last_name }}?')">
+                            <i class="bi bi-trash me-1"></i>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination for cards -->
+    {{ pagination(current_page, total_pages, url_for_page) }}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="bi bi-person"></i>
+        <h3>No patients found</h3>
+        <p>Get started by adding your first patient.</p>
+        <a href="{{ url_for('entities.create_patient_form') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            Add First Patient
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

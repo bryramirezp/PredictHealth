@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Create Doctor - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Create New Doctor{% endblock %}
+
+{% block page_subtitle %}Add a new healthcare provider to the system{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="entity-form">
+      <form action="{{ url_for('entities.create_doctor') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <!-- Sección 1: Información Personal y Profesional -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-person"></i>
+            </div>
+            <h3 class="form-section-title">Personal & Professional Information</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="first_name" class="form-label">First Name *</label>
+              <input type="text" id="first_name" name="first_name" class="form-control" required maxlength="100">
+              <div class="invalid-feedback">First name is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="last_name" class="form-label">Last Name *</label>
+              <input type="text" id="last_name" name="last_name" class="form-control" required maxlength="100">
+              <div class="invalid-feedback">Last name is required.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address *</label>
+              <input type="email" id="email" name="email" class="form-control" required maxlength="255">
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone Number *</label>
+              <input type="tel" id="phone" name="phone" class="form-control" required pattern="^\+?[0-9\s\-\(\)]{10,}$">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="medical_license" class="form-label">Medical License *</label>
+              <input type="text" id="medical_license" name="medical_license" class="form-control" required maxlength="50">
+              <small class="form-text text-muted">Unique medical license number</small>
+              <div class="invalid-feedback">Medical license is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="specialty_id" class="form-label">Primary Specialty</label>
+              <select id="specialty_id" name="specialty_id" class="form-control">
+                <option value="">Select specialty...</option>
+                {% for specialty in specialties %}
+                <option value="{{ specialty.id }}">{{ specialty.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="institution_id" class="form-label">Medical Institution</label>
+              <select id="institution_id" name="institution_id" class="form-control">
+                <option value="">Select institution...</option>
+                {% for institution in institutions %}
+                <option value="{{ institution.id }}">{{ institution.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="professional_status" class="form-label">Professional Status</label>
+              <select id="professional_status" name="professional_status" class="form-control">
+                <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
+                <option value="retired">Retired</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="years_experience" class="form-label">Years of Experience</label>
+              <input type="number" id="years_experience" name="years_experience" class="form-control" min="0" max="80" value="0">
+              <div class="invalid-feedback">Years of experience cannot be negative.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="consultation_fee" class="form-label">Consultation Fee ($)</label>
+              <input type="number" id="consultation_fee" name="consultation_fee" class="form-control" min="0" max="10000" step="0.01">
+              <div class="invalid-feedback">Consultation fee must be between 0 and 10000.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-section">
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('entities.doctors') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Doctor</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

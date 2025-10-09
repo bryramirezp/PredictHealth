@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+
+{% block title %}Microservices Health - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Microservices Health Monitoring{% endblock %}
+
+{% block page_subtitle %}Monitor the health status and logs of all microservices and modules in the system.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .health-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .health-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .health-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .health-card.healthy {
+        border-left: 4px solid #10b981;
+    }
+
+    .health-card.warning {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .health-card.error {
+        border-left: 4px solid #ef4444;
+    }
+
+    .health-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .service-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .service-type {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0.25rem 0;
+        text-transform: capitalize;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.healthy {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .health-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .detail-label {
+        font-weight: 500;
+    }
+
+    .detail-value {
+        font-weight: 600;
+    }
+
+    .health-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 6px;
+    }
+
+    .logs-modal .modal-content {
+        max-width: 900px;
+        width: 90%;
+    }
+
+    .logs-content {
+        background: #1f2937;
+        color: #e5e7eb;
+        padding: 1rem;
+        border-radius: 8px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        max-height: 500px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .logs-timestamp {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .refresh-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .auto-refresh {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .last-updated {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .health-cards-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .health-details {
+            grid-template-columns: 1fr;
+        }
+
+        .refresh-controls {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Refresh Controls -->
+<div class="refresh-controls">
+    <div class="last-updated">
+        Last updated: {{ last_updated or 'Never' }}
+    </div>
+    <form method="POST" action="{{ url_for('monitoring.microservices') }}" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync-alt me-1"></i>
+            Refresh Now
+        </button>
+    </form>
+</div>
+
+<!-- Health Cards Grid -->
+<div class="health-cards-grid">
+    {% if health_data %}
+        {% for service_key, service_data in health_data.items() %}
+            {% set config = service_data.config %}
+            {% set status = service_data.status %}
+            {% set response_time = service_data.response_time %}
+            <div class="health-card {{ status }}">
+                <div class="health-card-header">
+                    <div>
+                        <h3 class="service-name">{{ config.name }}</h3>
+                        <p class="service-type">{{ config.type }} service</p>
+                    </div>
+                    <div class="status-indicator">
+                        <span class="status-badge {{ status }}">
+                            {% if status == 'healthy' %}✓{% elif status == 'warning' %}⚠{% else %}✗{% endif %} {{ status.upper() }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="health-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Host:</span>
+                        <span class="detail-value">{{ config.host }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Port:</span>
+                        <span class="detail-value">{{ config.port }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value">{{ service_data.message }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Response Time:</span>
+                        <span class="detail-value">{{ response_time|round|int if response_time else 'N/A' }}ms</span>
+                    </div>
+                </div>
+
+                <div class="health-actions">
+                    <span class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Health monitoring active
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No microservices data available</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

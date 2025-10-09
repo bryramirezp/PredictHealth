@@ -29,11 +29,11 @@ class JWTService:
 
     def __init__(self):
         # Configuration from environment variables
-        self.SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-default-secure-secret")
-        self.ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+        self.SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+        self.ALGORITHM = os.getenv("JWT_ALGORITHM")
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15))
         self.REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
-        self.redis_url = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+        self.redis_url = os.getenv('REDIS_URL')
 
         # Redis connection pooling for production performance
         self.redis_pool = redis.ConnectionPool.from_url(
@@ -102,29 +102,20 @@ class JWTService:
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt, token_id
 
-    def _register_session(self, token_id: str, payload: Dict[str, Any], expiry_seconds: int, device_info: Dict[str, Any] = None) -> bool:
-        """Registers the token session in Redis with complete device metadata."""
+    def _register_token(self, token_type: str, jwt_token: str, expiry_seconds: int, token_id: str = None) -> bool:
+        """Stores the JWT token in Redis with JWT as part of the key name."""
         redis_client = self._get_redis_client()
         if not redis_client:
-            logger.error("❌ Cannot register session: Redis unavailable.")
+            logger.error("❌ Cannot register token: Redis unavailable.")
             return False
 
         try:
-            key = f"token:{token_id}"
-            session_data = {
-                "user_id": payload.get("user_id"),
-                "user_type": payload.get("user_type"),
-                "email": payload.get("email"),
-                "roles": payload.get("roles", []),
-                "device_info": device_info or {},
-                "login_time": datetime.now(timezone.utc).isoformat(),
-                "token_type": payload.get("type", "unknown")
-            }
-            redis_client.setex(key, expiry_seconds, json.dumps(session_data))
-            logger.info(f"✅ Session registered in Redis for token_id: {token_id} with device metadata")
+            key = f"{token_type}:{jwt_token}"  # "access_token:jwt..." or "refresh_token:jwt..."
+            redis_client.setex(key, expiry_seconds, "valid")  # Just store "valid" as value
+            logger.info(f"✅ {token_type} stored in Redis with JWT in key")
             return True
         except Exception as e:
-            logger.error(f"❌ Error registering session in Redis for {token_id}: {e}")
+            logger.error(f"❌ Error storing {token_type} in Redis: {e}")
             return False
 
     def create_access_token(
@@ -136,8 +127,8 @@ class JWTService:
         metadata: Dict[str, Any] = None,
         device_info: Dict[str, Any] = None
     ) -> Tuple[str, Optional[str]]:
-        """Creates a signed access token and registers its session."""
-        
+        """Creates a signed access token and stores it in Redis."""
+
         data = {
             "user_id": user_id,
             "user_type": user_type,
@@ -146,19 +137,19 @@ class JWTService:
             "metadata": metadata or {},
             "type": "access"
         }
-        
+
         expires_delta = timedelta(minutes=self.ACCESS_TOKEN_EXPIRE_MINUTES)
         token, token_id = self._create_token(data, expires_delta)
-        
-        # Register session in Redis - PROPAGATES 503 if Redis is definitively down
+
+        # Store complete JWT token in Redis - PROPAGATES 503 if Redis is definitively down
         expiry_seconds = int(expires_delta.total_seconds())
-        if not self._register_session(token_id, data, expiry_seconds, device_info):
-            # Propagate a critical error if session registration fails
+        if not self._register_token("access_token", token, expiry_seconds, token_id):
+            # Propagate a critical error if token storage fails
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Authentication backend unavailable (Redis session failure)"
+                detail="Authentication backend unavailable (Redis token storage failure)"
             )
-            
+
         return token, token_id
 
     def create_refresh_token(
@@ -168,7 +159,7 @@ class JWTService:
         email: str,
         device_info: Dict[str, Any] = None
     ) -> Tuple[str, str]:
-        """Creates a signed refresh token and stores it in Redis."""
+        """Creates a signed refresh token and stores the complete JWT in Redis."""
         data = {
             "user_id": user_id,
             "user_type": user_type,
@@ -178,39 +169,16 @@ class JWTService:
         expires_delta = timedelta(days=self.REFRESH_TOKEN_EXPIRE_DAYS)
         token, token_id = self._create_token(data, expires_delta)
 
-        # Store refresh token in Redis
-        redis_client = self._get_redis_client()
-        if redis_client:
-            try:
-                # Hash the token for secure storage key
-                token_hash = self._hash_token(token)
-                key = f"refresh_token:{token_hash}"
-
-                # Store comprehensive token data
-                token_data = {
-                    "user_id": user_id,
-                    "user_type": user_type,
-                    "email": email,
-                    "token_id": token_id,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "device_info": device_info or {},
-                    "token_type": "refresh"
-                }
-
-                expiry_seconds = int(expires_delta.total_seconds())
-                redis_client.setex(key, expiry_seconds, json.dumps(token_data))
-
-                logger.info(f"✅ Refresh token stored in Redis for user: {email}")
-            except Exception as e:
-                logger.error(f"❌ Error storing refresh token in Redis: {e}")
-                # Don't fail token creation if Redis storage fails - token still valid
-        else:
+        # Store complete JWT token in Redis (same as access tokens)
+        expiry_seconds = int(expires_delta.total_seconds())
+        if not self._register_token("refresh_token", token, expiry_seconds, token_id):
             logger.warning("⚠️ Redis unavailable - refresh token created but not persisted")
+            # Don't fail token creation if Redis storage fails - token still valid
 
         return token, token_id
 
     def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """Verifies the JWT signature, expiration, and Redis session (for access tokens)."""
+        """Verifies the JWT signature, expiration, and checks Redis for the stored token."""
         try:
             payload = jwt.decode(
                 token,
@@ -221,14 +189,17 @@ class JWTService:
             token_type = payload.get("type")
             token_id = payload.get("token_id")
 
-            if token_type == "access" and token_id:
+            if token_type == "access":
                 redis_client = self._get_redis_client()
                 if redis_client:
-                    key = f"token:{token_id}"
-                    if not redis_client.exists(key):
-                        logger.warning(f"⚠️ Access token {token_id} revoked or expired in Redis.")
+                    stored_token = redis_client.get("access_token")
+                    if not stored_token:
+                        logger.warning("⚠️ Access token not found in Redis (revoked or expired).")
                         return None
-                    logger.info(f"✅ Access token session confirmed active in Redis: {token_id}")
+                    if stored_token != token:
+                        logger.warning("⚠️ Access token mismatch in Redis.")
+                        return None
+                    logger.info("✅ Access token verified against Redis")
                 else:
                     logger.warning("⚠️ Redis unavailable for access token verification - allowing token")
                     # In fallback mode, allow tokens but log the issue
@@ -297,20 +268,16 @@ class JWTService:
                 if hasattr(self.redis_pool, 'connection_kwargs'):
                     stats["redis_pool_size"] = self.redis_pool.connection_kwargs.get('max_connections', 0)
 
-                # Count active tokens (access tokens)
+                # Count tokens by pattern matching
                 try:
-                    token_keys = redis_client.keys("token:*")
-                    stats["active_tokens"] = len(token_keys) if token_keys else 0
-                except Exception as e:
-                    logger.warning(f"Could not count active tokens: {e}")
-                    stats["active_tokens"] = -1
-
-                # Count refresh tokens
-                try:
+                    access_keys = redis_client.keys("access_token:*")
                     refresh_keys = redis_client.keys("refresh_token:*")
+
+                    stats["active_tokens"] = len(access_keys) if access_keys else 0
                     stats["refresh_tokens"] = len(refresh_keys) if refresh_keys else 0
                 except Exception as e:
-                    logger.warning(f"Could not count refresh tokens: {e}")
+                    logger.warning(f"Could not count tokens: {e}")
+                    stats["active_tokens"] = -1
                     stats["refresh_tokens"] = -1
 
         except Exception as e:
@@ -341,29 +308,20 @@ class JWTService:
                 logger.warning("⚠️ Token is not a refresh token")
                 return None
 
-            # Hash the token for Redis lookup
-            token_hash = self._hash_token(refresh_token)
             redis_client = self._get_redis_client()
-
             if not redis_client:
                 logger.warning("⚠️ Redis unavailable for refresh token verification")
                 return None
 
-            key = f"refresh_token:{token_hash}"
-            token_data_json = redis_client.get(key)
+            # Look up the stored refresh token using JWT in key name
+            key = f"refresh_token:{refresh_token}"
+            exists = redis_client.exists(key)
 
-            if not token_data_json:
-                logger.warning("⚠️ Refresh token not found in Redis")
+            if not exists:
+                logger.warning(f"⚠️ Refresh token not found in Redis: {key[:50]}...")
                 return None
 
-            token_data = json.loads(token_data_json)
-
-            # Verify token data matches payload
-            if (token_data.get("user_id") != payload.get("user_id") or
-                token_data.get("user_type") != payload.get("user_type") or
-                token_data.get("email") != payload.get("email")):
-                logger.warning("⚠️ Refresh token data mismatch")
-                return None
+            # Token exists, so it's valid
 
             logger.info(f"✅ Refresh token verified from Redis for user: {payload.get('email')}")
             return payload
@@ -373,9 +331,6 @@ class JWTService:
             return None
         except jwt.InvalidTokenError as e:
             logger.error(f"❌ Invalid refresh token: {e}")
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ Error parsing refresh token data from Redis: {e}")
             return None
         except Exception as e:
             logger.error(f"❌ Error verifying refresh token from Redis: {e}")
@@ -420,13 +375,13 @@ class JWTService:
             )
 
     def revoke_token(self, token: str) -> bool:
-        """Revokes a token by deleting its session from Redis."""
+        """Revokes a token by deleting its key from Redis (JWT is part of key name)."""
+        # First verify the token is valid
         payload = self.verify_token(token)
 
         if not payload:
             return False
 
-        token_id = payload.get("token_id")
         token_type = payload.get("type")
         success = False
 
@@ -436,28 +391,41 @@ class JWTService:
             return False
 
         try:
-            # Revoke access token from Redis
-            if token_type == "access" and token_id:
-                key = f"token:{token_id}"
-                deleted_count = redis_client.delete(key)
-                if deleted_count > 0:
-                    success = True
-                    logger.info(f"✅ Access token revoked from Redis: {token_id}")
-
-            # Revoke refresh token from Redis
-            elif token_type == "refresh":
-                token_hash = self._hash_token(token)
-                key = f"refresh_token:{token_hash}"
-                deleted_count = redis_client.delete(key)
-                if deleted_count > 0:
-                    success = True
-                    logger.info(f"✅ Refresh token revoked from Redis: {token_hash}")
+            # Revoke token from Redis using JWT in key name
+            key = f"{token_type}_token:{token}"
+            deleted_count = redis_client.delete(key)
+            if deleted_count > 0:
+                success = True
+                logger.info(f"✅ {token_type.capitalize()} token revoked from Redis: {key[:50]}...")
 
         except Exception as e:
             logger.error(f"❌ Error revoking token from Redis: {e}")
             return False
 
         return success
+
+    def revoke_token_by_id(self, token_id: str, token_type: str) -> bool:
+        """Revokes a token by token_id and type (used for logout with token_ids)."""
+        redis_client = self._get_redis_client()
+        if not redis_client:
+            logger.warning("⚠️ Redis unavailable for token revocation")
+            return False
+
+        try:
+            # Construct the key and delete the token
+            key = f"{token_type}_token:{token_id}"
+            deleted_count = redis_client.delete(key)
+            if deleted_count > 0:
+                logger.info(f"✅ {token_type.capitalize()} token revoked from Redis by ID: {key}")
+                return True
+            else:
+                logger.warning(f"⚠️ {token_type.capitalize()} token not found for revocation: {key}")
+                return False
+
+        except Exception as e:
+            logger.error(f"❌ Error revoking token by ID from Redis: {e}")
+            return False
+
 
     def revoke_user_tokens(self, user_id: str, device_fingerprint: str = None) -> int:
         """
@@ -478,31 +446,32 @@ class JWTService:
             return 0
 
         try:
-            # This is a simplified approach - in production you'd maintain user token indexes
-            # For now, we'll revoke based on pattern matching which is less efficient
+            # Find and delete token keys that belong to the user
             revoked_count = 0
 
-            # Get all token keys (this is inefficient for large datasets)
-            # In production, maintain separate user token indexes
-            token_keys = redis_client.keys("token:*")
-            refresh_keys = redis_client.keys("refresh_token:*")
+            # Get all token keys (access_token:* and refresh_token:*)
+            token_keys = redis_client.keys("access_token:*") + redis_client.keys("refresh_token:*")
 
-            for key in token_keys + refresh_keys:
+            for key in token_keys:
                 try:
-                    token_data_json = redis_client.get(key)
-                    if token_data_json:
-                        token_data = json.loads(token_data_json)
-                        if token_data.get("user_id") == user_id:
-                            if device_fingerprint:
-                                device_info = token_data.get("device_info", {})
-                                if device_info.get("fingerprint") != device_fingerprint:
-                                    continue
-                            redis_client.delete(key)
-                            revoked_count += 1
-                except Exception as e:
-                    logger.warning(f"⚠️ Error processing token key {key}: {e}")
+                    # Extract JWT from key name (format: "access_token:jwt_token")
+                    jwt_token = key.split(":", 1)[1]  # Get everything after the first ":"
 
-            logger.info(f"✅ Revoked {revoked_count} tokens for user {user_id}, device: {device_fingerprint}")
+                    # Decode to check if it belongs to the user
+                    payload = jwt.decode(jwt_token, options={"verify_signature": False})
+                    if payload.get("user_id") == user_id:
+                        if device_fingerprint:
+                            # For now, device fingerprint check is not implemented
+                            # since we don't store device info in the simple token format
+                            pass
+                        redis_client.delete(key)
+                        revoked_count += 1
+                        logger.info(f"✅ Token revoked: {key[:50]}...")
+                except:
+                    # Skip invalid tokens
+                    pass
+
+            logger.info(f"✅ Revoked {revoked_count} tokens for user {user_id}")
             return revoked_count
 
         except Exception as e:

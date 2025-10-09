@@ -1,0 +1,1022 @@
+{% extends "base.html" %}
+
+{% block title %}System Configuration - PredictHealth CMS{% endblock %}
+
+{% block page_title %}System Configuration{% endblock %}
+
+{% block page_subtitle %}Advanced system settings and performance configuration.{% endblock %}
+
+{% block extra_head %}
+<style>
+    .system-config-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .config-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .section-icon.database { background: #dbeafe; color: #2563eb; }
+    .section-icon.performance { background: #dcfce7; color: #16a34a; }
+    .section-icon.security { background: #fef3c7; color: #ca8a04; }
+    .section-icon.api { background: #f3e8ff; color: #7c3aed; }
+    .section-icon.logging { background: #fee2e2; color: #dc2626; }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .section-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .config-item {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .config-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+    .config-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .config-info {
+        flex: 1;
+    }
+
+    .config-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .config-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .config-control {
+        flex-shrink: 0;
+        margin-left: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .input-group .form-control {
+        flex: 1;
+    }
+
+    .input-group-addon {
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        background: #f3f4f6;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: var(--primary-color);
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-healthy { background: #dcfce7; color: #166534; }
+    .status-warning { background: #fef3c7; color: #92400e; }
+    .status-error { background: #fee2e2; color: #dc2626; }
+
+    .metrics-display {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .metric-item {
+        text-align: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 2rem;
+    }
+
+    .test-connection-btn {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: white;
+    }
+
+    .test-connection-btn:hover {
+        background: #4b5563;
+        border-color: #4b5563;
+    }
+
+    .restart-service-btn {
+        background: #d97706;
+        border-color: #d97706;
+        color: white;
+    }
+
+    .restart-service-btn:hover {
+        background: #b45309;
+        border-color: #b45309;
+    }
+
+    .code-block {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 0.875rem;
+        color: #374151;
+        overflow-x: auto;
+    }
+
+    .env-var-list {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .env-var-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .env-var-item:last-child {
+        border-bottom: none;
+    }
+
+    .env-var-name {
+        font-weight: 600;
+        color: #1f2937;
+        font-family: monospace;
+    }
+
+    .env-var-value {
+        color: #6b7280;
+        font-family: monospace;
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .system-config-container {
+            padding: 0 1rem;
+        }
+
+        .config-section {
+            padding: 1.5rem;
+        }
+
+        .config-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .config-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .config-control {
+            margin-left: 0;
+            align-self: flex-end;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+        }
+
+        .input-group {
+            flex-direction: column;
+        }
+
+        .metrics-display {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="system-config-container">
+    <!-- Database Configuration -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon database">
+                <i class="bi bi-database"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Database Configuration</h3>
+                <p class="section-description">Configure database connection and performance settings</p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Connection Status</div>
+                        <div class="config-description">Current database connection health</div>
+                    </div>
+                    <div class="config-control">
+                        <span class="status-indicator status-healthy">
+                            <i class="bi bi-circle-fill"></i>
+                            Healthy
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Connection Pool Size</div>
+                        <div class="config-description">Maximum number of database connections</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="poolSize" value="20" min="1" max="100" style="width: 80px;">
+                            <span class="input-group-addon">connections</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Query Timeout</div>
+                        <div class="config-description">Maximum time for database queries</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="queryTimeout" value="30" min="1" max="300" style="width: 80px;">
+                            <span class="input-group-addon">seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Enable Query Logging</div>
+                        <div class="config-description">Log all database queries for debugging</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="queryLogging">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-display">
+            <div class="metric-item">
+                <div class="metric-value" id="activeConnections">12</div>
+                <div class="metric-label">Active Connections</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value" id="totalQueries">45.2K</div>
+                <div class="metric-label">Queries Today</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value" id="avgQueryTime">23ms</div>
+                <div class="metric-label">Avg Query Time</div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value" id="cacheHitRate">94%</div>
+                <div class="metric-label">Cache Hit Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Configuration -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon performance">
+                <i class="bi bi-speedometer2"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Performance Settings</h3>
+                <p class="section-description">Optimize application performance and resource usage</p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Cache Enabled</div>
+                        <div class="config-description">Enable caching for improved performance</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cacheEnabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Cache TTL</div>
+                        <div class="config-description">Default cache expiration time</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="cacheTTL" value="3600" min="60" max="86400" style="width: 100px;">
+                            <span class="input-group-addon">seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Max File Upload Size</div>
+                        <div class="config-description">Maximum size for file uploads</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="maxUploadSize" value="10" min="1" max="100" style="width: 80px;">
+                            <span class="input-group-addon">MB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Enable Compression</div>
+                        <div class="config-description">Compress responses to reduce bandwidth</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="compressionEnabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Configuration -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon security">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Security Settings</h3>
+                <p class="section-description">Configure security policies and encryption</p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Force HTTPS</div>
+                        <div class="config-description">Redirect all HTTP requests to HTTPS</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="forceHttps" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">CSRF Protection</div>
+                        <div class="config-description">Enable Cross-Site Request Forgery protection</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="csrfProtection" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Rate Limiting</div>
+                        <div class="config-description">Limit API requests per minute</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="rateLimit" value="100" min="10" max="1000" style="width: 80px;">
+                            <span class="input-group-addon">req/min</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Session Security</div>
+                        <div class="config-description">Use secure session cookies</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="secureSessions" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Configuration -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon api">
+                <i class="bi bi-gear"></i>
+            </div>
+            <div>
+                <h3 class="section-title">API Configuration</h3>
+                <p class="section-description">Configure API endpoints and external integrations</p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">API Rate Limiting</div>
+                        <div class="config-description">Enable rate limiting for API endpoints</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="apiRateLimiting" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">API Documentation</div>
+                        <div class="config-description">Enable Swagger/OpenAPI documentation</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="apiDocs" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Webhook Support</div>
+                        <div class="config-description">Enable webhook notifications for events</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="webhooksEnabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">API Versioning</div>
+                        <div class="config-description">Enable API versioning in URLs</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="apiVersioning" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logging Configuration -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon logging">
+                <i class="bi bi-journal-text"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Logging Configuration</h3>
+                <p class="section-description">Configure logging levels and destinations</p>
+            </div>
+        </div>
+
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Log Level</div>
+                        <div class="config-description">Minimum severity level for logging</div>
+                    </div>
+                    <div class="config-control">
+                        <select class="form-control" id="logLevel" style="width: 120px;">
+                            <option value="DEBUG">Debug</option>
+                            <option value="INFO" selected>Info</option>
+                            <option value="WARNING">Warning</option>
+                            <option value="ERROR">Error</option>
+                            <option value="CRITICAL">Critical</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Log Retention</div>
+                        <div class="config-description">Days to keep log files</div>
+                    </div>
+                    <div class="config-control">
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="logRetention" value="30" min="1" max="365" style="width: 80px;">
+                            <span class="input-group-addon">days</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Error Notifications</div>
+                        <div class="config-description">Send alerts for critical errors</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="errorNotifications" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-info">
+                        <div class="config-name">Structured Logging</div>
+                        <div class="config-description">Use JSON format for logs</div>
+                    </div>
+                    <div class="config-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="structuredLogging" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Variables Display -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon database">
+                <i class="bi bi-code-slash"></i>
+            </div>
+            <div>
+                <h3 class="section-title">Environment Variables</h3>
+                <p class="section-description">Current environment configuration (read-only)</p>
+            </div>
+        </div>
+
+        <div class="env-var-list" id="envVarsList">
+            <!-- Environment variables will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button type="button" class="btn btn-outline-secondary test-connection-btn" onclick="testDatabaseConnection()">
+            <i class="bi bi-wifi me-1"></i>
+            Test Connection
+        </button>
+        <button type="button" class="btn btn-outline-warning restart-service-btn" onclick="restartService()">
+            <i class="bi bi-arrow-repeat me-1"></i>
+            Restart Service
+        </button>
+        <div>
+            <button type="button" class="btn btn-outline-primary me-2" onclick="exportConfig()">
+                <i class="bi bi-download me-1"></i>
+                Export Config
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveSystemConfig()">
+                <i class="bi bi-check-circle me-1"></i>
+                Save Configuration
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadSystemConfig();
+    loadEnvironmentVars();
+});
+
+async function loadSystemConfig() {
+    try {
+        const config = await simulateLoadSystemConfig();
+
+        // Populate form fields
+        document.getElementById('poolSize').value = config.poolSize;
+        document.getElementById('queryTimeout').value = config.queryTimeout;
+        document.getElementById('queryLogging').checked = config.queryLogging;
+
+        document.getElementById('cacheEnabled').checked = config.cacheEnabled;
+        document.getElementById('cacheTTL').value = config.cacheTTL;
+        document.getElementById('maxUploadSize').value = config.maxUploadSize;
+        document.getElementById('compressionEnabled').checked = config.compressionEnabled;
+
+        document.getElementById('forceHttps').checked = config.forceHttps;
+        document.getElementById('csrfProtection').checked = config.csrfProtection;
+        document.getElementById('rateLimit').value = config.rateLimit;
+        document.getElementById('secureSessions').checked = config.secureSessions;
+
+        document.getElementById('apiRateLimiting').checked = config.apiRateLimiting;
+        document.getElementById('apiDocs').checked = config.apiDocs;
+        document.getElementById('webhooksEnabled').checked = config.webhooksEnabled;
+        document.getElementById('apiVersioning').checked = config.apiVersioning;
+
+        document.getElementById('logLevel').value = config.logLevel;
+        document.getElementById('logRetention').value = config.logRetention;
+        document.getElementById('errorNotifications').checked = config.errorNotifications;
+        document.getElementById('structuredLogging').checked = config.structuredLogging;
+
+        updateMetrics();
+
+    } catch (error) {
+        console.error('Error loading system config:', error);
+    }
+}
+
+async function simulateLoadSystemConfig() {
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    return {
+        poolSize: 20,
+        queryTimeout: 30,
+        queryLogging: false,
+        cacheEnabled: true,
+        cacheTTL: 3600,
+        maxUploadSize: 10,
+        compressionEnabled: true,
+        forceHttps: true,
+        csrfProtection: true,
+        rateLimit: 100,
+        secureSessions: true,
+        apiRateLimiting: true,
+        apiDocs: true,
+        webhooksEnabled: false,
+        apiVersioning: true,
+        logLevel: 'INFO',
+        logRetention: 30,
+        errorNotifications: true,
+        structuredLogging: true
+    };
+}
+
+function updateMetrics() {
+    // Simulate real-time metrics
+    document.getElementById('activeConnections').textContent = Math.floor(Math.random() * 15) + 5;
+    document.getElementById('totalQueries').textContent = (Math.random() * 10 + 35).toFixed(1) + 'K';
+    document.getElementById('avgQueryTime').textContent = Math.floor(Math.random() * 20 + 15) + 'ms';
+    document.getElementById('cacheHitRate').textContent = Math.floor(Math.random() * 10 + 85) + '%';
+}
+
+async function loadEnvironmentVars() {
+    try {
+        const envVars = await simulateLoadEnvVars();
+
+        const envList = document.getElementById('envVarsList');
+        envList.innerHTML = envVars.map(env => `
+            <div class="env-var-item">
+                <span class="env-var-name">${env.name}</span>
+                <span class="env-var-value">${env.value}</span>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error loading environment variables:', error);
+    }
+}
+
+async function simulateLoadEnvVars() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    return [
+        { name: 'FLASK_ENV', value: 'development' },
+        { name: 'DATABASE_URL', value: 'postgresql://...' },
+        { name: 'REDIS_URL', value: 'redis://redis:6379/0' },
+        { name: 'JWT_SECRET_KEY', value: '••••••••••••••••' },
+        { name: 'SECRET_KEY', value: '••••••••••••••••' },
+        { name: 'LOG_LEVEL', value: 'INFO' },
+        { name: 'CORS_ORIGINS', value: 'http://localhost:5000,http://localhost:5001' }
+    ];
+}
+
+async function saveSystemConfig() {
+    const config = {
+        poolSize: document.getElementById('poolSize').value,
+        queryTimeout: document.getElementById('queryTimeout').value,
+        queryLogging: document.getElementById('queryLogging').checked,
+        cacheEnabled: document.getElementById('cacheEnabled').checked,
+        cacheTTL: document.getElementById('cacheTTL').value,
+        maxUploadSize: document.getElementById('maxUploadSize').value,
+        compressionEnabled: document.getElementById('compressionEnabled').checked,
+        forceHttps: document.getElementById('forceHttps').checked,
+        csrfProtection: document.getElementById('csrfProtection').checked,
+        rateLimit: document.getElementById('rateLimit').value,
+        secureSessions: document.getElementById('secureSessions').checked,
+        apiRateLimiting: document.getElementById('apiRateLimiting').checked,
+        apiDocs: document.getElementById('apiDocs').checked,
+        webhooksEnabled: document.getElementById('webhooksEnabled').checked,
+        apiVersioning: document.getElementById('apiVersioning').checked,
+        logLevel: document.getElementById('logLevel').value,
+        logRetention: document.getElementById('logRetention').value,
+        errorNotifications: document.getElementById('errorNotifications').checked,
+        structuredLogging: document.getElementById('structuredLogging').checked
+    };
+
+    try {
+        await simulateSaveSystemConfig(config);
+        showAlert('System configuration saved successfully!', 'success');
+
+    } catch (error) {
+        console.error('Error saving system config:', error);
+        showAlert('Error saving configuration. Please try again.', 'error');
+    }
+}
+
+async function simulateSaveSystemConfig(config) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('System config saved:', config);
+}
+
+async function testDatabaseConnection() {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        showAlert('Database connection test successful!', 'success');
+
+    } catch (error) {
+        showAlert('Database connection test failed.', 'error');
+    }
+}
+
+async function restartService() {
+    if (confirm('Are you sure you want to restart the CMS service? This may cause temporary downtime.')) {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            showAlert('Service restart initiated. Please wait...', 'info');
+
+            setTimeout(() => {
+                showAlert('Service restarted successfully!', 'success');
+            }, 3000);
+
+        } catch (error) {
+            showAlert('Service restart failed.', 'error');
+        }
+    }
+}
+
+async function exportConfig() {
+    try {
+        const config = await simulateLoadSystemConfig();
+        const dataStr = JSON.stringify(config, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = 'cms-config.json';
+        link.click();
+
+        showAlert('Configuration exported successfully!', 'success');
+
+    } catch (error) {
+        showAlert('Error exporting configuration.', 'error');
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type}`;
+    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info'}-fill me-2"></i>
+        ${message}
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// Update metrics every 30 seconds
+setInterval(updateMetrics, 30000);
+</script>
+{% endblock %}

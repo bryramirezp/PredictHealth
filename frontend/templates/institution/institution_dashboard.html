@@ -608,19 +608,24 @@
 
         // Función para manejar logout
         async function handleLogout() {
-            try {
-                const result = await authManager.logout();
-                if (result.success) {
-                    window.location.href = '/institution_login.html';
-                } else {
-                    console.error('Error en logout:', result.error);
-                    // Forzar logout local si falla el del servidor
-                    window.location.href = '/institution_login.html';
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                try {
+                    const response = await fetch('/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        // Logout exitoso, redirigir al login
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Error en logout:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error de conexión en logout:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
                 }
-            } catch (error) {
-                console.error('Error en logout:', error);
-                // Forzar logout local si hay error
-                window.location.href = '/institution_login.html';
             }
         }
     </script>

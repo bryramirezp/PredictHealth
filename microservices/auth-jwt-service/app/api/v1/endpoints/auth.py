@@ -139,7 +139,7 @@ async def logout(
     Logout user by revoking tokens
 
     Args:
-        request: Logout request with access and refresh tokens
+        request: Logout request with access and refresh token_ids
 
     Returns:
         LogoutResponse: Logout result
@@ -149,13 +149,15 @@ async def logout(
 
         success_count = 0
 
-        # Revoke tokens if provided
+        # Revoke tokens - now request contains full JWT tokens
         if request.access_token:
+            # request.access_token is the full JWT token
             access_revoked = jwt_service.revoke_token(request.access_token)
             if access_revoked:
                 success_count += 1
 
         if request.refresh_token:
+            # request.refresh_token is the full JWT token
             refresh_revoked = jwt_service.revoke_token(request.refresh_token)
             if refresh_revoked:
                 success_count += 1

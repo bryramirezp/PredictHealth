@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Login - {{ cms_title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .header {
+        display: none;
+    }
+
+    .login-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .login-logo {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        border-radius: 12px;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .login-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .login-subtitle {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control.is-invalid {
+        border-color: #ef4444;
+    }
+
+    .invalid-feedback {
+        display: none;
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-control.is-invalid + .invalid-feedback {
+        display: block;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-check-input {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .form-check-label {
+        font-size: 0.875rem;
+        color: #374151;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .btn-login {
+        width: 100%;
+        background: var(--primary-color);
+        border: none;
+        color: white;
+        padding: 0.875rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-login:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-login:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .login-footer p {
+        color: #64748b;
+        margin: 0 0 1rem 0;
+        font-size: 0.875rem;
+    }
+
+    .login-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-danger {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .alert-info {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    /* Loading spinner */
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 50%;
+        border-top-color: var(--primary-color);
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .login-container {
+            margin: 1rem;
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-header">
+        <div class="login-logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PredictHealth CMS" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.innerHTML='PH'">
+        </div>
+        <h1 class="login-title">Welcome Back</h1>
+        <p class="login-subtitle">Sign in to your CMS account</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" id="loginForm" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email"
+                    id="email"
+                    name="email"
+                    class="form-control"
+                    placeholder="Enter your email"
+                    value="{{ request.form.email if request.form.email else '' }}"
+                    required
+                    autofocus>
+            <div class="invalid-feedback">
+                Please enter a valid email address.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   class="form-control"
+                   placeholder="Enter your password"
+                   required>
+            <div class="invalid-feedback">
+                Password is required.
+            </div>
+        </div>
+
+        <div class="form-check">
+            <input type="checkbox" id="remember" name="remember" class="form-check-input">
+            <label for="remember" class="form-check-label">Remember me</label>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+            <span id="btnText">Sign In</span>
+        </button>
+    </form>
+
+    <div class="login-footer">
+        <p><strong>Test Credentials:</strong></p>
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+            <p style="margin: 0 0 0.5rem 0; font-weight: 600; color: #1f2937;">Administrator Role:</p>
+            <p style="margin: 0 0 0.25rem 0;"><strong>Email:</strong> admin.cms@predicthealth.com</p>
+            <p style="margin: 0 0 1rem 0;"><strong>Password:</strong> Admin123!</p>
+
+            <p style="margin: 0 0 0.5rem 0; font-weight: 600; color: #1f2937;">Editor Role:</p>
+            <p style="margin: 0 0 0.25rem 0;"><strong>Email:</strong> editor.cms@predicthealth.com</p>
+            <p style="margin: 0;"><strong>Password:</strong> Editor123!</p>
+        </div>
+        <p style="font-size: 0.75rem; color: #6b7280; margin: 0;">Use these credentials to test different permission levels.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const form = this;
+    const submitBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+
+    // Prevent double submission
+    if (submitBtn.disabled) {
+        e.preventDefault();
+        return;
+    }
+
+    // Basic client-side validation
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    let isValid = true;
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        document.getElementById('email').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        document.getElementById('email').classList.remove('is-invalid');
+    }
+
+    // Password validation
+    if (!password) {
+        document.getElementById('password').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        document.getElementById('password').classList.remove('is-invalid');
+    }
+
+    if (!isValid) {
+        e.preventDefault();
+        return;
+    }
+
+    // Show loading state
+    submitBtn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span>Signing in...';
+});
+
+// Clear validation on input
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+
+// Handle Enter key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') {
+        document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Institution - PredictHealth CMS{% endblock %}
+
+{% block page_title %}Edit Institution{% endblock %}
+
+{% block page_subtitle %}Update information for {{ institution.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="entity-form">
+      <form action="{{ url_for('entities.edit_institution', institution_id=institution.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <!-- Sección 1: Información Básica -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <h3 class="form-section-title">Basic Information</h3>
+          </div>
+
+          <div class="form-group">
+            <label for="name" class="form-label">Institution Name *</label>
+            <input type="text" id="name" name="name" class="form-control" required maxlength="200" value="{{ institution.name }}">
+            <div class="invalid-feedback">Institution name is required.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="institution_type" class="form-label">Institution Type *</label>
+              <select id="institution_type" name="institution_type" class="form-control" required>
+                <option value="">Select type...</option>
+                <option value="preventive_clinic" {{ 'selected' if institution.institution_type == 'preventive_clinic' else '' }}>Preventive Clinic</option>
+                <option value="insurer" {{ 'selected' if institution.institution_type == 'insurer' else '' }}>Insurer</option>
+                <option value="public_health" {{ 'selected' if institution.institution_type == 'public_health' else '' }}>Public Health</option>
+                <option value="hospital" {{ 'selected' if institution.institution_type == 'hospital' else '' }}>Hospital</option>
+                <option value="health_center" {{ 'selected' if institution.institution_type == 'health_center' else '' }}>Health Center</option>
+              </select>
+              <div class="invalid-feedback">Institution type is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="contact_email" class="form-label">Contact Email *</label>
+              <input type="email" id="contact_email" name="contact_email" class="form-control" required maxlength="255" value="{{ institution.contact_email }}">
+              <div class="invalid-feedback">Please enter a valid email address.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="license_number" class="form-label">License Number *</label>
+              <input type="text" id="license_number" name="license_number" class="form-control" required maxlength="100" value="{{ institution.license_number }}">
+              <small class="form-text text-muted">Unique license number for the institution</small>
+              <div class="invalid-feedback">License number is required.</div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone Number</label>
+              <input type="tel" id="phone" name="phone" class="form-control" pattern="^\+?[0-9\s\-\(\)]{10,}$" value="{{ institution.phone or '' }}">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Ubicación -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-geo-alt"></i>
+            </div>
+            <h3 class="form-section-title">Location</h3>
+          </div>
+
+          <div class="form-group">
+            <label for="address" class="form-label">Address</label>
+            <input type="text" id="address" name="address" class="form-control" maxlength="255" value="{{ institution.address or '' }}">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="region_state" class="form-label">State/Region</label>
+              <select id="region_state" name="region_state" class="form-control">
+                <option value="">Select state...</option>
+                <option value="Aguascalientes" {{ 'selected' if institution.region_state == 'Aguascalientes' else '' }}>Aguascalientes</option>
+                <option value="Baja California" {{ 'selected' if institution.region_state == 'Baja California' else '' }}>Baja California</option>
+                <option value="Baja California Sur" {{ 'selected' if institution.region_state == 'Baja California Sur' else '' }}>Baja California Sur</option>
+                <option value="Campeche" {{ 'selected' if institution.region_state == 'Campeche' else '' }}>Campeche</option>
+                <option value="Chiapas" {{ 'selected' if institution.region_state == 'Chiapas' else '' }}>Chiapas</option>
+                <option value="Chihuahua" {{ 'selected' if institution.region_state == 'Chihuahua' else '' }}>Chihuahua</option>
+                <option value="Ciudad de México" {{ 'selected' if institution.region_state == 'Ciudad de México' else '' }}>Ciudad de México</option>
+                <option value="Coahuila (de Zaragoza)" {{ 'selected' if institution.region_state == 'Coahuila (de Zaragoza)' else '' }}>Coahuila (de Zaragoza)</option>
+                <option value="Colima" {{ 'selected' if institution.region_state == 'Colima' else '' }}>Colima</option>
+                <option value="Durango" {{ 'selected' if institution.region_state == 'Durango' else '' }}>Durango</option>
+                <option value="Estado de México" {{ 'selected' if institution.region_state == 'Estado de México' else '' }}>Estado de México</option>
+                <option value="Guanajuato" {{ 'selected' if institution.region_state == 'Guanajuato' else '' }}>Guanajuato</option>
+                <option value="Guerrero" {{ 'selected' if institution.region_state == 'Guerrero' else '' }}>Guerrero</option>
+                <option value="Hidalgo" {{ 'selected' if institution.region_state == 'Hidalgo' else '' }}>Hidalgo</option>
+                <option value="Jalisco" {{ 'selected' if institution.region_state == 'Jalisco' else '' }}>Jalisco</option>
+                <option value="Michoacán" {{ 'selected' if institution.region_state == 'Michoacán' else '' }}>Michoacán</option>
+                <option value="Morelos" {{ 'selected' if institution.region_state == 'Morelos' else '' }}>Morelos</option>
+                <option value="Nayarit" {{ 'selected' if institution.region_state == 'Nayarit' else '' }}>Nayarit</option>
+                <option value="Nuevo León" {{ 'selected' if institution.region_state == 'Nuevo León' else '' }}>Nuevo León</option>
+                <option value="Oaxaca" {{ 'selected' if institution.region_state == 'Oaxaca' else '' }}>Oaxaca</option>
+                <option value="Puebla" {{ 'selected' if institution.region_state == 'Puebla' else '' }}>Puebla</option>
+                <option value="Querétaro" {{ 'selected' if institution.region_state == 'Querétaro' else '' }}>Querétaro</option>
+                <option value="Quintana Roo" {{ 'selected' if institution.region_state == 'Quintana Roo' else '' }}>Quintana Roo</option>
+                <option value="San Luis Potosí" {{ 'selected' if institution.region_state == 'San Luis Potosí' else '' }}>San Luis Potosí</option>
+                <option value="Sinaloa" {{ 'selected' if institution.region_state == 'Sinaloa' else '' }}>Sinaloa</option>
+                <option value="Sonora" {{ 'selected' if institution.region_state == 'Sonora' else '' }}>Sonora</option>
+                <option value="Tabasco" {{ 'selected' if institution.region_state == 'Tabasco' else '' }}>Tabasco</option>
+                <option value="Tamaulipas" {{ 'selected' if institution.region_state == 'Tamaulipas' else '' }}>Tamaulipas</option>
+                <option value="Tlaxcala" {{ 'selected' if institution.region_state == 'Tlaxcala' else '' }}>Tlaxcala</option>
+                <option value="Veracruz" {{ 'selected' if institution.region_state == 'Veracruz' else '' }}>Veracruz</option>
+                <option value="Yucatán" {{ 'selected' if institution.region_state == 'Yucatán' else '' }}>Yucatán</option>
+                <option value="Zacatecas" {{ 'selected' if institution.region_state == 'Zacatecas' else '' }}>Zacatecas</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="website" class="form-label">Website</label>
+              <input type="url" id="website" name="website" class="form-control" maxlength="255" placeholder="https://example.com" value="{{ institution.website or '' }}">
+              <small class="form-text text-muted">Include https://</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 3: Estado y Verificación -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <h3 class="form-section-title">Status & Verification</h3>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="is_verified" class="form-label">Institution Verified</label>
+              <select id="is_verified" name="is_verified" class="form-control">
+                <option value="false" {{ 'selected' if not institution.is_verified else '' }}>Not Verified</option>
+                <option value="true" {{ 'selected' if institution.is_verified else '' }}>Verified</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="is_active" class="form-label">Activity Status</label>
+              <select id="is_active" name="is_active" class="form-control">
+                <option value="true" {{ 'selected' if institution.is_active else '' }}>Active</option>
+                <option value="false" {{ 'selected' if not institution.is_active else '' }}>Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-section">
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('entities.view_institution', institution_id=institution.id) }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Institution</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - PredictHealth CMS{% endblock %}
+
+{% block page_title %}System Settings{% endblock %}
+
+{% block page_subtitle %}Configure system preferences and monitor system health{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- System General Settings -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">General Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">CMS Title</label>
+                                <input type="text" name="cms_title" class="form-control"
+                                       value="{{ settings.get('cms_title', 'PredictHealth CMS') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Timezone</label>
+                                <select name="timezone" class="form-control">
+                                    <option value="America/Mexico_City" {{ 'selected' if settings.get('timezone') == 'America/Mexico_City' else '' }}>America/Mexico_City</option>
+                                    <option value="UTC" {{ 'selected' if settings.get('timezone') == 'UTC' else '' }}>UTC</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Language</label>
+                                <select name="language" class="form-control">
+                                    <option value="es" {{ 'selected' if settings.get('language') == 'es' else '' }}>Español</option>
+                                    <option value="en" {{ 'selected' if settings.get('language') == 'en' else '' }}>English</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="maintenance_mode" class="form-check-input"
+                                           {{ 'checked' if settings.get('maintenance_mode') == 'True' else '' }}>
+                                    <label class="form-check-label">Maintenance Mode</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save General Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Database Settings -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Database Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label class="form-label">Backup Frequency</label>
+                        <select name="db_backup_frequency" class="form-control">
+                            <option value="hourly" {{ 'selected' if settings.get('db_backup_frequency') == 'hourly' else '' }}>Hourly</option>
+                            <option value="daily" {{ 'selected' if settings.get('db_backup_frequency') == 'daily' else '' }}>Daily</option>
+                            <option value="weekly" {{ 'selected' if settings.get('db_backup_frequency') == 'weekly' else '' }}>Weekly</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Database Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Microservices Settings -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Microservices Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Service Timeout (seconds)</label>
+                                <input type="number" name="service_timeout" class="form-control"
+                                       value="{{ settings.get('service_timeout', '30') }}" min="5" max="300">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Health Check Interval (seconds)</label>
+                                <input type="number" name="health_check_interval" class="form-control"
+                                       value="{{ settings.get('health_check_interval', '60') }}" min="10" max="3600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Microservices Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Statistics Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-3 mb-3">
+                            <h3 class="text-primary">{{ stats.total_doctors }}</h3>
+                            <small class="text-muted">Doctors</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 mb-3">
+                            <h3 class="text-success">{{ stats.total_patients }}</h3>
+                            <small class="text-muted">Patients</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 mb-3">
+                            <h3 class="text-info">{{ stats.total_institutions }}</h3>
+                            <small class="text-muted">Institutions</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 mb-3">
+                            <div class="text-{{ 'success' if stats.db_status == 'Conectado' else 'danger' }}">
+                                <i class="fas fa-{{ 'check-circle' if stats.db_status == 'Conectado' else 'times-circle' }}"></i>
+                            </div>
+                            <small class="text-muted">Database</small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="mb-2">
+                    <strong>PostgreSQL Version:</strong><br>
+                    <small class="text-muted">{{ stats.db_version }}</small>
+                </div>
+
+                <div class="mb-2">
+                    <strong>Last Updated:</strong><br>
+                    <small class="text-muted">{{ settings.get('updated_at', 'Never') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

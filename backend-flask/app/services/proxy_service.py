@@ -25,7 +25,6 @@ class ProxyService:
             'doctors': 'http://servicio-doctores:8000',
             'patients': 'http://servicio-pacientes:8004',
             'institutions': 'http://servicio-instituciones:8002',
-            'admins': 'http://servicio-admins:8006',
             'jwt': 'http://servicio-auth-jwt:8003'
         }
 
@@ -292,11 +291,6 @@ class ProxyService:
         """Proxy específico para servicio de autenticación"""
         return self._proxy_request('auth', endpoint, method, data, params, headers)
 
-    def proxy_to_admins_service(self, endpoint: str, method: str = 'GET',
-                               data: Optional[Dict] = None, params: Optional[Dict] = None,
-                               headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
-        """Proxy específico para servicio de administradores"""
-        return self._proxy_request('admins', endpoint, method, data, params, headers)
     
     # Métodos específicos para el web controller
     def call_jwt_service(self, method: str, endpoint: str, data: Optional[Dict] = None,
@@ -323,76 +317,6 @@ class ProxyService:
         """Llamada específica al servicio de instituciones"""
         return self._proxy_request('institutions', endpoint, method, data, params=params, headers=headers)
 
-    def call_admins_service(self, method: str, endpoint: str, **kwargs):
-        """Proxy genérico para llamadas al servicio de administradores con sesiones"""
-        try:
-            # Usar headers de sesión en lugar de JWT
-            headers = self._get_auth_headers()
-
-            # Combinar con headers custom si existen
-            if kwargs.get('headers'):
-                headers.update(kwargs['headers'])
-
-            # Build URL - Fix the duplicated path issue
-            base_url = "http://servicio-admins:8006"
-            # Remove the /api/v1/admins prefix from the incoming endpoint
-            clean_endpoint = endpoint
-            if clean_endpoint.startswith('/api/v1/admins/'):
-                clean_endpoint = clean_endpoint.replace('/api/v1/admins/', '/', 1)
-            elif clean_endpoint.startswith('/api/v1/admins'):
-                clean_endpoint = clean_endpoint.replace('/api/v1/admins', '', 1)
-            elif clean_endpoint.startswith('/admins/'):
-                clean_endpoint = clean_endpoint.replace('/admins/', '/', 1)
-            elif clean_endpoint.startswith('/admins'):
-                clean_endpoint = clean_endpoint.replace('/admins', '', 1)
-
-            # Ensure we have a leading slash
-            if not clean_endpoint.startswith('/'):
-                clean_endpoint = '/' + clean_endpoint
-
-            url = f"{base_url}/api/v1{clean_endpoint}"
-
-            logger.info(f"🔄 Proxy {method} request a admins: {url}")
-
-            # Make request with all kwargs
-            response = requests.request(
-                method=method,
-                url=url,
-                headers=headers,
-                json=kwargs.get('json'),
-                params=kwargs.get('params'),
-                data=kwargs.get('data'),
-                timeout=30
-            )
-
-            logger.info(f"✅ Respuesta del microservicio admins: {response.status_code}")
-
-            # Return standardized response format like other proxy methods
-            try:
-                response_data = response.json()
-            except ValueError:
-                response_data = response.text
-
-            return {
-                'status_code': response.status_code,
-                'data': response_data,
-                'headers': dict(response.headers)
-            }
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Error conectando con servicio de administradores: {str(e)}")
-            return {
-                'status_code': 503,
-                'data': {'error': 'Service unavailable', 'details': str(e)},
-                'headers': {}
-            }
-        except Exception as e:
-            logger.error(f"❌ Error inesperado en call_admins_service: {str(e)}")
-            return {
-                'status_code': 500,
-                'data': {'error': 'Internal server error', 'details': str(e)},
-                'headers': {}
-            }
 
     def call_domain_service(self, user_type: str, method: str, endpoint: str, data: Optional[Dict] = None,
                             headers: Optional[Dict] = None) -> Dict[str, Any]:
@@ -400,8 +324,7 @@ class ProxyService:
         service_map = {
             'institution': 'institutions',
             'doctor': 'doctors',
-            'patient': 'patients',
-            'admin': 'admins'
+            'patient': 'patients'
         }
         service = service_map.get(user_type)
         if service:

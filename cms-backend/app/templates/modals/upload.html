@@ -1,0 +1,265 @@
+<!-- File Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Upload Files</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-zone-content">
+                        <i class="bi bi-cloud-upload upload-icon"></i>
+                        <h4>Drag & drop files here</h4>
+                        <p>or <span class="text-primary" style="cursor: pointer;" onclick="document.getElementById('fileInput').click()">browse files</span></p>
+                        <small class="text-muted">Supported formats: JPG, PNG, PDF, DOC, XLS (Max 10MB each)</small>
+                    </div>
+                </div>
+
+                <input type="file" id="fileInput" multiple style="display: none;" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx">
+
+                <div class="upload-progress mt-3" id="uploadProgress" style="display: none;">
+                    <div class="progress mb-2">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="uploadStatus">Uploading...</small>
+                </div>
+
+                <div class="uploaded-files mt-3" id="uploadedFiles">
+                    <!-- Uploaded files will appear here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="uploadBtn" disabled>Upload Files</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: #f9fafb;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: var(--primary-color);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin-bottom: 1rem;
+}
+
+.uploaded-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    background: white;
+}
+
+.uploaded-file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.uploaded-file-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.uploaded-file-icon.image { background: #dcfce7; color: #16a34a; }
+.uploaded-file-icon.document { background: #dbeafe; color: #2563eb; }
+.uploaded-file-icon.spreadsheet { background: #fef3c7; color: #ca8a04; }
+
+.uploaded-file-details h5 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.uploaded-file-details small {
+    color: #6b7280;
+}
+
+.uploaded-file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+</style>
+
+<script>
+let selectedFiles = [];
+let uploadedFiles = [];
+
+function showUploadModal(options = {}) {
+    selectedFiles = [];
+    uploadedFiles = [];
+    document.getElementById('uploadedFiles').innerHTML = '';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('uploadProgress').style.display = 'none';
+
+    const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+    modal.show();
+
+    // Setup drag and drop
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+}
+
+function handleFiles(files) {
+    selectedFiles = Array.from(files);
+    document.getElementById('uploadBtn').disabled = selectedFiles.length === 0;
+
+    // Validate files
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+
+    const validFiles = selectedFiles.filter(file => {
+        if (file.size > maxSize) {
+            CMS.utils.showAlert(`File ${file.name} is too large. Maximum size is 10MB.`, 'error');
+            return false;
+        }
+        if (!allowedTypes.includes(file.type)) {
+            CMS.utils.showAlert(`File type ${file.type} is not allowed for ${file.name}.`, 'error');
+            return false;
+        }
+        return true;
+    });
+
+    selectedFiles = validFiles;
+    displaySelectedFiles();
+}
+
+function displaySelectedFiles() {
+    const container = document.getElementById('uploadedFiles');
+    container.innerHTML = selectedFiles.map((file, index) => `
+        <div class="uploaded-file-item">
+            <div class="uploaded-file-info">
+                <div class="uploaded-file-icon ${getFileIconClass(file.type)}">
+                    <i class="bi ${getFileIcon(file.type)}"></i>
+                </div>
+                <div class="uploaded-file-details">
+                    <h5>${file.name}</h5>
+                    <small>${CMS.upload.formatFileSize(file.size)}</small>
+                </div>
+            </div>
+            <div class="uploaded-file-actions">
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFile(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return 'bi-image';
+    if (mimeType === 'application/pdf') return 'bi-file-earmark-pdf';
+    if (mimeType.includes('word')) return 'bi-file-earmark-word';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'bi-file-earmark-excel';
+    return 'bi-file-earmark';
+}
+
+function getFileIconClass(mimeType) {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType === 'application/pdf' || mimeType.includes('word')) return 'document';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'spreadsheet';
+    return 'document';
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    displaySelectedFiles();
+    document.getElementById('uploadBtn').disabled = selectedFiles.length === 0;
+}
+
+document.getElementById('uploadBtn').addEventListener('click', async function() {
+    if (selectedFiles.length === 0) return;
+
+    const progress = document.getElementById('uploadProgress');
+    const progressBar = progress.querySelector('.progress-bar');
+    const status = document.getElementById('uploadStatus');
+
+    progress.style.display = 'block';
+    this.disabled = true;
+
+    try {
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            status.textContent = `Uploading ${file.name}...`;
+
+            const progressPercent = ((i + 1) / selectedFiles.length) * 100;
+            progressBar.style.width = progressPercent + '%';
+
+            // Simulate upload
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            uploadedFiles.push({
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url: '#', // Would be actual URL from server
+                uploadedAt: new Date().toISOString()
+            });
+        }
+
+        status.textContent = 'All files uploaded successfully!';
+        CMS.utils.showAlert(`${selectedFiles.length} files uploaded successfully!`, 'success');
+
+        // Close modal after success
+        setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+        }, 1500);
+
+    } catch (error) {
+        status.textContent = 'Upload failed';
+        CMS.utils.showAlert('Upload failed. Please try again.', 'error');
+        this.disabled = false;
+    }
+});
+
+// Global function for easy access
+window.showUploadModal = showUploadModal;
+</script>
