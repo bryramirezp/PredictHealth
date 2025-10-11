@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "dashboard/widgets.html" import action_card %}
 
 {% block title %}Reports Dashboard - PredictHealth CMS{% endblock %}
 
@@ -9,213 +8,130 @@
 
 {% block extra_head %}
 <style>
-    .reports-overview {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
-    }
-
-    .overview-card {
+    /* Report Type Selector */
+    .report-selector {
         background: white;
         border-radius: 12px;
         padding: 2rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        border: 1px solid #e5e7eb;
-        text-align: center;
-        transition: all 0.2s;
-    }
-
-    .overview-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .overview-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        margin: 0 auto 1rem;
-    }
-
-    .overview-icon.content { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
-    .overview-icon.analytics { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
-
-    .overview-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.5rem;
-    }
-
-    .overview-description {
-        color: #6b7280;
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-
-    .reports-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        max-width: 800px;
-        margin: 0 auto 3rem;
-        gap: 2rem;
-    }
-
-    .report-section {
-        background: white;
-        border-radius: 12px;
-        padding: 2rem;
+        margin-bottom: 2rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
     }
 
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
+    .report-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
     }
 
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .section-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-    }
-
-    .section-icon.content { background: #dbeafe; color: #2563eb; }
-
-    .report-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .report-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        transition: all 0.2s;
+    .report-type-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
         text-decoration: none;
-        color: inherit;
+        position: relative;
+        overflow: hidden;
     }
 
-    .report-item:hover {
-        border-color: var(--primary-color);
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    .report-type-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         text-decoration: none;
-        color: inherit;
+        color: white;
     }
 
-    .report-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex: 1;
+    .report-type-card.active {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
     }
 
-    .report-icon {
+    .report-type-icon {
         width: 48px;
         height: 48px;
         border-radius: 12px;
+        background: rgba(255, 255, 255, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .report-type-title {
         font-size: 1.25rem;
-    }
-
-    .report-icon.content { background: #dbeafe; color: #2563eb; }
-    .report-icon.analytics { background: #fef3c7; color: #ca8a04; }
-    .report-icon.export { background: #f3e8ff; color: #7c3aed; }
-
-    .report-details {
-        flex: 1;
-    }
-
-    .report-name {
-        font-size: 1rem;
         font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
     }
 
-    .report-description {
+    .report-type-description {
         font-size: 0.875rem;
-        color: #6b7280;
-        margin: 0;
+        opacity: 0.9;
+        line-height: 1.4;
     }
 
-    .report-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn-report {
-        padding: 0.5rem 1rem;
-        border: 1px solid #d1d5db;
+    /* Filters Section */
+    .filters-section {
         background: white;
-        border-radius: 6px;
-        text-decoration: none;
-        color: #374151;
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
     }
 
-    .btn-report:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
-        text-decoration: none;
-        color: #374151;
-    }
-
-    .btn-report.primary {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-    }
-
-    .btn-report.primary:hover {
-        background: #1d4ed8;
-        border-color: #1d4ed8;
-        color: white;
-    }
-
-    .quick-stats {
+    .filters-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 3rem;
+        align-items: end;
+        margin-bottom: 1.5rem;
     }
 
-    .stat-box {
+    .form-group {
+        margin-bottom: 0;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    /* Summary Cards */
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
         background: white;
         border-radius: 12px;
         padding: 1.5rem;
@@ -224,336 +140,1062 @@
         text-align: center;
     }
 
-    .stat-value {
+    .summary-value {
         font-size: 2rem;
         font-weight: 700;
         color: #1f2937;
         margin-bottom: 0.5rem;
     }
 
-    .stat-label {
+    .summary-label {
         font-size: 0.875rem;
         color: #6b7280;
         font-weight: 500;
     }
 
-    .recent-reports {
+    /* Data Table */
+    .data-table-section {
         background: white;
         border-radius: 12px;
         padding: 2rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
     }
 
-    .recent-reports-header {
+    .table-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
     }
 
-    .recent-reports-title {
-        font-size: 1.25rem;
+    .export-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-export {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #374151;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    .btn-export:hover {
+        background: #f9fafb;
+        text-decoration: none;
+        color: #374151;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        background: white;
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e5e7eb;
         font-weight: 600;
-        color: #1f2937;
-        margin: 0;
+        color: #374151;
+        padding: 1rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .recent-reports-list {
+    .table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .status-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .status-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .status-info {
+        background: rgba(6, 182, 212, 0.1);
+        color: #0891b2;
+    }
+
+    /* Pagination */
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .pagination-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
         list-style: none;
         padding: 0;
         margin: 0;
     }
 
-    .recent-report-item {
+    .page-link {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .page-link:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+        text-decoration: none;
+        color: #374151;
+    }
+
+    .page-link.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Overview Section */
+    .overview-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .overview-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        text-align: center;
+    }
+
+    .overview-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.2);
         display: flex;
         align-items: center;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #f3f4f6;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
     }
 
-    .recent-report-item:last-child {
-        border-bottom: none;
+    .overview-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
     }
 
-    .recent-report-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+    .overview-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    /* Charts for Overview */
+    .charts-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .chart-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1rem;
+        background: var(--primary-color);
+        color: white;
     }
 
-    .recent-report-icon.content { background: #dbeafe; color: #2563eb; }
-    .recent-report-icon.analytics { background: #fef3c7; color: #ca8a04; }
-
-    .recent-report-info {
-        flex: 1;
-    }
-
-    .recent-report-name {
-        font-size: 0.875rem;
+    .chart-title {
+        font-size: 1.125rem;
         font-weight: 600;
         color: #1f2937;
-        margin-bottom: 0.25rem;
+        margin: 0;
     }
 
-    .recent-report-meta {
-        font-size: 0.75rem;
-        color: #9ca3af;
+    .chart-container {
+        position: relative;
+        height: 300px;
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-        .reports-overview {
+        .report-type-grid {
             grid-template-columns: 1fr;
         }
 
-        .reports-grid {
+        .filters-grid {
             grid-template-columns: 1fr;
         }
 
-        .quick-stats {
+        .summary-cards {
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .section-header {
+        .export-buttons {
             flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
         }
 
-        .report-item {
+        .table-actions {
             flex-direction: column;
-            align-items: flex-start;
             gap: 1rem;
+            align-items: stretch;
         }
 
-        .report-actions {
-            width: 100%;
-            justify-content: flex-end;
+        .overview-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-export {
+            justify-content: center;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Quick Stats -->
-<div class="quick-stats">
-    <div class="stat-box">
-        <div class="stat-value" id="totalReports">0</div>
-        <div class="stat-label">Total Reports Generated</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-value" id="activeUsers">0</div>
-        <div class="stat-label">Active Users This Month</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-value" id="contentItems">0</div>
-        <div class="stat-label">Content Items</div>
-    </div>
-    <div class="stat-box">
-        <div class="stat-value" id="systemHealth">98%</div>
-        <div class="stat-label">System Health</div>
+<!-- Report Type Selector -->
+<div class="report-selector">
+    <div class="report-type-grid">
+        <a href="{{ url_for('reports.dashboard', type='patients') }}"
+           class="report-type-card {% if report_type == 'patients' %}active{% endif %}">
+            <div class="report-type-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <h3 class="report-type-title">👥 Patients Report</h3>
+            <p class="report-type-description">Patient demographics, validation status, and health profiles</p>
+        </a>
+
+        <a href="{{ url_for('reports.dashboard', type='doctors') }}"
+           class="report-type-card {% if report_type == 'doctors' %}active{% endif %}">
+            <div class="report-type-icon">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <h3 class="report-type-title">👨‍⚕️ Doctors Report</h3>
+            <p class="report-type-description">Healthcare providers, specialties, and performance metrics</p>
+        </a>
+
+        <a href="{{ url_for('reports.dashboard', type='institutions') }}"
+           class="report-type-card {% if report_type == 'institutions' %}active{% endif %}">
+            <div class="report-type-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <h3 class="report-type-title">🏥 Institutions Report</h3>
+            <p class="report-type-description">Medical facilities, verification status, and regional distribution</p>
+        </a>
+
+        <a href="{{ url_for('reports.dashboard', type='overview') }}"
+           class="report-type-card {% if report_type == 'overview' %}active{% endif %}">
+            <div class="report-type-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3 class="report-type-title">📊 System Overview</h3>
+            <p class="report-type-description">Overall system metrics, trends, and key performance indicators</p>
+        </a>
     </div>
 </div>
 
-<!-- Reports Overview -->
-<div class="reports-overview">
-    <div class="overview-card">
-        <div class="overview-icon content">
-            <i class="bi bi-file-earmark-text"></i>
-        </div>
-        <h3 class="overview-title">Content Reports</h3>
-        <p class="overview-description">
-            Analyze article performance, publication trends, and content engagement metrics.
-        </p>
-    </div>
+{% if report_type == 'overview' %}
+<!-- Overview Section -->
+<div class="overview-section">
+    <h3 style="margin: 0 0 2rem 0; color: #1f2937; font-size: 1.5rem; font-weight: 700;">
+        <i class="bi bi-graph-up" style="color: var(--primary-color); margin-right: 0.75rem;"></i>
+        System Overview
+    </h3>
 
-
-    <div class="overview-card">
-        <div class="overview-icon analytics">
-            <i class="bi bi-graph-up"></i>
+    <div class="overview-grid">
+        <div class="overview-card">
+            <div class="overview-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="overview-value">{{ overview.total_patients or 0 }}</div>
+            <div class="overview-label">Total Patients</div>
         </div>
-        <h3 class="overview-title">Advanced Analytics</h3>
-        <p class="overview-description">
-            Deep insights with custom queries and advanced data visualization.
-        </p>
+
+        <div class="overview-card">
+            <div class="overview-icon">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="overview-value">{{ overview.total_doctors or 0 }}</div>
+            <div class="overview-label">Total Doctors</div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="overview-value">{{ overview.total_institutions or 0 }}</div>
+            <div class="overview-label">Total Institutions</div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="overview-value">{{ overview.validated_patients or 0 }}</div>
+            <div class="overview-label">Validated Patients</div>
+        </div>
     </div>
 </div>
 
-<!-- Report Categories -->
-<div class="reports-grid">
-    <!-- Content Reports -->
-    <div class="report-section">
-        <div class="section-header">
-            <h3 class="section-title">
-                <div class="section-icon content">
-                    <i class="bi bi-file-earmark-text"></i>
-                </div>
-                Content Reports
-            </h3>
-            <button class="btn btn-primary btn-sm" disabled>
-                Content Reports <i class="bi bi-check-circle"></i>
+<!-- Charts Section -->
+{% if monthly_data %}
+<div class="charts-section">
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-icon">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h3 class="chart-title">Monthly Patient Registrations</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="monthlyRegistrationsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h3 class="chart-title">Patient Validation Status</h3>
+        </div>
+        <div class="chart-container">
+            <canvas id="validationStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% elif report_type in ['patients', 'doctors', 'institutions'] %}
+<!-- Filters Section -->
+<div class="filters-section">
+    <form method="GET">
+        <input type="hidden" name="type" value="{{ report_type }}">
+        <div class="filters-grid">
+            <div class="form-group">
+                <label class="form-label">Date From</label>
+                <input type="date" name="date_from" class="form-control" value="{{ filters.date_from or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date To</label>
+                <input type="date" name="date_to" class="form-control" value="{{ filters.date_to or '' }}">
+            </div>
+
+            {% if report_type == 'patients' %}
+            <div class="form-group">
+                <label class="form-label">Validation Status</label>
+                <select name="validation_status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if filters.validation_status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="doctor_validated" {% if filters.validation_status == 'doctor_validated' %}selected{% endif %}>Doctor Validated</option>
+                    <option value="institution_validated" {% if filters.validation_status == 'institution_validated' %}selected{% endif %}>Institution Validated</option>
+                    <option value="full_access" {% if filters.validation_status == 'full_access' %}selected{% endif %}>Full Access</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select name="gender" class="form-control">
+                    <option value="">All Genders</option>
+                    <option value="male" {% if filters.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if filters.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if filters.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            {% elif report_type == 'doctors' %}
+            <div class="form-group">
+                <label class="form-label">Specialty</label>
+                <input type="text" name="specialty" class="form-control" placeholder="Search specialty..." value="{{ filters.specialty or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="suspended" {% if filters.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                    <option value="retired" {% if filters.status == 'retired' %}selected{% endif %}>Retired</option>
+                </select>
+            </div>
+
+            {% elif report_type == 'institutions' %}
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Region</label>
+                <input type="text" name="region" class="form-control" placeholder="Search region..." value="{{ filters.region or '' }}">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i>
+                Apply Filters
             </button>
+            <a href="{{ url_for('reports.dashboard', type=report_type) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i>
+                Clear Filters
+            </a>
         </div>
-
-        <ul class="report-list">
-            <li class="report-item">
-                <div class="report-info">
-                    <div class="report-icon content">
-                        <i class="bi bi-bar-chart"></i>
-                    </div>
-                    <div class="report-details">
-                        <div class="report-name">Publication Trends</div>
-                        <div class="report-description">Articles published over time with growth analysis</div>
-                    </div>
-                </div>
-                <div class="report-actions">
-                    <button class="btn-report primary" disabled>
-                        <i class="bi bi-eye"></i>
-                        View
-                    </button>
-                </div>
-            </li>
-
-            <li class="report-item">
-                <div class="report-info">
-                    <div class="report-icon analytics">
-                        <i class="bi bi-tags"></i>
-                    </div>
-                    <div class="report-details">
-                        <div class="report-name">Category Performance</div>
-                        <div class="report-description">Content distribution and engagement by category</div>
-                    </div>
-                </div>
-                <div class="report-actions">
-                    <button class="btn-report primary" disabled>
-                        <i class="bi bi-eye"></i>
-                        View
-                    </button>
-                </div>
-            </li>
-
-            <li class="report-item">
-                <div class="report-info">
-                    <div class="report-icon export">
-                        <i class="bi bi-file-earmark-spreadsheet"></i>
-                    </div>
-                    <div class="report-details">
-                        <div class="report-name">Content Export</div>
-                        <div class="report-description">Export content data in CSV/PDF format</div>
-                    </div>
-                </div>
-                <div class="report-actions">
-                    <button class="btn-report" disabled>
-                        <i class="bi bi-download"></i>
-                        Export
-                    </button>
-                </div>
-            </li>
-        </ul>
-    </div>
-
-
-    <!-- Recent Reports -->
-    <div class="recent-reports">
-        <div class="recent-reports-header">
-            <h3 class="recent-reports-title">Recent Reports</h3>
-            <a href="#" class="text-primary" style="font-size: 0.875rem;">View Report History</a>
-        </div>
-
-        <ul class="recent-reports-list">
-            <li class="recent-report-item">
-                <div class="recent-report-icon content">
-                    <i class="bi bi-file-earmark-text"></i>
-                </div>
-                <div class="recent-report-info">
-                    <div class="recent-report-name">Monthly Content Report</div>
-                    <div class="recent-report-meta">Generated 2 hours ago • PDF (2.3 MB)</div>
-                </div>
-            </li>
-
-            <li class="recent-report-item">
-                <div class="recent-report-icon content">
-                    <i class="bi bi-bar-chart"></i>
-                </div>
-                <div class="recent-report-info">
-                    <div class="recent-report-name">Publication Trends Analysis</div>
-                    <div class="recent-report-meta">Generated yesterday • CSV (1.8 MB)</div>
-                </div>
-            </li>
-
-            <li class="recent-report-item">
-                <div class="recent-report-icon analytics">
-                    <i class="bi bi-tags"></i>
-                </div>
-                <div class="recent-report-info">
-                    <div class="recent-report-name">Category Performance Report</div>
-                    <div class="recent-report-meta">Generated 3 days ago • PDF (856 KB)</div>
-                </div>
-            </li>
-        </ul>
-    </div>
+    </form>
 </div>
+
+<!-- Summary Cards -->
+{% if summary %}
+<div class="summary-cards">
+    {% if report_type == 'patients' %}
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.total_patients or 0 }}</div>
+        <div class="summary-label">Total Patients</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.validated_patients or 0 }}</div>
+        <div class="summary-label">Validated Patients</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.male_count or 0 }}</div>
+        <div class="summary-label">Male Patients</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.female_count or 0 }}</div>
+        <div class="summary-label">Female Patients</div>
+    </div>
+
+    {% elif report_type == 'doctors' %}
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.total_doctors or 0 }}</div>
+        <div class="summary-label">Total Doctors</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">${{ "%.2f"|format(summary.avg_fee or 0) }}</div>
+        <div class="summary-label">Avg Consultation Fee</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ "%.1f"|format(summary.avg_experience or 0) }}</div>
+        <div class="summary-label">Avg Years Experience</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.specialty_count or 0 }}</div>
+        <div class="summary-label">Specialties</div>
+    </div>
+
+    {% elif report_type == 'institutions' %}
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.total_institutions or 0 }}</div>
+        <div class="summary-label">Total Institutions</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.active_institutions or 0 }}</div>
+        <div class="summary-label">Active Institutions</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.verified_institutions or 0 }}</div>
+        <div class="summary-label">Verified Institutions</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-value">{{ summary.type_count or 0 }}</div>
+        <div class="summary-label">Institution Types</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Data Table -->
+{% if report_type == 'patients' and patients %}
+<div class="data-table-section">
+    <div class="table-actions">
+        <h4 style="margin: 0; color: #1f2937;">Patients Data</h4>
+        <div class="export-buttons">
+            <a href="{{ url_for('reports.export_report', report_type='patients', format='csv') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                Export CSV
+            </a>
+            <a href="{{ url_for('reports.export_report', report_type='patients', format='pdf') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Export PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Validation Status</th>
+                    <th>Doctor</th>
+                    <th>Institution</th>
+                    <th>Blood Type</th>
+                    <th>Registration Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                    <td>{{ patient.email }}</td>
+                    <td>{{ patient.age }}</td>
+                    <td>{{ patient.gender|title }}</td>
+                    <td>
+                        <span class="status-badge status-{{ 'success' if patient.validation_status == 'full_access' else 'warning' if patient.validation_status in ['doctor_validated', 'institution_validated'] else 'error' }}">
+                            {{ patient.validation_status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td>{{ patient.doctor_first_name }} {{ patient.doctor_last_name }}</td>
+                    <td>{{ patient.institution_name }}</td>
+                    <td>{{ patient.blood_type or 'N/A' }}</td>
+                    <td>{{ patient.created_at.strftime('%Y-%m-%d') if patient.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * per_page) + 1 }} to {{ (page * per_page) if (page * per_page) < total_pages * per_page else total_pages * per_page }} of {{ total_pages * per_page }} entries
+        </div>
+        <ul class="pagination">
+            {% if page > 1 %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page-1, **filters) }}" class="page-link">Previous</a></li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num == page %}
+                <li><span class="page-link active">{{ page_num }}</span></li>
+                {% elif page_num == 1 or page_num == total_pages or (page_num >= page - 2 and page_num <= page + 2) %}
+                <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page_num, **filters) }}" class="page-link">{{ page_num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page+1, **filters) }}" class="page-link">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+{% elif report_type == 'doctors' and doctors %}
+<div class="data-table-section">
+    <div class="table-actions">
+        <h4 style="margin: 0; color: #1f2937;">Doctors Data</h4>
+        <div class="export-buttons">
+            <a href="{{ url_for('reports.export_report', report_type='doctors', format='csv') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                Export CSV
+            </a>
+            <a href="{{ url_for('reports.export_report', report_type='doctors', format='pdf') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Export PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Medical License</th>
+                    <th>Specialty</th>
+                    <th>Years Experience</th>
+                    <th>Consultation Fee</th>
+                    <th>Institution</th>
+                    <th>Patient Count</th>
+                    <th>Registration Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr>
+                    <td>{{ doctor.first_name }} {{ doctor.last_name }}</td>
+                    <td>{{ doctor.email }}</td>
+                    <td>{{ doctor.medical_license }}</td>
+                    <td>{{ doctor.specialty or 'N/A' }}</td>
+                    <td>{{ doctor.years_experience }}</td>
+                    <td>${{ "%.2f"|format(doctor.consultation_fee or 0) }}</td>
+                    <td>{{ doctor.institution_name or 'N/A' }}</td>
+                    <td>{{ doctor.patient_count or 0 }}</td>
+                    <td>{{ doctor.created_at.strftime('%Y-%m-%d') if doctor.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * per_page) + 1 }} to {{ (page * per_page) if (page * per_page) < total_pages * per_page else total_pages * per_page }} of {{ total_pages * per_page }} entries
+        </div>
+        <ul class="pagination">
+            {% if page > 1 %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page-1, **filters) }}" class="page-link">Previous</a></li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num == page %}
+                <li><span class="page-link active">{{ page_num }}</span></li>
+                {% elif page_num == 1 or page_num == total_pages or (page_num >= page - 2 and page_num <= page + 2) %}
+                <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page_num, **filters) }}" class="page-link">{{ page_num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page+1, **filters) }}" class="page-link">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+
+{% elif report_type == 'institutions' and institutions %}
+<div class="data-table-section">
+    <div class="table-actions">
+        <h4 style="margin: 0; color: #1f2937;">Institutions Data</h4>
+        <div class="export-buttons">
+            <a href="{{ url_for('reports.export_report', report_type='institutions', format='csv') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                Export CSV
+            </a>
+            <a href="{{ url_for('reports.export_report', report_type='institutions', format='pdf') }}{% if request.args %}?{{ request.query_string.decode() }}{% endif %}" class="btn-export">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Export PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Email</th>
+                    <th>Region</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Registration Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for institution in institutions %}
+                <tr>
+                    <td>{{ institution.name }}</td>
+                    <td>{{ institution.institution_type|replace('_', ' ')|title }}</td>
+                    <td>{{ institution.contact_email }}</td>
+                    <td>{{ institution.region_state or 'N/A' }}</td>
+                    <td>{{ institution.phone or 'N/A' }}</td>
+                    <td>
+                        <span class="status-badge {{ 'status-success' if institution.is_active else 'status-error' }}">
+                            {{ 'Active' if institution.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ 'status-success' if institution.is_verified else 'status-warning' }}">
+                            {{ 'Verified' if institution.is_verified else 'Pending' }}
+                        </span>
+                    </td>
+                    <td>{{ institution.created_at.strftime('%Y-%m-%d') if institution.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-wrapper">
+        <div class="pagination-info">
+            Showing {{ ((page - 1) * per_page) + 1 }} to {{ (page * per_page) if (page * per_page) < total_pages * per_page else total_pages * per_page }} of {{ total_pages * per_page }} entries
+        </div>
+        <ul class="pagination">
+            {% if page > 1 %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page-1, **filters) }}" class="page-link">Previous</a></li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num == page %}
+                <li><span class="page-link active">{{ page_num }}</span></li>
+                {% elif page_num == 1 or page_num == total_pages or (page_num >= page - 2 and page_num <= page + 2) %}
+                <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page_num, **filters) }}" class="page-link">{{ page_num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <li><a href="{{ url_for('reports.dashboard', type=report_type, page=page+1, **filters) }}" class="page-link">Next</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
+<script type="text/template">
+// Chart data initialization template
+{% if monthly_data -%}
+const monthlyData = {{ monthly_data | tojson }};
+{%- endif %}
+
+{% if validation_data -%}
+const validationData = {{ validation_data | tojson }};
+{%- endif %}
+</script>
+
 <script>
-// Load dashboard statistics
+// Chart data passed from backend
+const chartData = {
+    monthlyData: [],
+    validationData: []
+};
+
+// Initialize chart data if available
+if (typeof monthlyData !== 'undefined') {
+    chartData.monthlyData = monthlyData;
+}
+
+if (typeof validationData !== 'undefined') {
+    chartData.validationData = validationData;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    loadReportStats();
+    // Initialize charts for overview page
+    if (document.getElementById('monthlyRegistrationsChart') && chartData.monthlyData.length > 0) {
+        createMonthlyRegistrationsChart();
+    }
+
+    if (document.getElementById('validationStatusChart') && chartData.validationData.length > 0) {
+        createValidationStatusChart();
+    }
+
+    // Report type selector functionality
+    initializeReportTypeSelector();
+
+    // Filter form enhancements
+    initializeFilters();
 });
 
-async function loadReportStats() {
-    try {
-        // In a real app, fetch from API
-        // const response = await fetch('/api/reports/stats');
-        // const data = await response.json();
+function createMonthlyRegistrationsChart() {
+    const ctx = document.getElementById('monthlyRegistrationsChart').getContext('2d');
 
-        // Simulate API call
-        const data = await simulateApiCall();
-
-        updateStats(data);
-
-    } catch (error) {
-        console.error('Error loading report stats:', error);
-    }
-}
-
-async function simulateApiCall() {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    return {
-        totalReports: 47,
-        activeUsers: 1250,
-        contentItems: 89,
-        systemHealth: '98%'
-    };
-}
-
-function updateStats(stats) {
-    document.getElementById('totalReports').textContent = stats.totalReports;
-    document.getElementById('activeUsers').textContent = stats.activeUsers.toLocaleString();
-    document.getElementById('contentItems').textContent = stats.contentItems;
-    document.getElementById('systemHealth').textContent = stats.systemHealth;
-}
-
-// Add click tracking for report items
-document.querySelectorAll('.report-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        // If clicked on a link, don't track
-        if (e.target.tagName === 'A') return;
-
-        const link = this.querySelector('.btn-report.primary');
-        if (link) {
-            link.click();
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Patient Registrations',
+                data: chartData.monthlyData.map(item => item.count),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    ticks: { color: '#6b7280' }
+                },
+                x: {
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    ticks: { color: '#6b7280' }
+                }
+            },
+            interaction: { intersect: false, mode: 'index' }
         }
     });
+}
+
+function createValidationStatusChart() {
+    const ctx = document.getElementById('validationStatusChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.validationData.map(item => item.validation_status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())),
+            datasets: [{
+                data: chartData.validationData.map(item => item.patient_count),
+                backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
+                borderWidth: 0,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, font: { size: 12 } } },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+function initializeReportTypeSelector() {
+    // Add active state management for report type cards
+    const reportCards = document.querySelectorAll('.report-type-card');
+
+    reportCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Remove active class from all cards
+            reportCards.forEach(c => c.classList.remove('active'));
+
+            // Add active class to clicked card
+            this.classList.add('active');
+
+            // Navigate to the URL after a short delay for visual feedback
+            setTimeout(() => {
+                window.location.href = this.href;
+            }, 150);
+        });
+    });
+}
+
+function initializeFilters() {
+    // Auto-submit filters on change for better UX
+    const filterSelects = document.querySelectorAll('.filters-section select');
+    const filterInputs = document.querySelectorAll('.filters-section input[type="date"], .filters-section input[type="text"]');
+
+    [...filterSelects, ...filterInputs].forEach(element => {
+        element.addEventListener('change', function() {
+            // Auto-submit form after a short delay
+            setTimeout(() => {
+                this.closest('form').submit();
+            }, 300);
+        });
+    });
+
+    // Clear filters functionality
+    const clearButtons = document.querySelectorAll('[onclick*="Clear"]');
+    clearButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Clear all form inputs
+            const form = document.querySelector('.filters-section form');
+            if (form) {
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.type === 'date' || input.type === 'text') {
+                        input.value = '';
+                    } else if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    }
+                });
+            }
+
+            // Navigate to clear URL
+            window.location.href = this.href;
+        });
+    });
+}
+
+// Utility function for status badges
+function getStatusBadgeClass(status) {
+    const statusMap = {
+        'full_access': 'status-success',
+        'doctor_validated': 'status-warning',
+        'institution_validated': 'status-warning',
+        'pending': 'status-error',
+        'active': 'status-success',
+        'inactive': 'status-error',
+        'verified': 'status-success'
+    };
+
+    return statusMap[status] || 'status-info';
+}
+
+// Format currency values
+function formatCurrency(amount) {
+    if (amount === null || amount === undefined) return 'N/A';
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+    }).format(amount);
+}
+
+// Format dates consistently
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+// Show loading state for exports
+function showExportLoading(button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
+    button.disabled = true;
+
+    // Reset after 3 seconds (in case of error)
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 3000);
+}
+
+// Add loading states to export buttons
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.btn-export')) {
+        showExportLoading(e.target.closest('.btn-export'));
+    }
 });
 </script>
 {% endblock %}

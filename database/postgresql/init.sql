@@ -361,7 +361,8 @@ SELECT
     hp.blood_type,
     hp.hypertension_diagnosis,
     hp.diabetes_diagnosis,
-    hp.high_cholesterol_diagnosis
+    hp.high_cholesterol_diagnosis,
+    p.created_at
 FROM patients p
 LEFT JOIN doctors d ON p.doctor_id = d.id
 LEFT JOIN medical_institutions mi ON p.institution_id = mi.id
@@ -381,14 +382,15 @@ SELECT
     ds.name AS specialty,
     mi.name AS institution_name,
     COUNT(p.id) AS patient_count,
-    AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.date_of_birth))) AS avg_patient_age
+    AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.date_of_birth))) AS avg_patient_age,
+    d.created_at
 FROM doctors d
 LEFT JOIN doctor_specialties ds ON d.specialty_id = ds.id
 LEFT JOIN medical_institutions mi ON d.institution_id = mi.id
 LEFT JOIN patients p ON d.id = p.doctor_id AND p.is_active = TRUE
 WHERE d.is_active = TRUE
 GROUP BY d.id, d.first_name, d.last_name, d.email, d.medical_license,
-         d.years_experience, d.consultation_fee, ds.name, mi.name;
+         d.years_experience, d.consultation_fee, ds.name, mi.name, d.created_at;
 
 -- View for monthly registration analytics
 CREATE OR REPLACE VIEW vw_monthly_registrations AS
