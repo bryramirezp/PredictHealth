@@ -43,8 +43,27 @@ def doctors():
     if min_experience is not None:
         query = query.filter(Doctor.years_experience >= min_experience)
 
-    # Paginate results
-    doctors = query.paginate(page=page, per_page=per_page)
+    # Paginate results first
+    doctors_paginated = query.paginate(page=page, per_page=per_page)
+
+    # Now add specialty and institution names to each doctor object
+    for doctor in doctors_paginated.items:
+        # Get specialty name
+        if doctor.specialty_id:
+            specialty = DoctorSpecialty.query.get(doctor.specialty_id)
+            doctor.specialty_name = specialty.name if specialty else None
+        else:
+            doctor.specialty_name = None
+
+        # Get institution name
+        if doctor.institution_id:
+            institution = MedicalInstitution.query.get(doctor.institution_id)
+            doctor.institution_name = institution.name if institution else None
+        else:
+            doctor.institution_name = None
+
+    # Use the original pagination object
+    doctors = doctors_paginated
 
     # Get specialties and institutions for filter dropdowns
     specialties = DoctorSpecialty.query.filter_by(is_active=True).all()
@@ -280,7 +299,8 @@ def create_patient_form():
     doctors_rows = Doctor.query.with_entities(Doctor.id, Doctor.first_name, Doctor.last_name).all()
     doctors = [{'id': row[0], 'first_name': row[1], 'last_name': row[2]} for row in doctors_rows]
     institutions = MedicalInstitution.query.with_entities(MedicalInstitution.id, MedicalInstitution.name).all()
-    return render_template('entities/create_patient.html', doctors=doctors, institutions=institutions)
+    from datetime import datetime
+    return render_template('entities/create_patient.html', doctors=doctors, institutions=institutions, today_date=datetime.now().date().isoformat())
 
 @entities_bp.route('/patients', methods=['POST'])
 @login_required
@@ -359,11 +379,13 @@ def view_patient(patient_id):
     # Get health profile
     health_profile = HealthProfile.query.filter_by(patient_id=patient_id).first()
 
+    from datetime import datetime
     return render_template('entities/view_patient.html',
                           patient=patient,
                           doctor=doctor,
                           institution=institution,
-                          health_profile=health_profile)
+                          health_profile=health_profile,
+                          today_date=datetime.now().date())
 
 @entities_bp.route('/patients/edit/<patient_id>', methods=['GET', 'POST'])
 @login_required
@@ -414,6 +436,7 @@ def edit_patient(patient_id):
             return redirect(url_for('entities.edit_patient', patient_id=patient_id))
 
     # GET request - show edit form
+    from datetime import datetime
     doctors_rows = Doctor.query.with_entities(Doctor.id, Doctor.first_name, Doctor.last_name).all()
     doctors = [{'id': row[0], 'first_name': row[1], 'last_name': row[2]} for row in doctors_rows]
     institutions = MedicalInstitution.query.with_entities(MedicalInstitution.id, MedicalInstitution.name).all()
@@ -423,7 +446,8 @@ def edit_patient(patient_id):
                           patient=patient,
                           doctors=doctors,
                           institutions=institutions,
-                          health_profile=health_profile)
+                          health_profile=health_profile,
+                          today_date=datetime.now().date().isoformat())
 
 @entities_bp.route('/patients/delete/<patient_id>', methods=['POST'])
 @login_required

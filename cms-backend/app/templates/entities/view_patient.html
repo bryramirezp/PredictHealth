@@ -34,7 +34,7 @@
       </div>
 
       <div class="entity-stats">
-        <span><i class="bi bi-calendar me-1"></i>Age: {{ ((now().date() - patient.date_of_birth).days // 365) if patient.date_of_birth else 'Unknown' }}</span>
+        <span><i class="bi bi-calendar me-1"></i>Age: {{ ((today_date - patient.date_of_birth).days // 365) if patient.date_of_birth else 'Unknown' }}</span>
         {% if patient.emergency_contact_name %}
           <span><i class="bi bi-person-lines-fill me-1"></i>Emergency: {{ patient.emergency_contact_name }}</span>
         {% endif %}

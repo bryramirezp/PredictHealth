@@ -52,7 +52,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="date_of_birth" class="form-label">Date of Birth *</label>
-              <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" required max="{{ 'now'|date:'Y-m-d' }}" value="{{ patient.date_of_birth.isoformat() if patient.date_of_birth else '' }}">
+              <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" required max="{{ today_date }}" value="{{ patient.date_of_birth.isoformat() if patient.date_of_birth else '' }}">
               <div class="invalid-feedback">Date of birth is required.</div>
             </div>
 

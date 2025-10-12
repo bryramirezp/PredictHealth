@@ -298,6 +298,35 @@
 </style>
 {% endblock %}
 
+{% block extra_scripts %}
+<script>
+// View toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tableViewBtn = document.getElementById('tableView');
+    const cardViewBtn = document.getElementById('cardView');
+    const tableContainer = document.getElementById('tableViewContainer');
+    const cardContainer = document.getElementById('cardViewContainer');
+
+    function showTableView() {
+        tableViewBtn.classList.add('active');
+        cardViewBtn.classList.remove('active');
+        tableContainer.style.display = 'block';
+        cardContainer.style.display = 'none';
+    }
+
+    function showCardView() {
+        cardViewBtn.classList.add('active');
+        tableViewBtn.classList.remove('active');
+        cardContainer.style.display = 'block';
+        tableContainer.style.display = 'none';
+    }
+
+    tableViewBtn.addEventListener('click', showTableView);
+    cardViewBtn.addEventListener('click', showCardView);
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <!-- Header with Actions -->
 <div class="entity-header">
