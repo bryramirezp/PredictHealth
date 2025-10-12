@@ -320,9 +320,7 @@ logging.basicConfig(
 # Instalar dependencias
 pip install -r requirements.txt
 
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con configuración local
+# Las variables de entorno ya están configuradas en .env (editar si es necesario)
 
 # Ejecutar aplicación
 python app.py

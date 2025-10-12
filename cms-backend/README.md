@@ -225,8 +225,7 @@ La aplicación está contenerizada con:
 1. **Clonar y Configurar**:
    ```bash
    cd cms-backend
-   cp .env.example .env
-   # Editar .env con tu configuración
+   # Las variables de entorno ya están configuradas en .env (editar si es necesario)
    ```
 
 2. **Instalar Dependencias**:

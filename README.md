@@ -148,9 +148,7 @@ sudo -u postgres createuser predictHealth_user
 pip install -r backend-flask/requirements.txt
 pip install -r cms-backend/requirements.txt
 
-# 4. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con configuración local
+# 4. Las variables de entorno ya están configuradas en .env (editar si es necesario)
 
 # 5. Ejecutar servicios
 python backend-flask/app.py &
@@ -270,9 +268,7 @@ python cms-backend/app.py &
 git clone https://github.com/your-org/predicthealth.git
 cd predicthealth
 
-# 2. Configurar entorno
-cp .env.example .env
-# Editar .env con configuración específica
+# 2. Las variables de entorno ya están configuradas en .env (editar si es necesario)
 
 # 3. Construir y ejecutar
 docker-compose up --build -d

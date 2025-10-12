@@ -266,8 +266,7 @@ Cada servicio proporciona:
 1. **Clonar y Configurar**:
    ```bash
    cd microservices/service-name
-   cp .env.example .env
-   # Configurar variables de entorno
+   # Las variables de entorno ya están configuradas en .env (editar si es necesario)
    ```
 
 2. **Instalar Dependencias**:
