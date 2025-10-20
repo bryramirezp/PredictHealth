@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - PredictHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
+    <style>
+        :root {
+            --primary-color: #059669;
+            --primary-dark: #047857;
+            --secondary-color: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navigation Styles */
+        .main-menu {
+            width: 300px;
+            height: 100vh;
+            background: var(--gradient-primary);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .main-menu.hide {
+            transform: translateX(-100%);
+        }
+
+        .main-menu h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-menu ul {
+            list-style: none;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+        .nav-item {
+            position: relative;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item.active b {
+            opacity: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+        }
+
+        .nav-item a:hover::before,
+        .nav-item.active a::before {
+            left: 0;
+        }
+
+        .nav-item:hover a,
+        .nav-item.active a {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-text {
+            font-size: 1rem;
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Content Styles */
+        .content {
+            margin-left: 300px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content.mobile-menu-open {
+            margin-left: 0;
+        }
+
+        /* Header */
+        .page-header {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        /* Profile Content */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .main-profile {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .profile-section {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Profile Header */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-upload:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-info h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-email {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Form Styles */
+        .profile-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Health Profile */
+        .health-profile {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .health-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .health-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .health-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .health-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Preferences */
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .preference-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .preference-toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preference-toggle.active {
+            background: var(--primary-color);
+        }
+
+        .preference-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .preference-toggle.active::after {
+            left: 28px;
+        }
+
+        /* Sidebar */
+        .profile-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Account Security */
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .security-item:last-child {
+            border-bottom: none;
+        }
+
+        .security-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .security-value {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .security-action {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .security-action:hover {
+            text-decoration: underline;
+        }
+
+        /* Activity Summary */
+        .activity-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: white;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+            border: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-primary);
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-menu {
+                transform: translateX(-100%);
+            }
+
+            .main-menu.show {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .content.mobile-menu-open {
+                margin-left: 300px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .health-profile {
+                grid-template-columns: 1fr;
+            }
+
+            .preferences-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu">
+        <h1>
+            <i class="fas fa-heartbeat"></i>
+            PredictHealth
+        </h1>
+        <ul>
+            <li class="nav-item">
+                <a href="patient_dashboard.html">
+                    <i class="fa fa-house nav-icon"></i>
+                    <span class="nav-text">Inicio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="patient_medical_record.html">
+                    <i class="fa fa-file-medical nav-icon"></i>
+                    <span class="nav-text">Mi Expediente</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="patient_appointments.html">
+                    <i class="fa fa-calendar-check nav-icon"></i>
+                    <span class="nav-text">Mis Citas</span>
+                </a>
+            </li>
+            <li class="nav-item active">
+                <a href="patient_profile.html">
+                    <i class="fa fa-user nav-icon"></i>
+                    <span class="nav-text">Perfil</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-user"></i>
+                Mi Perfil
+            </h1>
+            <p class="page-subtitle">Gestiona tu información personal y preferencias de salud</p>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="profile-grid">
+            <!-- Main Profile Content -->
+            <div class="main-profile">
+                <!-- Profile Header -->
+                <div class="profile-section">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            CR
+                            <div class="avatar-upload" onclick="changeAvatar()">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="profileName">Carlos Rodríguez</h2>
+                            <div class="profile-email" id="profileEmail">carlos.rodriguez@email.com</div>
+                            <div class="profile-status">
+                                <i class="fas fa-circle"></i>
+                                Cuenta Activa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="profile-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-id-card"></i>
+                        Información Personal
+                    </h2>
+                    <form class="profile-form" id="personalForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-input" id="firstName" value="Carlos" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" class="form-input" id="lastName" value="Rodríguez" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" id="email" value="carlos.rodriguez@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-input" id="birthDate" value="1985-06-15" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Género</label>
+                                <select class="form-select" id="gender" required>
+                                    <option value="Masculino" selected>Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                    <option value="Prefiero no decir">Prefiero no decir</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Zona Horaria</label>
+                                <select class="form-select" id="timezone">
+                                    <option value="America/Mexico_City" selected>México (GMT-6)</option>
+                                    <option value="America/New_York">Nueva York (GMT-5)</option>
+                                    <option value="America/Los_Angeles">Los Ángeles (GMT-8)</option>
+                                    <option value="Europe/Madrid">Madrid (GMT+1)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Dirección</label>
+                            <textarea class="form-textarea" id="address" rows="3" placeholder="Ingresa tu dirección completa">Calle Principal 123, Ciudad de México, CDMX</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teléfono de Emergencia</label>
+                            <input type="tel" class="form-input" id="emergencyPhone" value="+52 55 1234 5678" placeholder="+52 55 1234 5678">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Health Profile -->
+                <div class="profile-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Perfil de Salud
+                    </h2>
+                    <div class="health-profile">
+                        <div class="health-item">
+                            <div class="health-label">Altura</div>
+                            <div class="health-value" id="heightValue">175 <span class="health-unit">cm</span></div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Peso</div>
+                            <div class="health-value" id="weightValue">75 <span class="health-unit">kg</span></div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">IMC</div>
+                            <div class="health-value" id="bmiValue">24.5</div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Tipo de Sangre</div>
+                            <div class="health-value" id="bloodType">O+</div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Actividad Física</div>
+                            <div class="health-value" id="activityLevel">150 <span class="health-unit">min/sem</span></div>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-label">Alergias</div>
+                            <div class="health-value" id="allergiesCount">2</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-outline-primary" onclick="editHealthProfile()">
+                            <i class="fas fa-edit"></i>
+                            Editar Perfil de Salud
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div class="profile-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-sliders-h"></i>
+                        Preferencias
+                    </h2>
+                    <div class="preferences-grid">
+                        <div class="preference-item">
+                            <span class="preference-label">Notificaciones por Email</span>
+                            <div class="preference-toggle active" onclick="togglePreference(this, 'email')"></div>
+                        </div>
+                        <div class="preference-item">
+                            <span class="preference-label">Recordatorios de Medicamentos</span>
+                            <div class="preference-toggle active" onclick="togglePreference(this, 'medications')"></div>
+                        </div>
+                        <div class="preference-item">
+                            <span class="preference-label">Alertas de Salud</span>
+                            <div class="preference-toggle active" onclick="togglePreference(this, 'alerts')"></div>
+                        </div>
+                        <div class="preference-item">
+                            <span class="preference-label">Compartir Datos Anónimos</span>
+                            <div class="preference-toggle" onclick="togglePreference(this, 'anonymous')"></div>
+                        </div>
+                        <div class="preference-item">
+                            <span class="preference-label">Actualizaciones del Sistema</span>
+                            <div class="preference-toggle active" onclick="togglePreference(this, 'updates')"></div>
+                        </div>
+                        <div class="preference-item">
+                            <span class="preference-label">Sugerencias Personalizadas</span>
+                            <div class="preference-toggle active" onclick="togglePreference(this, 'suggestions')"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <!-- Account Security -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Seguridad de la Cuenta
+                    </h3>
+                    <div class="security-item">
+                        <div>
+                            <div class="security-label">Contraseña</div>
+                            <div class="security-value">Último cambio: hace 3 meses</div>
+                        </div>
+                        <a class="security-action" onclick="changePassword()">Cambiar</a>
+                    </div>
+                    <div class="security-item">
+                        <div>
+                            <div class="security-label">Autenticación de Dos Factores</div>
+                            <div class="security-value">No activada</div>
+                        </div>
+                        <a class="security-action" onclick="enable2FA()">Activar</a>
+                    </div>
+                    <div class="security-item">
+                        <div>
+                            <div class="security-label">Sesiones Activas</div>
+                            <div class="security-value">1 dispositivo</div>
+                        </div>
+                        <a class="security-action" onclick="manageSessions()">Ver</a>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-history"></i>
+                        Actividad Reciente
+                    </h3>
+                    <div class="activity-summary">
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-user-edit"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Perfil actualizado</div>
+                                <div class="activity-time">Hace 2 días</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Cita médica completada</div>
+                                <div class="activity-time">Hace 1 semana</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-file-medical"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Expediente revisado</div>
+                                <div class="activity-time">Hace 2 semanas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-bolt"></i>
+                        Acciones Rápidas
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn btn-primary" onclick="exportData()">
+                            <i class="fas fa-download"></i>
+                            Exportar Mis Datos
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="privacySettings()">
+                            <i class="fas fa-user-shield"></i>
+                            Configuración de Privacidad
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="deleteAccount()">
+                            <i class="fas fa-trash-alt"></i>
+                            Eliminar Cuenta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            menu.classList.toggle('show');
+            content.classList.toggle('mobile-menu-open');
+        }
+
+        // Load profile data
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const isLoggedIn = await authManager.isLoggedIn();
+            if (!isLoggedIn) {
+                window.location.href = '/patient_login.html';
+                return;
+            }
+
+            const userInfo = await authManager.getUserInfo();
+            if (userInfo.user_type !== 'patient') {
+                window.location.href = '/';
+                return;
+            }
+
+            // Load profile data
+            loadProfile();
+        });
+
+        // Load profile data from API
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/web/patient/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayProfile(data);
+                } else {
+                    // Show demo data if API not available
+                    displayDemoData();
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                displayDemoData();
+            }
+        }
+
+        // Display profile data
+        function displayProfile(data) {
+            if (!data) return;
+
+            // Update profile header
+            document.getElementById('profileName').textContent = `${data.nombre || 'Nombre'} ${data.apellido || 'Apellido'}`;
+            document.getElementById('profileEmail').textContent = data.email || 'email@ejemplo.com';
+
+            // Update form fields
+            document.getElementById('firstName').value = data.nombre || '';
+            document.getElementById('lastName').value = data.apellido || '';
+            document.getElementById('email').value = data.email || '';
+            document.getElementById('birthDate').value = data.fecha_nacimiento ? data.fecha_nacimiento.split('T')[0] : '';
+            document.getElementById('gender').value = data.genero || '';
+            document.getElementById('timezone').value = data.zona_horaria || 'America/Mexico_City';
+
+            // Update health profile
+            if (data.healthProfile) {
+                document.getElementById('heightValue').innerHTML = `${data.healthProfile.altura_cm || 'N/A'} <span class="health-unit">cm</span>`;
+                document.getElementById('weightValue').innerHTML = `${data.healthProfile.peso_kg || 'N/A'} <span class="health-unit">kg</span>`;
+
+                if (data.healthProfile.altura_cm && data.healthProfile.peso_kg) {
+                    const heightM = data.healthProfile.altura_cm / 100;
+                    const bmi = (data.healthProfile.peso_kg / (heightM * heightM)).toFixed(1);
+                    document.getElementById('bmiValue').textContent = bmi;
+                }
+
+                document.getElementById('activityLevel').innerHTML = `${data.healthProfile.minutos_actividad_fisica_semanal || 'N/A'} <span class="health-unit">min/sem</span>`;
+            }
+        }
+
+        // Display demo data when API is not available
+        function displayDemoData() {
+            // Demo data is already in the HTML
+            console.log('Displaying demo profile data');
+        }
+
+        // Form submission
+        document.getElementById('personalForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                nombre: document.getElementById('firstName').value,
+                apellido: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                fecha_nacimiento: document.getElementById('birthDate').value,
+                genero: document.getElementById('gender').value,
+                zona_horaria: document.getElementById('timezone').value,
+                direccion: document.getElementById('address').value,
+                telefono_emergencia: document.getElementById('emergencyPhone').value
+            };
+
+            try {
+                const response = await fetch('/api/web/patient/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Perfil actualizado exitosamente.');
+                    loadProfile(); // Reload profile data
+                } else {
+                    alert('Error al actualizar el perfil. Inténtalo de nuevo.');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Error de conexión. Inténtalo de nuevo.');
+            }
+        });
+
+        // Preference toggle functionality
+        function togglePreference(element, preference) {
+            element.classList.toggle('active');
+            const isActive = element.classList.contains('active');
+
+            // Here you would save the preference to the server
+            console.log(`Preference ${preference} set to ${isActive}`);
+        }
+
+        // Action functions
+        function changeAvatar() {
+            alert('Funcionalidad de cambio de avatar próximamente disponible');
+        }
+
+        function editHealthProfile() {
+            window.location.href = 'lifestyle.html';
+        }
+
+        function changePassword() {
+            alert('Funcionalidad de cambio de contraseña próximamente disponible');
+        }
+
+        function enable2FA() {
+            alert('Funcionalidad de 2FA próximamente disponible');
+        }
+
+        function manageSessions() {
+            alert('Funcionalidad de gestión de sesiones próximamente disponible');
+        }
+
+        function exportData() {
+            alert('Exportando datos... (funcionalidad próximamente disponible)');
+        }
+
+        function privacySettings() {
+            alert('Abriendo configuración de privacidad...');
+        }
+
+        function deleteAccount() {
+            if (confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
+                alert('Funcionalidad de eliminación de cuenta próximamente disponible');
+            }
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            if (!menu.contains(e.target) && !menuBtn.contains(e.target) && menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                content.classList.remove('mobile-menu-open');
+            }
+        });
+    </script>
+</body>
+</html>

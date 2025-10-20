@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Citas Médicas - PredictHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
+    <style>
+        :root {
+            --primary-color: #059669;
+            --primary-dark: #047857;
+            --secondary-color: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        body {
+            background: var(--bg-secondary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Navigation Styles */
+        .main-menu {
+            width: 300px;
+            height: 100vh;
+            background: var(--gradient-primary);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .main-menu.hide {
+            transform: translateX(-100%);
+        }
+
+        .main-menu h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-menu ul {
+            list-style: none;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+        .nav-item {
+            position: relative;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item.active b {
+            opacity: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.3s ease;
+        }
+
+        .nav-item a:hover::before,
+        .nav-item.active a::before {
+            left: 0;
+        }
+
+        .nav-item:hover a,
+        .nav-item.active a {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-text {
+            font-size: 1rem;
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Content Styles */
+        .content {
+            margin-left: 300px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content.mobile-menu-open {
+            margin-left: 0;
+        }
+
+        /* Header */
+        .page-header {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        /* Appointments Content */
+        .appointments-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .main-appointments {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .appointments-section {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Tabs */
+        .appointments-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Appointments List */
+        .appointments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .appointment-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .appointment-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .appointment-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .appointment-content {
+            flex: 1;
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .appointment-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .appointment-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .appointment-status.confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .appointment-status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .appointment-status.cancelled {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .appointment-details {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .appointment-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .appointment-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-action.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-action.primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        /* Schedule Appointment */
+        .schedule-section {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .schedule-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-select, .form-input {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .btn-schedule {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-schedule:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        }
+
+        /* Sidebar */
+        .appointments-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar-card {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Upcoming Appointments */
+        .upcoming-appointments {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .upcoming-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .upcoming-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .upcoming-content {
+            flex: 1;
+        }
+
+        .upcoming-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .upcoming-time {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Appointment Stats */
+        .appointment-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #ef4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-menu {
+                transform: translateX(-100%);
+            }
+
+            .main-menu.show {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .content.mobile-menu-open {
+                margin-left: 300px;
+            }
+
+            .appointments-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .appointment-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .appointment-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+
+            .appointment-actions {
+                margin-left: 0;
+                margin-top: 1rem;
+                justify-content: center;
+            }
+
+            .appointment-meta {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu">
+        <h1>
+            <i class="fas fa-heartbeat"></i>
+            PredictHealth
+        </h1>
+        <ul>
+            <li class="nav-item">
+                <a href="patient_dashboard.html">
+                    <i class="fa fa-house nav-icon"></i>
+                    <span class="nav-text">Inicio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="patient_medical_record.html">
+                    <i class="fa fa-file-medical nav-icon"></i>
+                    <span class="nav-text">Mi Expediente</span>
+                </a>
+            </li>
+            <li class="nav-item active">
+                <a href="patient_appointments.html">
+                    <i class="fa fa-calendar-check nav-icon"></i>
+                    <span class="nav-text">Mis Citas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="patient_profile.html">
+                    <i class="fa fa-user nav-icon"></i>
+                    <span class="nav-text">Perfil</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-calendar-check"></i>
+                Mis Citas Médicas
+            </h1>
+            <p class="page-subtitle">Gestiona tus citas médicas y programa nuevas consultas</p>
+        </div>
+
+        <!-- Appointments Content -->
+        <div class="appointments-grid">
+            <!-- Main Content -->
+            <div class="main-appointments">
+                <!-- Appointments Tabs -->
+                <div class="appointments-section">
+                    <div class="appointments-tabs">
+                        <button class="tab-btn active" onclick="showTab('upcoming')">Próximas</button>
+                        <button class="tab-btn" onclick="showTab('past')">Pasadas</button>
+                    </div>
+
+                    <!-- Upcoming Appointments -->
+                    <div id="upcomingTab" class="tab-content">
+                        <div class="appointments-list" id="upcomingAppointments">
+                            <div class="appointment-card">
+                                <div class="appointment-icon">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div class="appointment-content">
+                                    <div class="appointment-header">
+                                        <h3 class="appointment-title">Consulta con Dr. García</h3>
+                                        <span class="appointment-status confirmed">Confirmada</span>
+                                    </div>
+                                    <div class="appointment-details">
+                                        <strong>Cardiología</strong> - Hospital Central
+                                    </div>
+                                    <div class="appointment-meta">
+                                        <span><i class="fas fa-calendar me-1"></i>15 Nov 2024</span>
+                                        <span><i class="fas fa-clock me-1"></i>10:00 AM</span>
+                                        <span><i class="fas fa-map-marker-alt me-1"></i>Consultorio 205</span>
+                                    </div>
+                                </div>
+                                <div class="appointment-actions">
+                                    <button class="btn-action" onclick="rescheduleAppointment('1')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action" onclick="cancelAppointment('1')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <button class="btn-action primary" onclick="joinAppointment('1')">
+                                        <i class="fas fa-video"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="appointment-card">
+                                <div class="appointment-icon">
+                                    <i class="fas fa-stethoscope"></i>
+                                </div>
+                                <div class="appointment-content">
+                                    <div class="appointment-header">
+                                        <h3 class="appointment-title">Chequeo General</h3>
+                                        <span class="appointment-status pending">Pendiente</span>
+                                    </div>
+                                    <div class="appointment-details">
+                                        <strong>Medicina General</strong> - Clínica San José
+                                    </div>
+                                    <div class="appointment-meta">
+                                        <span><i class="fas fa-calendar me-1"></i>22 Nov 2024</span>
+                                        <span><i class="fas fa-clock me-1"></i>2:30 PM</span>
+                                        <span><i class="fas fa-map-marker-alt me-1"></i>Consultorio 101</span>
+                                    </div>
+                                </div>
+                                <div class="appointment-actions">
+                                    <button class="btn-action" onclick="rescheduleAppointment('2')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-action" onclick="cancelAppointment('2')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <button class="btn-action primary" onclick="confirmAppointment('2')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Past Appointments -->
+                    <div id="pastTab" class="tab-content" style="display: none;">
+                        <div class="appointments-list" id="pastAppointments">
+                            <div class="appointment-card">
+                                <div class="appointment-icon">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div class="appointment-content">
+                                    <div class="appointment-header">
+                                        <h3 class="appointment-title">Control Diabetes</h3>
+                                        <span class="appointment-status confirmed">Completada</span>
+                                    </div>
+                                    <div class="appointment-details">
+                                        <strong>Endocrinología</strong> - Hospital Central
+                                    </div>
+                                    <div class="appointment-meta">
+                                        <span><i class="fas fa-calendar me-1"></i>1 Nov 2024</span>
+                                        <span><i class="fas fa-clock me-1"></i>9:00 AM</span>
+                                        <span><i class="fas fa-map-marker-alt me-1"></i>Consultorio 310</span>
+                                    </div>
+                                </div>
+                                <div class="appointment-actions">
+                                    <button class="btn-action" onclick="viewDetails('3')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action" onclick="downloadReport('3')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule New Appointment -->
+                <div class="schedule-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-calendar-plus"></i>
+                        Programar Nueva Cita
+                    </h2>
+                    <form class="schedule-form" id="scheduleForm">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Consulta</label>
+                            <select class="form-select" id="appointmentType" required>
+                                <option value="">Selecciona el tipo de consulta</option>
+                                <option value="general">Medicina General</option>
+                                <option value="cardiology">Cardiología</option>
+                                <option value="dermatology">Dermatología</option>
+                                <option value="endocrinology">Endocrinología</option>
+                                <option value="gynecology">Ginecología</option>
+                                <option value="neurology">Neurología</option>
+                                <option value="ophthalmology">Oftalmología</option>
+                                <option value="orthopedics">Ortopedia</option>
+                                <option value="pediatrics">Pediatría</option>
+                                <option value="psychiatry">Psiquiatría</option>
+                                <option value="urology">Urología</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Motivo de la Consulta</label>
+                            <select class="form-select" id="appointmentReason" required>
+                                <option value="">Selecciona el motivo</option>
+                                <option value="checkup">Chequeo de rutina</option>
+                                <option value="followup">Seguimiento</option>
+                                <option value="symptoms">Síntomas específicos</option>
+                                <option value="emergency">Urgencia</option>
+                                <option value="prescription">Renovar receta</option>
+                                <option value="results">Revisar resultados</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Preferencia de Horario</label>
+                            <select class="form-select" id="timePreference">
+                                <option value="">Sin preferencia</option>
+                                <option value="morning">Mañana (8:00 - 12:00)</option>
+                                <option value="afternoon">Tarde (12:00 - 18:00)</option>
+                                <option value="evening">Noche (18:00 - 20:00)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Comentarios Adicionales</label>
+                            <textarea class="form-input" id="appointmentNotes" rows="3" placeholder="Describe brevemente tu consulta..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-schedule">
+                            <i class="fas fa-calendar-plus me-2"></i>
+                            Solicitar Cita
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="appointments-sidebar">
+                <!-- Appointment Stats -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Estadísticas
+                    </h3>
+                    <div class="appointment-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="totalAppointments">2</div>
+                            <div class="stat-label">Total de Citas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="upcomingCount">2</div>
+                            <div class="stat-label">Próximas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="completedCount">1</div>
+                            <div class="stat-label">Completadas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="cancelledCount">0</div>
+                            <div class="stat-label">Canceladas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Appointments Summary -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-clock"></i>
+                        Próximas Citas
+                    </h3>
+                    <div class="upcoming-appointments" id="upcomingSummary">
+                        <div class="upcoming-item">
+                            <div class="upcoming-icon">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <div class="upcoming-content">
+                                <div class="upcoming-title">Dr. García</div>
+                                <div class="upcoming-time">15 Nov - 10:00 AM</div>
+                            </div>
+                        </div>
+                        <div class="upcoming-item">
+                            <div class="upcoming-icon">
+                                <i class="fas fa-stethoscope"></i>
+                            </div>
+                            <div class="upcoming-content">
+                                <div class="upcoming-title">Chequeo General</div>
+                                <div class="upcoming-time">22 Nov - 2:30 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <i class="fas fa-bolt"></i>
+                        Acciones Rápidas
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn btn-primary" onclick="scheduleUrgent()">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Consulta Urgente
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="viewCalendar()">
+                            <i class="fas fa-calendar-alt me-1"></i>Ver Calendario
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="contactDoctor()">
+                            <i class="fas fa-comments me-1"></i>Contactar Doctor
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            menu.classList.toggle('show');
+            content.classList.toggle('mobile-menu-open');
+        }
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Load appointments data
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            const isLoggedIn = await authManager.isLoggedIn();
+            if (!isLoggedIn) {
+                window.location.href = '/patient_login.html';
+                return;
+            }
+
+            const userInfo = await authManager.getUserInfo();
+            if (userInfo.user_type !== 'patient') {
+                window.location.href = '/';
+                return;
+            }
+
+            // Load appointments data
+            loadAppointments();
+        });
+
+        // Load appointments from API
+        async function loadAppointments() {
+            try {
+                const response = await fetch('/api/web/patient/appointments', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayAppointments(data);
+                } else {
+                    // Show demo data if API not available
+                    displayDemoData();
+                }
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                displayDemoData();
+            }
+        }
+
+        // Display appointments data
+        function displayAppointments(data) {
+            // Update stats
+            if (data.stats) {
+                document.getElementById('totalAppointments').textContent = data.stats.total || 0;
+                document.getElementById('upcomingCount').textContent = data.stats.upcoming || 0;
+                document.getElementById('completedCount').textContent = data.stats.completed || 0;
+                document.getElementById('cancelledCount').textContent = data.stats.cancelled || 0;
+            }
+
+            // Update upcoming appointments
+            if (data.upcoming && data.upcoming.length > 0) {
+                const upcomingContainer = document.getElementById('upcomingAppointments');
+                upcomingContainer.innerHTML = data.upcoming.map(appointment => `
+                    <div class="appointment-card">
+                        <div class="appointment-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="appointment-content">
+                            <div class="appointment-header">
+                                <h3 class="appointment-title">${appointment.doctor_name || 'Doctor'}</h3>
+                                <span class="appointment-status ${appointment.status}">${appointment.status_text || 'Confirmada'}</span>
+                            </div>
+                            <div class="appointment-details">
+                                <strong>${appointment.specialty || 'Especialidad'}</strong> - ${appointment.location || 'Ubicación'}
+                            </div>
+                            <div class="appointment-meta">
+                                <span><i class="fas fa-calendar me-1"></i>${appointment.date || 'Fecha'}</span>
+                                <span><i class="fas fa-clock me-1"></i>${appointment.time || 'Hora'}</span>
+                                <span><i class="fas fa-map-marker-alt me-1"></i>${appointment.room || 'Consultorio'}</span>
+                            </div>
+                        </div>
+                        <div class="appointment-actions">
+                            <button class="btn-action" onclick="rescheduleAppointment('${appointment.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action" onclick="cancelAppointment('${appointment.id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="btn-action primary" onclick="joinAppointment('${appointment.id}')">
+                                <i class="fas fa-video"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Display demo data when API is not available
+        function displayDemoData() {
+            // Demo data is already in the HTML
+            console.log('Displaying demo appointments data');
+        }
+
+        // Appointment action functions
+        function rescheduleAppointment(id) {
+            alert('Funcionalidad de reagendar cita próximamente disponible');
+        }
+
+        function cancelAppointment(id) {
+            if (confirm('¿Estás seguro de que quieres cancelar esta cita?')) {
+                alert('Cita cancelada. Se enviará confirmación por email.');
+            }
+        }
+
+        function joinAppointment(id) {
+            alert('Abriendo videollamada...');
+        }
+
+        function confirmAppointment(id) {
+            alert('Cita confirmada exitosamente.');
+        }
+
+        function viewDetails(id) {
+            alert('Abriendo detalles de la cita...');
+        }
+
+        function downloadReport(id) {
+            alert('Descargando reporte de la cita...');
+        }
+
+        // Schedule form handling
+        document.getElementById('scheduleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                type: document.getElementById('appointmentType').value,
+                reason: document.getElementById('appointmentReason').value,
+                timePreference: document.getElementById('timePreference').value,
+                notes: document.getElementById('appointmentNotes').value
+            };
+
+            try {
+                const response = await fetch('/api/web/patient/appointments/schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Cita solicitada exitosamente. Recibirás confirmación pronto.');
+                    this.reset();
+                    loadAppointments(); // Reload appointments
+                } else {
+                    alert('Error al solicitar la cita. Inténtalo de nuevo.');
+                }
+            } catch (error) {
+                console.error('Error scheduling appointment:', error);
+                alert('Error de conexión. Inténtalo de nuevo.');
+            }
+        });
+
+        // Quick action functions
+        function scheduleUrgent() {
+            document.getElementById('appointmentType').value = 'general';
+            document.getElementById('appointmentReason').value = 'emergency';
+            document.getElementById('scheduleForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function viewCalendar() {
+            alert('Abriendo calendario de disponibilidad...');
+        }
+
+        function contactDoctor() {
+            alert('Abriendo chat con el doctor...');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('mainMenu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            const content = document.getElementById('content');
+
+            if (!menu.contains(e.target) && !menuBtn.contains(e.target) && menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                content.classList.remove('mobile-menu-open');
+            }
+        });
+    </script>
+</body>
+</html>

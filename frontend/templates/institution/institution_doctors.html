@@ -1,128 +1,377 @@
-<!-- /frontend\templates\institution_doctors.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionar Doctores - PredictHealth</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Gestión de Doctores - PredictHealth Institución</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/institution_dashboard.css') }}">
     <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #8b5cf6;
+            --primary-color: #7c3aed;
+            --primary-dark: #6d28d9;
+            --secondary-color: #a855f7;
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
             --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
+            --bg-secondary: #f9fafc;
             --border-color: #e5e7eb;
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
         }
 
         body {
-            background: var(--bg-secondary);
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
+            background: var(--bg-secondary);
         }
 
-        .navbar {
+        /* Sidebar Navigation */
+        .main-menu {
             background: var(--gradient-primary);
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow-lg);
-            position: sticky;
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
             top: 0;
             z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        .navbar-brand {
-            color: white;
+        .main-menu.collapsed {
+            width: 80px;
+        }
+
+        .logo-container {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 1.5rem;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 0 auto 1rem;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
             font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .institution-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            position: relative;
+            margin: 0.25rem 1rem;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item b {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid white;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item.active b {
+            opacity: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1.25rem;
+            color: white;
             text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item a:hover {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-icon {
+            width: 20px;
+            font-size: 1.1rem;
+            margin-right: 0.875rem;
+            text-align: center;
+        }
+
+        .nav-text {
+            font-weight: 500;
+            font-size: 0.9rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .main-menu.collapsed .nav-text {
+            opacity: 0;
+        }
+
+        /* User Profile Section */
+        .user-profile {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            padding: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            margin-left: auto;
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s ease;
+        /* Main Content */
+        .content {
+            margin-left: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
         }
 
-        .nav-link:hover {
-            opacity: 0.8;
-            color: white;
+        .content.expanded {
+            margin-left: 80px;
         }
 
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .page-header {
+        /* Content Header */
+        .content-header {
             background: white;
-            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-info {
+            margin-bottom: 1rem;
+        }
+
+        .page-info h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .page-info p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Doctors Content */
+        .doctors-content {
             padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);
+        }
+
+        .doctors-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 2rem;
         }
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .btn-primary {
-            background: var(--gradient-primary);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: transform 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-        }
-
-        .doctors-grid {
+        .doctors-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.doctors {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        }
+
+        .stat-icon.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .stat-icon.inactive {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
         .doctor-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 1.5rem;
-            box-shadow: var(--shadow-lg);
-            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
         }
 
         .doctor-card:hover {
-            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
         }
 
         .doctor-header {
@@ -140,32 +389,58 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
             color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .doctor-info {
+            flex: 1;
         }
 
         .doctor-info h3 {
-            margin: 0;
-            font-size: 1.125rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--text-primary);
+            margin-bottom: 0.25rem;
         }
 
         .doctor-info p {
-            margin: 0;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            margin-bottom: 0.25rem;
         }
 
         .doctor-specialty {
-            background: #e0f2fe;
-            color: #0277bd;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .doctor-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             padding: 0.25rem 0.75rem;
             border-radius: 12px;
             font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
+            font-weight: 500;
             margin-bottom: 1rem;
+        }
+
+        .doctor-status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .doctor-status.inactive {
+            background: #fef2f2;
+            color: #dc2626;
         }
 
         .doctor-actions {
@@ -173,16 +448,37 @@
             gap: 0.5rem;
         }
 
-        .btn-sm {
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
             padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 0.875rem;
-            border-radius: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
         }
 
         .btn-outline-primary {
-            border: 1px solid var(--primary-color);
             color: var(--primary-color);
-            background: transparent;
+            border-color: var(--primary-color);
+            background: white;
         }
 
         .btn-outline-primary:hover {
@@ -191,9 +487,9 @@
         }
 
         .btn-outline-danger {
-            border: 1px solid #dc2626;
             color: #dc2626;
-            background: transparent;
+            border-color: #dc2626;
+            background: white;
         }
 
         .btn-outline-danger:hover {
@@ -201,462 +497,266 @@
             color: white;
         }
 
-        .add-doctor-section {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: var(--shadow-lg);
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
             margin-bottom: 2rem;
         }
 
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-            background-color: white;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .form-group select {
-            cursor: pointer;
-        }
-
-        .password-input-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .password-input-container input {
-            padding-right: 3rem;
-        }
-
-        .password-toggle-btn {
-            position: absolute;
-            right: 0.75rem;
-            background: none;
-            border: none;
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
             color: var(--text-secondary);
-            cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 4px;
-            transition: color 0.3s ease;
-            z-index: 10;
         }
 
-        .password-toggle-btn:hover {
-            color: var(--primary-color);
-        }
-
-        .password-toggle-btn:focus {
-            outline: none;
-            color: var(--primary-color);
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
+            .main-menu {
+                transform: translateX(-100%);
             }
-            
-            .page-header {
+
+            .main-menu.show {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .content.expanded {
+                margin-left: 0;
+            }
+
+            .doctors-header {
                 flex-direction: column;
                 gap: 1rem;
-                text-align: center;
+                align-items: stretch;
             }
-            
+
+            .doctors-stats {
+                grid-template-columns: 1fr;
+            }
+
             .doctors-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .form-row {
-                grid-template-columns: 1fr;
+
+            .doctor-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .doctor-actions {
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="d-flex align-items-center justify-content-between w-100">
-            <a href="/institution_dashboard.html" class="navbar-brand">
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu">
+        <div class="logo-container">
+            <div class="logo-icon">
                 <i class="fas fa-hospital"></i>
-                PredictHealth
-            </a>
-            <div class="navbar-nav">
-                <span class="nav-link">
-                    <i class="fas fa-building me-1"></i>
-                    {{ session.institution_name }}
-                </span>
-                <form method="POST" action="/auth/logout" style="display: inline;">
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-sign-out-alt me-1"></i>
-                        Cerrar Sesión
-                    </button>
-                </form>
             </div>
+            <div class="logo-text">PredictHealth</div>
+            <div class="institution-badge">
+                <i class="fas fa-building me-1"></i>
+                <span id="institutionType">Institución</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="institution_dashboard.html">
+                    <i class="fa fa-house nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item active">
+                <a href="institution_doctors.html">
+                    <i class="fa fa-user-md nav-icon"></i>
+                    <span class="nav-text">Doctores</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_patients.html">
+                    <i class="fa fa-users nav-icon"></i>
+                    <span class="nav-text">Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_analytics.html">
+                    <i class="fa fa-chart-bar nav-icon"></i>
+                    <span class="nav-text">Analíticas</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_settings.html">
+                    <i class="fa fa-cog nav-icon"></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Institución</div>
+                    <div class="user-role">Administrador</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </button>
         </div>
     </nav>
 
-    <div class="main-container">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-user-md me-2"></i>
-                Gestionar Doctores
-            </h1>
-            <button class="btn btn-primary" onclick="toggleAddDoctorForm()">
-                <i class="fas fa-plus me-1"></i>
-                Agregar Doctor
-            </button>
+    <!-- Main Content -->
+    <section class="content" id="mainContent">
+        <div class="content-header">
+            <div class="page-info">
+                <h1>Gestión de Doctores</h1>
+                <p>Administra los doctores de tu institución</p>
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
 
-        <!-- Add Doctor Form -->
-        <div class="add-doctor-section" id="addDoctorForm" style="display: none;">
-            <h2 class="section-title">
-                <i class="fas fa-user-plus"></i>
-                Registrar Nuevo Doctor
-            </h2>
-            
-            <form id="doctorForm" action="/institution/doctors" method="POST">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="nombre">Nombre:</label>
-                        <input type="text" id="nombre" name="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="apellido">Apellido:</label>
-                        <input type="text" id="apellido" name="apellido" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="licencia_medica">Licencia Médica:</label>
-                        <input type="text" id="licencia_medica" name="licencia_medica" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="especialidad">Especialidad:</label>
-                        <select id="especialidad" name="especialidad" required>
-                            <option value="">Seleccionar especialidad</option>
-                            <option value="Cardiología">Cardiología</option>
-                            <option value="Neurología">Neurología</option>
-                            <option value="Medicina Interna">Medicina Interna</option>
-                            <option value="Pediatría">Pediatría</option>
-                            <option value="Ginecología">Ginecología</option>
-                            <option value="Traumatología">Traumatología</option>
-                            <option value="Dermatología">Dermatología</option>
-                            <option value="Oftalmología">Oftalmología</option>
-                            <option value="Psiquiatría">Psiquiatría</option>
-                            <option value="Endocrinología">Endocrinología</option>
-                            <option value="Gastroenterología">Gastroenterología</option>
-                            <option value="Neumología">Neumología</option>
-                            <option value="Oncología">Oncología</option>
-                            <option value="Medicina General">Medicina General</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Contraseña:</label>
-                        <div class="password-input-container">
-                            <input type="password" id="password" name="password" minlength="8" required placeholder="Mínimo 8 caracteres">
-                            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility()">
-                                <i class="fas fa-eye" id="passwordToggleIcon"></i>
-                            </button>
-                        </div>
-                        <small class="text-muted">Debe contener mayúsculas, minúsculas, números y caracteres especiales</small>
-                    </div>
+        <!-- Doctors Content -->
+        <div class="doctors-content">
+            <div class="doctors-header">
+                <div></div>
+                <button class="btn btn-primary" onclick="showAddDoctorModal()">
+                    <i class="fas fa-plus"></i>
+                    Agregar Doctor
+                </button>
+            </div>
 
-                    <div class="form-group">
-                        <label for="confirm_password">Confirmar Contraseña:</label>
-                        <div class="password-input-container">
-                            <input type="password" id="confirm_password" name="confirm_password" minlength="8" required placeholder="Repita la contraseña">
-                            <button type="button" class="password-toggle-btn" onclick="toggleConfirmPasswordVisibility()">
-                                <i class="fas fa-eye" id="confirmPasswordToggleIcon"></i>
-                            </button>
+            <!-- Statistics -->
+            <div class="doctors-stats">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon doctors">
+                            <i class="fas fa-user-md"></i>
                         </div>
                     </div>
+                    <div class="stat-number" id="totalDoctors">0</div>
+                    <div class="stat-label">Total Doctores</div>
                 </div>
-                
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>
-                        Registrar Doctor
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="toggleAddDoctorForm()">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
 
-        <!-- Doctors List -->
-        <div class="doctors-grid" id="doctorsList">
-            <!-- Doctors will be loaded here via JavaScript -->
-            <div class="doctor-card">
-                <div class="doctor-header">
-                    <div class="doctor-avatar">
-                        <i class="fas fa-user-md"></i>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon active">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
                     </div>
-                    <div class="doctor-info">
-                        <h3>Dr. Juan Pérez</h3>
-                        <p>juan.perez@hospital.com</p>
-                    </div>
+                    <div class="stat-number" id="activeDoctors">0</div>
+                    <div class="stat-label">Doctores Activos</div>
                 </div>
-                <div class="doctor-specialty">Cardiología</div>
-                <div class="doctor-actions">
-                    <button class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-eye me-1"></i>
-                        Ver Perfil
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-trash me-1"></i>
-                        Eliminar
-                    </button>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon inactive">
+                            <i class="fas fa-pause-circle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="inactiveDoctors">0</div>
+                    <div class="stat-label">Doctores Inactivos</div>
                 </div>
             </div>
 
-            <div class="doctor-card">
-                <div class="doctor-header">
-                    <div class="doctor-avatar">
-                        <i class="fas fa-user-md"></i>
-                    </div>
-                    <div class="doctor-info">
-                        <h3>Dra. María González</h3>
-                        <p>maria.gonzalez@hospital.com</p>
-                    </div>
-                </div>
-                <div class="doctor-specialty">Neurología</div>
-                <div class="doctor-actions">
-                    <button class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-eye me-1"></i>
-                        Ver Perfil
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-trash me-1"></i>
-                        Eliminar
-                    </button>
-                </div>
+            <!-- Doctors Grid -->
+            <div class="doctors-grid" id="doctorsGrid">
+                <!-- Doctors will be loaded here -->
             </div>
         </div>
-    </div>
+    </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
     <script>
-        function toggleAddDoctorForm() {
-            const form = document.getElementById('addDoctorForm');
-            if (form.style.display === 'none') {
-                form.style.display = 'block';
-                form.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                form.style.display = 'none';
-            }
+        // Global variables
+        let institutionData = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInstitutionData();
+            loadDoctors();
+        });
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('mainContent');
+
+            menu.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
         }
 
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('passwordToggleIcon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
-            }
-        }
-
-        function toggleConfirmPasswordVisibility() {
-            const confirmPasswordInput = document.getElementById('confirm_password');
-            const toggleIcon = document.getElementById('confirmPasswordToggleIcon');
-
-            if (confirmPasswordInput.type === 'password') {
-                confirmPasswordInput.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            } else {
-                confirmPasswordInput.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
-            }
-        }
-
-        function validatePasswordStrength(password) {
-            const minLength = 8;
-            const hasUpperCase = /[A-Z]/.test(password);
-            const hasLowerCase = /[a-z]/.test(password);
-            const hasNumbers = /\d/.test(password);
-            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-            return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
-        }
-
-        function checkPasswordMatch() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const confirmField = document.getElementById('confirm_password');
-
-            if (confirmPassword && password !== confirmPassword) {
-                confirmField.style.borderColor = '#ef4444';
-                return false;
-            } else if (confirmPassword && password === confirmPassword) {
-                confirmField.style.borderColor = '#10b981';
-                return true;
-            } else {
-                confirmField.style.borderColor = '';
-                return false;
-            }
-        }
-
-        // Handle form submission
-        document.getElementById('doctorForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-
-            // Validaciones adicionales del lado cliente
-            const password = formData.get('password');
-            const confirmPassword = formData.get('confirm_password');
-
-            // Validar fortaleza de contraseña
-            if (!validatePasswordStrength(password)) {
-                showAlert('La contraseña no cumple con los requisitos de seguridad', 'error');
-                return;
-            }
-
-            // Validar que las contraseñas coincidan
-            if (password !== confirmPassword) {
-                showAlert('Las contraseñas no coinciden', 'error');
-                return;
-            }
-
-            // Prepare JSON payload for web frontend communication
-            const doctorData = {
-                nombre: formData.get('nombre'),
-                apellido: formData.get('apellido'),
-                email: formData.get('email'),
-                licencia_medica: formData.get('licencia_medica'),
-                especialidad: formData.get('especialidad'),
-                password: password,
-                confirm_password: confirmPassword
-            };
-
-            console.log('Enviando datos del doctor:', doctorData);
-
+        // Load institution data
+        async function loadInstitutionData() {
             try {
-                const response = await fetch('/api/web/institution/doctors', {
-                    method: 'POST',
+                const response = await fetch('/api/web/institution/dashboard', {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include', // Incluir cookies automáticamente
-                    body: JSON.stringify(doctorData)
+                    credentials: 'include'
                 });
 
-                const data = await response.json();
+                if (response.ok) {
+                    const data = await response.json();
+                    institutionData = data.data || {};
 
-                if (response.ok && data.status === 'success') {
-                    showAlert(data.message || 'Doctor registrado exitosamente', 'success');
-                    this.reset();
-                    toggleAddDoctorForm();
-                    loadDoctors();
-                } else {
-                    throw new Error(data.message || 'Error al registrar doctor');
+                    // Update UI with institution data
+                    updateInstitutionInfo(institutionData);
+                } else if (response.status === 401) {
+                    window.location.href = '/institution_login.html';
                 }
             } catch (error) {
-                showAlert('Error al registrar doctor: ' + error.message, 'error');
+                console.error('Error loading institution data:', error);
             }
-        });
-
-        function showAlert(message, type) {
-            // Create alert element
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            // Insert at the top of main container
-            const mainContainer = document.querySelector('.main-container');
-            mainContainer.insertBefore(alertDiv, mainContainer.firstChild);
-            
-            // Auto-dismiss after 5 seconds
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
-                }
-            }, 5000);
         }
 
+        // Update institution information in UI
+        function updateInstitutionInfo(data) {
+            if (data.institution) {
+                document.getElementById('userName').textContent = data.institution.nombre || 'Institución';
+                document.getElementById('institutionType').textContent = data.institution.tipo_institucion || 'Institución';
+            }
+        }
+
+        // Load doctors data
         async function loadDoctors() {
             try {
                 const response = await fetch('/api/web/institution/doctors', {
@@ -664,113 +764,134 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include' // Incluir cookies automáticamente
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
 
                 if (response.ok && data.status === 'success') {
-                    const doctors = data.doctors || [];
-                    displayDoctors(doctors);
+                    displayDoctors(data.doctors || []);
+                    updateDoctorStats(data.stats || {});
                 } else {
-                    throw new Error(data.message || 'Error al cargar doctores');
+                    displayDoctors([]);
                 }
             } catch (error) {
                 console.error('Error loading doctors:', error);
-                showAlert('Error al cargar doctores: ' + error.message, 'error');
-                // Mostrar datos de ejemplo si falla la carga
                 displayDoctors([]);
             }
         }
 
+        // Display doctors
         function displayDoctors(doctors) {
-            const doctorsList = document.getElementById('doctorsList');
+            const doctorsGrid = document.getElementById('doctorsGrid');
 
             if (doctors.length === 0) {
-                doctorsList.innerHTML = `
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">No hay doctores registrados</h4>
-                            <p class="text-muted">Comienza agregando el primer doctor a tu institución</p>
+                doctorsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-md"></i>
                         </div>
+                        <h3 class="empty-title">No hay doctores registrados</h3>
+                        <p class="empty-description">
+                            Comienza agregando el primer doctor a tu institución
+                        </p>
+                        <button class="btn btn-primary" onclick="showAddDoctorModal()">
+                            <i class="fas fa-plus"></i>
+                            Agregar Primer Doctor
+                        </button>
                     </div>
                 `;
                 return;
             }
 
-            doctorsList.innerHTML = doctors.map(doctor => `
-                <div class="doctor-card">
-                    <div class="doctor-header">
-                        <div class="doctor-avatar">
-                            <i class="fas fa-user-md"></i>
+            doctorsGrid.innerHTML = doctors.map(doctor => {
+                const initials = doctor.nombre ? doctor.nombre.charAt(0) + (doctor.apellido ? doctor.apellido.charAt(0) : '') : 'DR';
+                const statusClass = doctor.activo ? 'active' : 'inactive';
+                const statusText = doctor.activo ? 'Activo' : 'Inactivo';
+
+                return `
+                    <div class="doctor-card">
+                        <div class="doctor-header">
+                            <div class="doctor-avatar">${initials}</div>
+                            <div class="doctor-info">
+                                <h3>Dr. ${doctor.nombre || 'Nombre'} ${doctor.apellido || 'Apellido'}</h3>
+                                <p>${doctor.email || 'email@ejemplo.com'}</p>
+                                <p>ID: ${doctor.id_doctor || doctor.id || 'N/A'}</p>
+                            </div>
                         </div>
-                        <div class="doctor-info">
-                            <h3>Dr. ${doctor.nombre || doctor.first_name} ${doctor.apellido || doctor.last_name}</h3>
-                            <p>${doctor.email || doctor.contact_email}</p>
+                        <div class="doctor-specialty">${doctor.especialidad || doctor.specialty || 'Sin especialidad'}</div>
+                        <div class="doctor-status ${statusClass}">
+                            <i class="fas fa-circle"></i>
+                            ${statusText}
+                        </div>
+                        <div class="doctor-actions">
+                            <button class="btn btn-outline-primary" onclick="viewDoctor('${doctor.id_doctor || doctor.id}')">
+                                <i class="fas fa-eye"></i>
+                                Ver Perfil
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteDoctor('${doctor.id_doctor || doctor.id}', '${doctor.nombre || 'Doctor'}')">
+                                <i class="fas fa-trash"></i>
+                                Eliminar
+                            </button>
                         </div>
                     </div>
-                    <div class="doctor-specialty">${doctor.especialidad || doctor.specialty || 'Sin especialidad'}</div>
-                    <div class="doctor-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewDoctor('${doctor.id_doctor || doctor.id}')">
-                            <i class="fas fa-eye me-1"></i>
-                            Ver Perfil
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDoctor('${doctor.id_doctor || doctor.id}', '${doctor.nombre || doctor.first_name}')">
-                            <i class="fas fa-trash me-1"></i>
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        // Update doctor statistics
+        function updateDoctorStats(stats) {
+            document.getElementById('totalDoctors').textContent = stats.total_doctors || 0;
+            document.getElementById('activeDoctors').textContent = stats.active_doctors || 0;
+            document.getElementById('inactiveDoctors').textContent = stats.inactive_doctors || 0;
+        }
+
+        // Action functions
+        function showAddDoctorModal() {
+            alert('Funcionalidad de agregar doctor próximamente disponible');
         }
 
         function viewDoctor(doctorId) {
-            // Implementar vista de perfil del doctor
-            showAlert('Función de ver perfil en desarrollo', 'info');
+            alert('Funcionalidad de ver perfil próximamente disponible');
         }
 
-        async function deleteDoctor(doctorId, doctorName) {
+        function deleteDoctor(doctorId, doctorName) {
             if (confirm(`¿Estás seguro de que deseas eliminar al Dr. ${doctorName}?`)) {
+                alert('Funcionalidad de eliminar doctor próximamente disponible');
+            }
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 try {
-                    const response = await fetch(`/api/web/institution/doctors/${doctorId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'include' // Incluir cookies automáticamente
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
                     });
 
-                    const data = await response.json();
-
-                    if (response.ok && data.status === 'success') {
-                        showAlert(data.message || 'Doctor eliminado exitosamente', 'success');
-                        loadDoctors();
+                    if (response.ok) {
+                        window.location.href = '/';
                     } else {
-                        throw new Error(data.message || 'Error al eliminar doctor');
+                        console.error('Error en logout:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
                     }
                 } catch (error) {
-                    showAlert('Error al eliminar doctor: ' + error.message, 'error');
+                    console.error('Error de conexión en logout:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
                 }
             }
         }
 
-        // Real-time validation
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDoctors();
+        // Handle window resize for responsive sidebar
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                const menu = document.getElementById('mainMenu');
+                const content = document.getElementById('mainContent');
 
-            // Password confirmation validation
-            document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
-            document.getElementById('password').addEventListener('input', function() {
-                checkPasswordMatch();
-                // Also validate password strength
-                const password = this.value;
-                if (password && !validatePasswordStrength(password)) {
-                    this.style.borderColor = '#f59e0b'; // Orange for weak password
-                } else if (password) {
-                    this.style.borderColor = '#10b981'; // Green for strong password
-                }
-            });
+                menu.classList.add('collapsed');
+                content.classList.add('expanded');
+            }
         });
     </script>
 </body>

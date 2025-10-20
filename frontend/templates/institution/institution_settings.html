@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - PredictHealth Institución</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/institution_dashboard.css') }}">
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-dark: #6d28d9;
+            --secondary-color: #a855f7;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafc;
+            --border-color: #e5e7eb;
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-secondary);
+        }
+
+        /* Sidebar Navigation */
+        .main-menu {
+            background: var(--gradient-primary);
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-menu.collapsed {
+            width: 80px;
+        }
+
+        .logo-container {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 0 auto 1rem;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .institution-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .nav-menu {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            position: relative;
+            margin: 0.25rem 1rem;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item b {
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid white;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-item.active b {
+            opacity: 1;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 0.875rem 1.25rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item a:hover {
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-icon {
+            width: 20px;
+            font-size: 1.1rem;
+            margin-right: 0.875rem;
+            text-align: center;
+        }
+
+        .nav-text {
+            font-weight: 500;
+            font-size: 0.9rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .main-menu.collapsed .nav-text {
+            opacity: 0;
+        }
+
+        /* User Profile Section */
+        .user-profile {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 6px;
+            padding: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Content */
+        .content {
+            margin-left: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content.expanded {
+            margin-left: 80px;
+        }
+
+        /* Content Header */
+        .content-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-info {
+            margin-bottom: 1rem;
+        }
+
+        .page-info h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .page-info p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Settings Content */
+        .settings-content {
+            padding: 2rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .main-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Preferences */
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .preference-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .preference-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .preference-toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preference-toggle.active {
+            background: var(--primary-color);
+        }
+
+        .preference-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .preference-toggle.active::after {
+            left: 28px;
+        }
+
+        /* Sidebar */
+        .settings-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* System Status */
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .status-value {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.healthy {
+            background: #10b981;
+        }
+
+        .status-indicator.warning {
+            background: #f59e0b;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-outline-danger {
+            color: #dc2626;
+            border-color: #dc2626;
+            background: white;
+        }
+
+        .btn-outline-danger:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-outline-secondary {
+            color: var(--text-secondary);
+            border-color: #e5e7eb;
+            background: white;
+        }
+
+        .btn-outline-secondary:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-menu {
+                transform: translateX(-100%);
+            }
+
+            .main-menu.show {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+            }
+
+            .content.expanded {
+                margin-left: 0;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .preferences-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fas fa-hospital"></i>
+            </div>
+            <div class="logo-text">PredictHealth</div>
+            <div class="institution-badge">
+                <i class="fas fa-building me-1"></i>
+                <span id="institutionType">Institución</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="institution_dashboard.html">
+                    <i class="fa fa-house nav-icon"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_doctors.html">
+                    <i class="fa fa-user-md nav-icon"></i>
+                    <span class="nav-text">Doctores</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_patients.html">
+                    <i class="fa fa-users nav-icon"></i>
+                    <span class="nav-text">Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="institution_analytics.html">
+                    <i class="fa fa-chart-bar nav-icon"></i>
+                    <span class="nav-text">Analíticas</span>
+                </a>
+            </li>
+
+            <li class="nav-item active">
+                <a href="institution_settings.html">
+                    <i class="fa fa-cog nav-icon"></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Institución</div>
+                    <div class="user-role">Administrador</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="mainContent">
+        <div class="content-header">
+            <div class="page-info">
+                <h1>Configuración</h1>
+                <p>Administra tu institución y preferencias</p>
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <div class="settings-grid">
+                <!-- Main Settings -->
+                <div class="main-settings">
+                    <!-- Institution Information -->
+                    <div class="settings-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-building"></i>
+                            Información de la Institución
+                        </h2>
+                        <form class="settings-form" id="institutionForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nombre de la Institución</label>
+                                    <input type="text" class="form-input" id="institutionName" value="Clínica PredictHealth" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tipo de Institución</label>
+                                    <select class="form-select" id="institutionTypeSelect" required>
+                                        <option value="clinica_privada" selected>Clínica Privada</option>
+                                        <option value="hospital_publico">Hospital Público</option>
+                                        <option value="centro_medico">Centro Médico</option>
+                                        <option value="consultorio">Consultorio</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-input" id="institutionPhone" value="+52 55 1234 5678">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-input" id="institutionEmail" value="contacto@predicthealth.com">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Dirección</label>
+                                <textarea class="form-textarea" id="institutionAddress" rows="3">Av. Reforma 123, Col. Centro, Ciudad de México, CDMX</textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Especialidades Principales</label>
+                                    <input type="text" class="form-input" id="specialties" value="Medicina General, Cardiología, Endocrinología" placeholder="Separadas por comas">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Capacidad de Pacientes</label>
+                                    <input type="number" class="form-input" id="capacity" value="500" min="1">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Guardar Cambios
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- System Preferences -->
+                    <div class="settings-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-sliders-h"></i>
+                            Preferencias del Sistema
+                        </h2>
+                        <div class="preferences-grid">
+                            <div class="preference-item">
+                                <span class="preference-label">Notificaciones Automáticas</span>
+                                <div class="preference-toggle active" onclick="togglePreference(this, 'autoNotifications')"></div>
+                            </div>
+                            <div class="preference-item">
+                                <span class="preference-label">Recordatorios de Citas</span>
+                                <div class="preference-toggle active" onclick="togglePreference(this, 'appointmentReminders')"></div>
+                            </div>
+                            <div class="preference-item">
+                                <span class="preference-label">Alertas de Riesgo</span>
+                                <div class="preference-toggle active" onclick="togglePreference(this, 'riskAlerts')"></div>
+                            </div>
+                            <div class="preference-item">
+                                <span class="preference-label">Reportes Semanales</span>
+                                <div class="preference-toggle" onclick="togglePreference(this, 'weeklyReports')"></div>
+                            </div>
+                            <div class="preference-item">
+                                <span class="preference-label">Backup Automático</span>
+                                <div class="preference-toggle active" onclick="togglePreference(this, 'autoBackup')"></div>
+                            </div>
+                            <div class="preference-item">
+                                <span class="preference-label">Actualizaciones Automáticas</span>
+                                <div class="preference-toggle" onclick="togglePreference(this, 'autoUpdates')"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="settings-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Configuración de Seguridad
+                        </h2>
+                        <div class="settings-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Tiempo de Sesión (minutos)</label>
+                                    <input type="number" class="form-input" id="sessionTimeout" value="60" min="15" max="480">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Intentos de Login Máximos</label>
+                                    <input type="number" class="form-input" id="maxLoginAttempts" value="5" min="3" max="10">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Política de Contraseñas</label>
+                                    <select class="form-select" id="passwordPolicy">
+                                        <option value="basic" selected>Básica (8 caracteres)</option>
+                                        <option value="medium">Media (8 caracteres + símbolos)</option>
+                                        <option value="strong">Fuerte (12 caracteres + compleja)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Encriptación de Datos</label>
+                                    <select class="form-select" id="encryptionLevel">
+                                        <option value="standard" selected>Estándar (AES-256)</option>
+                                        <option value="enhanced">Mejorada (AES-256 + Hash)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" onclick="updateSecuritySettings()">
+                                <i class="fas fa-save"></i>
+                                Actualizar Seguridad
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="settings-sidebar">
+                    <!-- System Status -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">
+                            <i class="fas fa-server"></i>
+                            Estado del Sistema
+                        </h3>
+                        <div class="status-item">
+                            <div>
+                                <span class="status-indicator healthy"></span>
+                                <span class="status-label">Base de Datos</span>
+                            </div>
+                            <span class="status-value">Operativo</span>
+                        </div>
+                        <div class="status-item">
+                            <div>
+                                <span class="status-indicator healthy"></span>
+                                <span class="status-label">API Services</span>
+                            </div>
+                            <span class="status-value">100% Uptime</span>
+                        </div>
+                        <div class="status-item">
+                            <div>
+                                <span class="status-indicator warning"></span>
+                                <span class="status-label">Espacio en Disco</span>
+                            </div>
+                            <span class="status-value">75% usado</span>
+                        </div>
+                        <div class="status-item">
+                            <div>
+                                <span class="status-indicator healthy"></span>
+                                <span class="status-label">Último Backup</span>
+                            </div>
+                            <span class="status-value">Hace 2 horas</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">
+                            <i class="fas fa-bolt"></i>
+                            Acciones Rápidas
+                        </h3>
+                        <div class="quick-actions">
+                            <button class="btn btn-primary" onclick="backupData()">
+                                <i class="fas fa-download"></i>
+                                Backup Manual
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="clearCache()">
+                                <i class="fas fa-broom"></i>
+                                Limpiar Cache
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="resetSettings()">
+                                <i class="fas fa-undo"></i>
+                                Restaurar Configuración
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteInstitution()">
+                                <i class="fas fa-trash-alt"></i>
+                                Eliminar Institución
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Support -->
+                    <div class="sidebar-card">
+                        <h3 class="sidebar-title">
+                            <i class="fas fa-life-ring"></i>
+                            Soporte
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                            ¿Necesitas ayuda? Contacta a nuestro equipo de soporte.
+                        </p>
+                        <button class="btn btn-outline-secondary" onclick="contactSupport()">
+                            <i class="fas fa-envelope"></i>
+                            Contactar Soporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Global variables
+        let institutionData = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInstitutionData();
+        });
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('mainContent');
+
+            menu.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+        }
+
+        // Load institution data
+        async function loadInstitutionData() {
+            try {
+                const response = await fetch('/api/web/institution/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    institutionData = data.data || {};
+
+                    // Update UI with institution data
+                    updateInstitutionInfo(institutionData);
+                } else if (response.status === 401) {
+                    window.location.href = '/institution_login.html';
+                }
+            } catch (error) {
+                console.error('Error loading institution data:', error);
+            }
+        }
+
+        // Update institution information in UI
+        function updateInstitutionInfo(data) {
+            if (data.institution) {
+                document.getElementById('userName').textContent = data.institution.nombre || 'Institución';
+                document.getElementById('institutionType').textContent = data.institution.tipo_institucion || 'Institución';
+
+                // Update form fields
+                document.getElementById('institutionName').value = data.institution.nombre || '';
+                document.getElementById('institutionTypeSelect').value = data.institution.tipo_institucion || '';
+                document.getElementById('institutionPhone').value = data.institution.telefono || '';
+                document.getElementById('institutionEmail').value = data.institution.email || '';
+                document.getElementById('institutionAddress').value = data.institution.direccion || '';
+                document.getElementById('specialties').value = data.institution.especialidades || '';
+                document.getElementById('capacity').value = data.institution.capacidad || '';
+            }
+        }
+
+        // Form submission
+        document.getElementById('institutionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                nombre: document.getElementById('institutionName').value,
+                tipo_institucion: document.getElementById('institutionTypeSelect').value,
+                telefono: document.getElementById('institutionPhone').value,
+                email: document.getElementById('institutionEmail').value,
+                direccion: document.getElementById('institutionAddress').value,
+                especialidades: document.getElementById('specialties').value,
+                capacidad: document.getElementById('capacity').value
+            };
+
+            try {
+                const response = await fetch('/api/web/institution/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Configuración actualizada exitosamente.');
+                    loadInstitutionData(); // Reload data
+                } else {
+                    alert('Error al actualizar la configuración. Inténtalo de nuevo.');
+                }
+            } catch (error) {
+                console.error('Error updating settings:', error);
+                alert('Error de conexión. Inténtalo de nuevo.');
+            }
+        });
+
+        // Preference toggle functionality
+        function togglePreference(element, preference) {
+            element.classList.toggle('active');
+            const isActive = element.classList.contains('active');
+
+            // Here you would save the preference to the server
+            console.log(`Preference ${preference} set to ${isActive}`);
+        }
+
+        // Action functions
+        function updateSecuritySettings() {
+            const sessionTimeout = document.getElementById('sessionTimeout').value;
+            const maxLoginAttempts = document.getElementById('maxLoginAttempts').value;
+            const passwordPolicy = document.getElementById('passwordPolicy').value;
+            const encryptionLevel = document.getElementById('encryptionLevel').value;
+
+            alert('Configuración de seguridad actualizada (funcionalidad próximamente disponible)');
+        }
+
+        function backupData() {
+            alert('Iniciando backup de datos... (funcionalidad próximamente disponible)');
+        }
+
+        function clearCache() {
+            alert('Limpiando cache del sistema... (funcionalidad próximamente disponible)');
+        }
+
+        function resetSettings() {
+            if (confirm('¿Estás seguro de que quieres restaurar la configuración por defecto?')) {
+                alert('Configuración restaurada (funcionalidad próximamente disponible)');
+            }
+        }
+
+        function deleteInstitution() {
+            if (confirm('¿Estás seguro de que quieres eliminar la institución? Esta acción no se puede deshacer.')) {
+                alert('Funcionalidad de eliminación próximamente disponible');
+            }
+        }
+
+        function contactSupport() {
+            alert('Abriendo formulario de soporte... (funcionalidad próximamente disponible)');
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Error en logout:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error de conexión en logout:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
+                }
+            }
+        }
+
+        // Handle window resize for responsive sidebar
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                const menu = document.getElementById('mainMenu');
+                const content = document.getElementById('mainContent');
+
+                menu.classList.add('collapsed');
+                content.classList.add('expanded');
+            }
+        });
+    </script>
+</body>
+</html>

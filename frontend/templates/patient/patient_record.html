@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expediente Médico - PredictHealth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+        }
+
+        /* Patient Header - Fixed */
+        .patient-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .patient-info-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .patient-basic-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .patient-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .patient-details h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .patient-meta {
+            display: flex;
+            gap: 2rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .patient-vitals {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .vital-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .vital-icon {
+            color: #7c3aed;
+        }
+
+        /* Critical Alerts */
+        .critical-alerts {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .critical-alerts.warning {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
+        .alert-icon {
+            margin-right: 0.5rem;
+        }
+
+        /* Navigation Tabs */
+        .record-navigation {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 120px;
+            z-index: 999;
+        }
+
+        .nav-tabs {
+            padding: 0 2rem;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tab {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: none;
+            color: #6b7280;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+        }
+
+        .nav-tab:hover {
+            color: #7c3aed;
+            background: #f8fafc;
+        }
+
+        .nav-tab i {
+            margin-right: 0.5rem;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Clinical Summary Tab */
+        .clinical-summary {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .summary-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .active-conditions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .condition-tag {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #fecaca;
+        }
+
+        .condition-tag.warning {
+            background: #fef3c7;
+            color: #d97706;
+            border-color: #fde68a;
+        }
+
+        .medications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .medication-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .medication-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .medication-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .vital-signs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .vital-sign-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .vital-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 0.25rem;
+        }
+
+        .vital-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .last-consultation {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+
+        /* Consultations History Tab */
+        .consultations-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .consultations-timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .consultation-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-left: 2rem;
+        }
+
+        .consultation-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 1rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #7c3aed;
+        }
+
+        .consultation-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .consultation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .consultation-date {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .consultation-type {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .consultation-reason {
+            font-size: 1rem;
+            color: #374151;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .consultation-notes {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .soap-structure {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .soap-section {
+            margin-bottom: 1rem;
+        }
+
+        .soap-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .soap-content {
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        /* Medications Tab */
+        .medications-section {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .medications-current,
+        .medications-history {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .medication-full-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .medication-full-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .medication-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .medication-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .medication-status {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .medication-dosage {
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .medication-period {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        /* Allergies and Family History Tab */
+        .health-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .allergies-list,
+        .family-history {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .allergy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .allergy-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .allergy-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .allergy-reaction {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .family-condition {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .family-condition:last-child {
+            margin-bottom: 0;
+        }
+
+        .family-relation {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .family-details {
+            color: #6b7280;
+        }
+
+        /* Personal Data Tab */
+        .personal-data {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .data-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .field-value {
+            font-size: 1rem;
+            color: #1f2937;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Floating Action Button */
+        .floating-add-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .floating-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .patient-info-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .clinical-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .health-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                padding: 0 1rem;
+                overflow-x: auto;
+            }
+
+            .tab-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Patient Header -->
+    <div class="patient-header">
+        <div class="patient-info-bar">
+            <div class="patient-basic-info">
+                <div class="patient-avatar" id="patientAvatar">JD</div>
+                <div class="patient-details">
+                    <h1 id="patientName">Juan Díaz</h1>
+                    <div class="patient-meta">
+                        <span id="patientAge">47 años</span>
+                        <span id="patientBloodType">Tipo de Sangre: A+</span>
+                    </div>
+                </div>
+            </div>
+            <div class="patient-vitals">
+                <div class="vital-item">
+                    <i class="fas fa-heartbeat vital-icon"></i>
+                    <span>Presión: <strong id="bloodPressure">120/80</strong></span>
+                </div>
+                <div class="vital-item">
+                    <i class="fas fa-weight vital-icon"></i>
+                    <span>Peso: <strong id="weight">75 kg</strong></span>
+                </div>
+                <div class="vital-item">
+                    <i class="fas fa-ruler-vertical vital-icon"></i>
+                    <span>Altura: <strong id="height">175 cm</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Alerts -->
+    <div class="critical-alerts" id="criticalAlerts" style="display: none;">
+        <i class="fas fa-exclamation-triangle alert-icon"></i>
+        <span id="alertMessage">ALERGIA: PENICILINA - REACCIÓN: ANAFILAXIS</span>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="record-navigation">
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="summary">
+                <i class="fas fa-clipboard-list"></i>
+                Resumen Clínico
+            </button>
+            <button class="nav-tab" data-tab="consultations">
+                <i class="fas fa-calendar-alt"></i>
+                Historial de Consultas
+            </button>
+            <button class="nav-tab" data-tab="medications">
+                <i class="fas fa-pills"></i>
+                Medicamentos
+            </button>
+            <button class="nav-tab" data-tab="allergies">
+                <i class="fas fa-allergies"></i>
+                Alergias y Antecedentes
+            </button>
+            <button class="nav-tab" data-tab="personal">
+                <i class="fas fa-user"></i>
+                Datos Personales
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Clinical Summary Tab -->
+        <div class="tab-pane active" id="summaryTab">
+            <div class="clinical-summary">
+                <div>
+                    <!-- Active Conditions -->
+                    <div class="summary-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-stethoscope"></i>
+                            Problemas Activos
+                        </h3>
+                        <div class="active-conditions" id="activeConditions">
+                            <div class="condition-tag">Hipertensión</div>
+                            <div class="condition-tag warning">Diabetes Tipo 2</div>
+                            <div class="condition-tag">Colesterol Alto</div>
+                        </div>
+                    </div>
+
+                    <!-- Current Medications -->
+                    <div class="summary-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-pills"></i>
+                            Medicamentos Actuales
+                        </h3>
+                        <div class="medications-list" id="currentMedications">
+                            <div class="medication-item">
+                                <div class="medication-info">
+                                    <h4>Enalapril 10mg</h4>
+                                    <div class="medication-details">1 tableta diaria - Presión arterial</div>
+                                </div>
+                                <div class="medication-status">Activo</div>
+                            </div>
+                            <div class="medication-item">
+                                <div class="medication-info">
+                                    <h4>Metformina 500mg</h4>
+                                    <div class="medication-details">2 tabletas diarias - Diabetes</div>
+                                </div>
+                                <div class="medication-status">Activo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Vital Signs -->
+                    <div class="summary-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-heartbeat"></i>
+                            Signos Vitales Recientes
+                        </h3>
+                        <div class="vital-signs-grid" id="vitalSigns">
+                            <div class="vital-sign-card">
+                                <div class="vital-value">120/80</div>
+                                <div class="vital-label">Presión Arterial</div>
+                            </div>
+                            <div class="vital-sign-card">
+                                <div class="vital-value">75</div>
+                                <div class="vital-label">Peso (kg)</div>
+                            </div>
+                            <div class="vital-sign-card">
+                                <div class="vital-value">175</div>
+                                <div class="vital-label">Altura (cm)</div>
+                            </div>
+                            <div class="vital-sign-card">
+                                <div class="vital-value">85</div>
+                                <div class="vital-label">Glucosa (mg/dL)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Last Consultation -->
+                    <div class="summary-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-calendar-check"></i>
+                            Última Consulta
+                        </h3>
+                        <div class="last-consultation" id="lastConsultation">
+                            <div class="consultation-date">15 de octubre, 2024</div>
+                            <div class="consultation-reason">Seguimiento de hipertensión y diabetes</div>
+                            <div class="consultation-notes">
+                                Paciente presenta buen control metabólico. Presión arterial estable.
+                                Recomendar continuar con tratamiento actual y próxima cita en 3 meses.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultations History Tab -->
+        <div class="tab-pane" id="consultationsTab">
+            <div class="consultations-timeline" id="consultationsTimeline">
+                <!-- Consultations will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Medications Tab -->
+        <div class="tab-pane" id="medicationsTab">
+            <div class="medications-section">
+                <div class="medications-current">
+                    <h3 class="section-title">
+                        <i class="fas fa-prescription-bottle"></i>
+                        Medicamentos Actuales
+                    </h3>
+                    <div id="currentMedicationsFull">
+                        <!-- Current medications will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="medications-history">
+                    <h3 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Historial de Medicamentos
+                    </h3>
+                    <div id="medicationsHistory">
+                        <!-- Medication history will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Allergies and Family History Tab -->
+        <div class="tab-pane" id="allergiesTab">
+            <div class="health-info-grid">
+                <div class="allergies-list">
+                    <h3 class="section-title">
+                        <i class="fas fa-allergies"></i>
+                        Alergias Conocidas
+                    </h3>
+                    <div id="allergiesList">
+                        <div class="allergy-item">
+                            <div class="allergy-info">
+                                <h4>Penicilina</h4>
+                                <div class="allergy-reaction">Reacción: Anafilaxis grave</div>
+                            </div>
+                            <div class="allergy-severity">
+                                <span class="condition-tag">Crítica</span>
+                            </div>
+                        </div>
+                        <div class="allergy-item">
+                            <div class="allergy-info">
+                                <h4>Sulfa</h4>
+                                <div class="allergy-reaction">Reacción: Rash cutáneo</div>
+                            </div>
+                            <div class="allergy-severity">
+                                <span class="condition-tag warning">Moderada</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="family-history">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Antecedentes Familiares
+                    </h3>
+                    <div id="familyHistory">
+                        <div class="family-condition">
+                            <div class="family-relation">Padre</div>
+                            <div class="family-details">Diabetes Tipo 2, diagnosticado a los 55 años</div>
+                        </div>
+                        <div class="family-condition">
+                            <div class="family-relation">Madre</div>
+                            <div class="family-details">Hipertensión, ACV a los 68 años</div>
+                        </div>
+                        <div class="family-condition">
+                            <div class="family-relation">Hermano</div>
+                            <div class="family-details">Colesterol alto, sin complicaciones</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Data Tab -->
+        <div class="tab-pane" id="personalTab">
+            <div class="personal-data">
+                <div class="data-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-id-card"></i>
+                        Información Personal
+                    </h3>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label class="field-label">Nombre Completo</label>
+                            <div class="field-value" id="fullName">Juan Díaz López</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Fecha de Nacimiento</label>
+                            <div class="field-value" id="birthDate">15/03/1977</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Género</label>
+                            <div class="field-value" id="gender">Masculino</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Tipo de Sangre</label>
+                            <div class="field-value" id="bloodType">A+</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-address-book"></i>
+                        Información de Contacto
+                    </h3>
+                    <div class="data-grid">
+                        <div class="data-field">
+                            <label class="field-label">Teléfono Principal</label>
+                            <div class="field-value" id="phone">+52 55 1234 5678</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Email</label>
+                            <div class="field-value" id="email">juan.diaz@email.com</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Dirección</label>
+                            <div class="field-value" id="address">Av. Reforma 123, CDMX</div>
+                        </div>
+                        <div class="data-field">
+                            <label class="field-label">Contacto de Emergencia</label>
+                            <div class="field-value" id="emergencyContact">María Díaz (Hermana) - +52 55 8765 4321</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="floating-add-btn" onclick="addNewConsultation()" title="Registrar Nueva Consulta">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script>
+        // Global variables
+        let currentPatient = {};
+        let currentTab = 'summary';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const patientId = urlParams.get('id');
+
+            if (patientId) {
+                loadPatientRecord(patientId);
+            } else {
+                showError('ID de paciente no especificado');
+            }
+
+            setupTabNavigation();
+        });
+
+        // Setup tab navigation
+        function setupTabNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Update active tab content
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+
+            currentTab = tabName;
+        }
+
+        // Load patient record
+        async function loadPatientRecord(patientId) {
+            try {
+                const response = await fetch(`/api/web/patient/record/${patientId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentPatient = data.patient;
+                    displayPatientRecord(data);
+                } else if (response.status === 401) {
+                    window.location.href = '/doctor_login.html';
+                } else {
+                    showError('Error al cargar el expediente del paciente');
+                }
+            } catch (error) {
+                console.error('Error loading patient record:', error);
+                showError('Error de conexión');
+            }
+        }
+
+        // Display patient record
+        function displayPatientRecord(data) {
+            const patient = data.patient;
+
+            // Update header
+            document.getElementById('patientAvatar').textContent =
+                `${patient.nombre.charAt(0)}${patient.apellido.charAt(0)}`;
+            document.getElementById('patientName').textContent =
+                `${patient.nombre} ${patient.apellido}`;
+            document.getElementById('patientAge').textContent =
+                calculateAge(patient.fecha_nacimiento) + ' años';
+            document.getElementById('patientBloodType').textContent =
+                `Tipo de Sangre: ${patient.tipo_sangre || 'No especificado'}`;
+
+            // Update vitals
+            if (data.vitals) {
+                document.getElementById('bloodPressure').textContent =
+                    data.vitals.presion_arterial || 'No disponible';
+                document.getElementById('weight').textContent =
+                    data.vitals.peso_kg ? `${data.vitals.peso_kg} kg` : 'No disponible';
+                document.getElementById('height').textContent =
+                    data.vitals.altura_cm ? `${data.vitals.altura_cm} cm` : 'No disponible';
+            }
+
+            // Show critical alerts
+            if (data.alerts && data.alerts.length > 0) {
+                const criticalAlert = data.alerts.find(alert => alert.critical);
+                if (criticalAlert) {
+                    document.getElementById('alertMessage').textContent = criticalAlert.message;
+                    document.getElementById('criticalAlerts').style.display = 'block';
+                }
+            }
+
+            // Load tab data
+            loadClinicalSummary(data);
+            loadConsultationsHistory(data.consultations || []);
+            loadMedications(data.medications || []);
+            loadAllergiesAndFamily(data);
+            loadPersonalData(patient);
+        }
+
+        // Load clinical summary
+        function loadClinicalSummary(data) {
+            // Active conditions
+            const conditionsContainer = document.getElementById('activeConditions');
+            if (data.conditions && data.conditions.length > 0) {
+                conditionsContainer.innerHTML = data.conditions.map(condition => `
+                    <div class="condition-tag ${condition.severity === 'high' ? '' : 'warning'}">
+                        ${condition.name}
+                    </div>
+                `).join('');
+            }
+
+            // Current medications
+            const medicationsContainer = document.getElementById('currentMedications');
+            if (data.currentMedications && data.currentMedications.length > 0) {
+                medicationsContainer.innerHTML = data.currentMedications.map(med => `
+                    <div class="medication-item">
+                        <div class="medication-info">
+                            <h4>${med.name} ${med.dosage}</h4>
+                            <div class="medication-details">${med.frequency} - ${med.indication}</div>
+                        </div>
+                        <div class="medication-status">Activo</div>
+                    </div>
+                `).join('');
+            }
+
+            // Vital signs
+            if (data.vitals) {
+                document.querySelectorAll('.vital-sign-card')[0].querySelector('.vital-value').textContent =
+                    data.vitals.presion_arterial || 'N/A';
+                document.querySelectorAll('.vital-sign-card')[1].querySelector('.vital-value').textContent =
+                    data.vitals.peso_kg || 'N/A';
+                document.querySelectorAll('.vital-sign-card')[2].querySelector('.vital-value').textContent =
+                    data.vitals.altura_cm || 'N/A';
+                document.querySelectorAll('.vital-sign-card')[3].querySelector('.vital-value').textContent =
+                    data.vitals.glucosa || 'N/A';
+            }
+
+            // Last consultation
+            if (data.lastConsultation) {
+                const lastConsultation = document.getElementById('lastConsultation');
+                lastConsultation.querySelector('.consultation-date').textContent =
+                    formatDate(data.lastConsultation.fecha);
+                lastConsultation.querySelector('.consultation-reason').textContent =
+                    data.lastConsultation.motivo;
+                lastConsultation.querySelector('.consultation-notes').textContent =
+                    data.lastConsultation.notas;
+            }
+        }
+
+        // Load consultations history
+        function loadConsultationsHistory(consultations) {
+            const timeline = document.getElementById('consultationsTimeline');
+
+            if (consultations.length === 0) {
+                timeline.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay consultas registradas</h5>
+                    </div>
+                `;
+                return;
+            }
+
+            timeline.innerHTML = consultations.map(consultation => `
+                <div class="consultation-item">
+                    <div class="consultation-card">
+                        <div class="consultation-header">
+                            <div class="consultation-date">${formatDate(consultation.fecha)}</div>
+                            <div class="consultation-type">${consultation.tipo}</div>
+                        </div>
+                        <div class="consultation-reason">${consultation.motivo}</div>
+                        <div class="consultation-notes">${consultation.notas}</div>
+                        ${consultation.soap ? `
+                            <div class="soap-structure">
+                                <div class="soap-section">
+                                    <div class="soap-label">Subjetivo:</div>
+                                    <div class="soap-content">${consultation.soap.subjetivo}</div>
+                                </div>
+                                <div class="soap-section">
+                                    <div class="soap-label">Objetivo:</div>
+                                    <div class="soap-content">${consultation.soap.objetivo}</div>
+                                </div>
+                                <div class="soap-section">
+                                    <div class="soap-label">Análisis:</div>
+                                    <div class="soap-content">${consultation.soap.analisis}</div>
+                                </div>
+                                <div class="soap-section">
+                                    <div class="soap-label">Plan:</div>
+                                    <div class="soap-content">${consultation.soap.plan}</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load medications
+        function loadMedications(medications) {
+            const currentContainer = document.getElementById('currentMedicationsFull');
+            const historyContainer = document.getElementById('medicationsHistory');
+
+            const currentMeds = medications.filter(med => med.activo);
+            const pastMeds = medications.filter(med => !med.activo);
+
+            currentContainer.innerHTML = currentMeds.map(med => `
+                <div class="medication-full-item">
+                    <div class="medication-header">
+                        <div class="medication-name">${med.nombre} ${med.dosis}</div>
+                        <div class="medication-status">Activo</div>
+                    </div>
+                    <div class="medication-dosage">${med.frecuencia}</div>
+                    <div class="medication-period">Iniciado: ${formatDate(med.fecha_inicio)}</div>
+                </div>
+            `).join('');
+
+            historyContainer.innerHTML = pastMeds.map(med => `
+                <div class="medication-full-item">
+                    <div class="medication-header">
+                        <div class="medication-name">${med.nombre} ${med.dosis}</div>
+                        <div class="medication-status">Finalizado</div>
+                    </div>
+                    <div class="medication-dosage">${med.frecuencia}</div>
+                    <div class="medication-period">${formatDate(med.fecha_inicio)} - ${formatDate(med.fecha_fin)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load allergies and family history
+        function loadAllergiesAndFamily(data) {
+            // Allergies
+            const allergiesContainer = document.getElementById('allergiesList');
+            if (data.allergies && data.allergies.length > 0) {
+                allergiesContainer.innerHTML = data.allergies.map(allergy => `
+                    <div class="allergy-item">
+                        <div class="allergy-info">
+                            <h4>${allergy.alergeno}</h4>
+                            <div class="allergy-reaction">Reacción: ${allergy.reaccion}</div>
+                        </div>
+                        <div class="allergy-severity">
+                            <span class="condition-tag ${allergy.severidad === 'critical' ? '' : 'warning'}">
+                                ${allergy.severidad === 'critical' ? 'Crítica' : 'Moderada'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Family history
+            const familyContainer = document.getElementById('familyHistory');
+            if (data.familyHistory && data.familyHistory.length > 0) {
+                familyContainer.innerHTML = data.familyHistory.map(condition => `
+                    <div class="family-condition">
+                        <div class="family-relation">${condition.familiar}</div>
+                        <div class="family-details">${condition.condicion}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Load personal data
+        function loadPersonalData(patient) {
+            document.getElementById('fullName').textContent =
+                `${patient.nombre} ${patient.apellido}`;
+            document.getElementById('birthDate').textContent =
+                formatDate(patient.fecha_nacimiento);
+            document.getElementById('gender').textContent = patient.genero;
+            document.getElementById('bloodType').textContent = patient.tipo_sangre || 'No especificado';
+            document.getElementById('phone').textContent = patient.telefono || 'No especificado';
+            document.getElementById('email').textContent = patient.email;
+            document.getElementById('address').textContent = patient.direccion || 'No especificada';
+            document.getElementById('emergencyContact').textContent =
+                patient.contacto_emergencia || 'No especificado';
+        }
+
+        // Utility functions
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+
+            return age;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'No especificada';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES');
+        }
+
+        function addNewConsultation() {
+            // Open modal or navigate to consultation form
+            alert('Funcionalidad de nueva consulta próximamente disponible');
+        }
+
+        function showError(message) {
+            // Simple error display
+            alert('Error: ' + message);
+        }
+    </script>
+</body>
+</html>

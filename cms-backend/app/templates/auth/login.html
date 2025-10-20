@@ -4,13 +4,19 @@
 
 {% block extra_head %}
 <style>
-    body {
-        background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    * {
+        box-sizing: border-box;
         margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: #e8edf3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
     }
 
     .sidebar {
@@ -26,73 +32,64 @@
     }
 
     .login-container {
-        background: white;
+        background: #fff;
+        padding: 40px 30px;
         border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-        padding: 2.5rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         width: 100%;
-        max-width: 400px;
+        max-width: 360px;
     }
 
-    .login-header {
+    .login-container h2 {
         text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .login-logo {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 1rem;
-        border-radius: 12px;
-        background: var(--primary-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .login-title {
-        font-size: 1.875rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .login-subtitle {
-        color: #64748b;
-        margin: 0;
+        margin-bottom: 30px;
+        font-size: 22px;
+        color: #111827;
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        position: relative;
+        margin-bottom: 24px;
     }
 
-    .form-label {
-        display: block;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-        font-size: 0.875rem;
-    }
-
-    .form-control {
+    .form-group input {
         width: 100%;
-        padding: 0.875rem;
-        border: 2px solid #e5e7eb;
+        padding: 14px 12px;
+        font-size: 15px;
+        border: 1px solid #d1d5db;
         border-radius: 8px;
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        background: transparent;
+        color: #111827;
+        transition: border-color 0.3s;
     }
 
-    .form-control:focus {
+    .form-group input:focus {
         outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #2563eb;
     }
 
-    .form-control.is-invalid {
+    .form-group label {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        background: #fff;
+        padding: 0 4px;
+        font-size: 14px;
+        color: #6b7280;
+        pointer-events: none;
+        transition: 0.2s ease all;
+    }
+
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+        top: -8px;
+        left: 10px;
+        font-size: 12px;
+        color: #2563eb;
+    }
+
+    .form-group input.is-invalid {
         border-color: #ef4444;
     }
 
@@ -103,7 +100,7 @@
         margin-top: 0.25rem;
     }
 
-    .form-control.is-invalid + .invalid-feedback {
+    .form-group input.is-invalid + label + .invalid-feedback {
         display: block;
     }
 
@@ -124,8 +121,8 @@
     }
 
     .form-check-input:checked {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
+        background: #2563eb;
+        border-color: #2563eb;
     }
 
     .form-check-label {
@@ -137,27 +134,24 @@
 
     .btn-login {
         width: 100%;
-        background: var(--primary-color);
+        padding: 12px;
+        background: #2563eb;
         border: none;
-        color: white;
-        padding: 0.875rem;
         border-radius: 8px;
-        font-size: 1rem;
+        color: white;
+        font-size: 16px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: background 0.3s ease;
     }
 
     .btn-login:hover {
-        background: #1d4ed8;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        background: #1e4ed8;
     }
 
     .btn-login:disabled {
         background: #9ca3af;
         cursor: not-allowed;
-        transform: none;
     }
 
     .login-footer {
@@ -174,7 +168,7 @@
     }
 
     .login-footer a {
-        color: var(--primary-color);
+        color: #2563eb;
         text-decoration: none;
         font-weight: 500;
     }
@@ -206,7 +200,7 @@
         height: 20px;
         border: 2px solid #e5e7eb;
         border-radius: 50%;
-        border-top-color: var(--primary-color);
+        border-top-color: #2563eb;
         animation: spin 1s ease-in-out infinite;
         margin-right: 0.5rem;
     }
@@ -227,13 +221,7 @@
 
 {% block content %}
 <div class="login-container">
-    <div class="login-header">
-        <div class="login-logo">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PredictHealth CMS" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" onerror="this.innerHTML='PH'">
-        </div>
-        <h1 class="login-title">Welcome Back</h1>
-        <p class="login-subtitle">Sign in to your CMS account</p>
-    </div>
+    <h2>Welcome Back</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -248,28 +236,24 @@
     <form method="POST" id="loginForm" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="form-group">
-            <label for="email" class="form-label">Email Address</label>
             <input type="email"
                     id="email"
                     name="email"
-                    class="form-control"
-                    placeholder="Enter your email"
                     value="{{ request.form.email if request.form.email else '' }}"
                     required
                     autofocus>
+            <label for="email">Email Address</label>
             <div class="invalid-feedback">
                 Please enter a valid email address.
             </div>
         </div>
 
         <div class="form-group">
-            <label for="password" class="form-label">Password</label>
             <input type="password"
                    id="password"
                    name="password"
-                   class="form-control"
-                   placeholder="Enter your password"
                    required>
+            <label for="password">Password</label>
             <div class="invalid-feedback">
                 Password is required.
             </div>
@@ -281,7 +265,7 @@
         </div>
 
         <button type="submit" class="btn-login" id="loginBtn">
-            <span id="btnText">Sign In</span>
+            <span id="btnText">Login</span>
         </button>
     </form>
 
@@ -344,11 +328,11 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
     // Show loading state
     submitBtn.disabled = true;
-    btnText.innerHTML = '<span class="spinner"></span>Signing in...';
+    btnText.innerHTML = '<span class="spinner"></span>Logging in...';
 });
 
 // Clear validation on input
-document.querySelectorAll('.form-control').forEach(input => {
+document.querySelectorAll('input[type="email"], input[type="password"]').forEach(input => {
     input.addEventListener('input', function() {
         this.classList.remove('is-invalid');
     });

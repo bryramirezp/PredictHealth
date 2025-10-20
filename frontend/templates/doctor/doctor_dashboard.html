@@ -1,632 +1,486 @@
-<!-- /frontend\templates\doctor_dashboard.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PredictHealth - Dashboard del Doctor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Mi Jornada - PredictHealth Doctor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #7c3aed;
-            --primary-dark: #6d28d9;
-            --secondary-color: #8b5cf6;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
-            --border-color: #e5e7eb;
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        }
-
-        body {
-            background: var(--bg-secondary);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .navbar {
-            background: var(--gradient-primary);
-            padding: 1rem 2rem;
-            box-shadow: var(--shadow-lg);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .navbar-brand {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .navbar-nav {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            margin-left: auto;
-        }
-
-        .nav-item {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: opacity 0.3s ease;
-        }
-
-        .nav-item:hover {
-            opacity: 0.8;
-        }
-
-        .doctor-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            color: white;
-        }
-
-        .doctor-name {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .doctor-type {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-        }
-
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .main-content {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .welcome-section {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .welcome-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-subtitle {
-            color: var(--text-secondary);
-            font-size: 1.125rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-lg);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .stat-icon.patients {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        }
-
-        .stat-icon.appointments {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .stat-icon.reviews {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-
-        .stat-icon.schedule {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-
-        .main-panel {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .panel-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .patient-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .patient-item:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
-        }
-
-        .patient-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            margin-right: 1rem;
-        }
-
-        .patient-details h4 {
-            margin: 0 0 0.25rem 0;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .patient-details p {
-            margin: 0;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .quick-actions {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .action-btn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            border: none;
-            padding: 0.875rem 1rem;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
-        }
-
-        .action-btn:last-child {
-            margin-bottom: 0;
-        }
-
-        .pending-reviews {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .review-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            background: #fef3c7;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-        }
-
-        .review-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .review-icon {
-            color: #f59e0b;
-            margin-right: 0.75rem;
-        }
-
-        .review-text {
-            color: #92400e;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-secondary);
-        }
-
-        .error {
-            text-align: center;
-            padding: 2rem;
-            color: #ef4444;
-        }
-
-        @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-            
-            .main-content {
-                padding: 1rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_dashboard.css') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="navbar-brand">
-            <i class="fas fa-heartbeat"></i>
-            PredictHealth
-        </a>
-        <div class="navbar-nav">
-            <div class="doctor-info">
-                <span class="doctor-name">Doctor</span>
-                <span class="doctor-type">Portal del Doctor</span>
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fas fa-stethoscope"></i>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt me-1"></i>
-                Cerrar Sesión
-            </button>
+            <div class="logo-text">PredictHealth</div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <a href="#" onclick="loadPage('dashboard')">
+                    <i class="fa fa-calendar-check nav-icon"></i>
+                    <span class="nav-text">Mi Jornada</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="patients">
+                <a href="#" onclick="loadPage('patients')">
+                    <i class="fa fa-users nav-icon"></i>
+                    <span class="nav-text">Mis Pacientes</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name" id="doctorName">Dr. Nombre</div>
+                    <div class="user-role">Médico General</div>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="main-content">
-        <div class="welcome-section">
-            <h1 class="welcome-title">¡Bienvenido Doctor!</h1>
-            <p class="welcome-subtitle">Gestiona tus pacientes y citas desde tu panel profesional</p>
+    <!-- Main Content -->
+    <section class="content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="patient-info">
+                <span class="patient-name" id="doctorGreeting">Hola, Dr. Nombre</span>
+                <span class="patient-type">Portal Médico</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </button>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon patients">
-                        <i class="fas fa-users"></i>
-                    </div>
+        <!-- Global Search Header -->
+        <div class="global-search-header">
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input
+                        type="text"
+                        class="global-search-input"
+                        id="globalSearch"
+                        placeholder="Buscar paciente por nombre, apellido o ID..."
+                        autocomplete="off"
+                    >
+                    <div class="search-results" id="searchResults"></div>
                 </div>
-                <div class="stat-number" id="patients-count">0</div>
-                <div class="stat-label">Pacientes Asignados</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon appointments">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                </div>
-                <div class="stat-number" id="appointments-count">0</div>
-                <div class="stat-label">Citas de Hoy</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon reviews">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-                </div>
-                <div class="stat-number" id="reviews-count">0</div>
-                <div class="stat-label">Revisiones Pendientes</div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon schedule">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                </div>
-                <div class="stat-number" id="schedule-count">0</div>
-                <div class="stat-label">Horas Disponibles</div>
             </div>
         </div>
 
-        <div class="content-grid">
-            <div class="main-panel">
-                <h2 class="panel-title">
-                    <i class="fas fa-users"></i>
-                    Mis Pacientes
-                </h2>
-                <div id="patients-list">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin me-2"></i>
-                        Cargando pacientes...
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <div class="dashboard-grid">
+                <!-- Appointments Timeline -->
+                <div class="appointments-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-calendar-day me-2"></i>
+                            Agenda del Día
+                        </h2>
+                        <button class="btn btn-primary" onclick="scheduleAppointment()">
+                            <i class="fas fa-plus me-1"></i>
+                            Nueva Cita
+                        </button>
+                    </div>
+
+                    <div class="timeline" id="appointmentsTimeline">
+                        <!-- Appointments will be loaded here -->
                     </div>
                 </div>
-            </div>
 
-            <div class="sidebar">
-                <div class="quick-actions">
-                    <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">
-                        <i class="fas fa-bolt me-2"></i>
-                        Acciones Rápidas
-                    </h3>
-                    <button class="action-btn" onclick="scheduleAppointment()">
-                        <i class="fas fa-calendar-plus"></i>
-                        Programar Cita
-                    </button>
-                    <button class="action-btn" onclick="viewPatientHistory()">
-                        <i class="fas fa-file-medical"></i>
-                        Ver Historial
-                    </button>
-                    <button class="action-btn" onclick="updateProfile()">
-                        <i class="fas fa-user-edit"></i>
-                        Actualizar Perfil
-                    </button>
-                    <button class="action-btn" onclick="contactPatient()">
-                        <i class="fas fa-comments"></i>
-                        Contactar Paciente
-                    </button>
-                </div>
+                <!-- Tasks and Recent Patients Sidebar -->
+                <div>
+                    <!-- Pending Tasks -->
+                    <div class="tasks-sidebar">
+                        <h3 class="tasks-title">
+                            <i class="fas fa-tasks"></i>
+                            Tareas Pendientes
+                        </h3>
+                        <div id="pendingTasks">
+                            <!-- Tasks will be loaded here -->
+                        </div>
+                    </div>
 
-                <div class="pending-reviews">
-                    <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-weight: 600;">
-                        <i class="fas fa-clipboard-check me-2"></i>
-                        Revisiones Pendientes
-                    </h3>
-                    <div id="reviews-list">
-                        <div class="review-item">
-                            <i class="fas fa-info-circle review-icon"></i>
-                            <span class="review-text">No hay revisiones pendientes</span>
+                    <!-- Recent Patients -->
+                    <div class="tasks-sidebar recent-patients">
+                        <h4 class="recent-title">Pacientes Recientes</h4>
+                        <div id="recentPatients">
+                            <!-- Recent patients will be loaded here -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <!-- Floating Add Button -->
+    <button class="floating-add-btn" onclick="quickAddConsultation()" title="Registrar Nueva Consulta">
+        <i class="fas fa-plus"></i>
+    </button>
+
     <script>
-        // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
-            const isLoggedIn = await authManager.isLoggedIn();
-            if (!isLoggedIn) {
-                window.location.href = '/doctor_login.html';
-                return;
-            }
+        // Global variables
+        let currentPage = 'dashboard';
+        let appointments = [];
+        let tasks = [];
+        let recentPatients = [];
+        let allPatients = [];
+        let searchTimeout;
 
-            const userInfo = await authManager.getUserInfo();
-            if (userInfo.user_type !== 'doctor') {
-                window.location.href = '/';
-                return;
-            }
-
-            // Actualizar información del usuario en la navbar
-            document.querySelector('.doctor-name').textContent = userInfo.email || 'Doctor';
-
-            // Cargar datos del dashboard
-            loadDoctorStats();
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDoctorData();
+            loadAppointments();
+            loadTasks();
+            loadRecentPatients();
+            setupGlobalSearch();
+            setupAutoLogout();
         });
 
-        // Cargar estadísticas del doctor
-        async function loadDoctorStats() {
+        // Setup global search
+        function setupGlobalSearch() {
+            const searchInput = document.getElementById('globalSearch');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performGlobalSearch(query);
+                }, 300);
+            });
+
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Perform global search
+        async function performGlobalSearch(query) {
             try {
-                const response = await fetch('/api/web/doctor/dashboard', {
+                const response = await fetch(`/api/web/doctor/search-patients?q=${encodeURIComponent(query)}`, {
                     method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include' // Incluir cookies automáticamente
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    updateDashboard(data.data);
-                } else if (response.status === 401) {
-                    // Sesión expirada o inválida
-                    window.location.href = '/doctor_login.html';
-                } else {
-                    console.error('Error cargando dashboard:', response.status);
-                    showError('Error cargando datos del dashboard');
+                    displaySearchResults(data.results || []);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('Error de conexión');
+                console.error('Error searching patients:', error);
             }
         }
 
-        // Actualizar el dashboard con los datos recibidos
-        function updateDashboard(data) {
-            // Actualizar estadísticas
-            document.getElementById('patients-count').textContent = data.statistics?.total_patients || 0;
-            document.getElementById('appointments-count').textContent = data.statistics?.total_appointments || 0;
-            document.getElementById('reviews-count').textContent = data.statistics?.total_reviews || 0;
-            document.getElementById('schedule-count').textContent = data.statistics?.available_hours || 0;
+        // Display search results
+        function displaySearchResults(results) {
+            const searchResults = document.getElementById('searchResults');
 
-            // Actualizar lista de pacientes
-            const patientsList = document.getElementById('patients-list');
-            if (data.patients && data.patients.length > 0) {
-                patientsList.innerHTML = data.patients.map(patient => `
-                    <div class="patient-item">
-                        <div class="patient-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="patient-details">
-                            <h4>${patient.nombre || 'Paciente Sin Nombre'}</h4>
-                            <p>${patient.email || 'Sin email'} - ${patient.telefono || 'Sin teléfono'}</p>
+            if (results.length === 0) {
+                searchResults.innerHTML = '<div class="search-result-item">No se encontraron pacientes</div>';
+            } else {
+                searchResults.innerHTML = results.map(patient => `
+                    <div class="search-result-item" onclick="openPatientRecord('${patient.id_usuario}')">
+                        <div class="result-name">${patient.nombre} ${patient.apellido}</div>
+                        <div class="result-details">
+                            ID: ${patient.id_usuario} • ${patient.email}
                         </div>
                     </div>
                 `).join('');
-            } else {
-                patientsList.innerHTML = `
-                    <div class="loading">
-                        <i class="fas fa-user-times me-2"></i>
-                        No hay pacientes asignados
-                    </div>
-                `;
             }
 
-            // Actualizar revisiones pendientes
-            const reviewsList = document.getElementById('reviews-list');
-            if (data.reviews && data.reviews.length > 0) {
-                reviewsList.innerHTML = data.reviews.map(review => `
-                    <div class="review-item">
-                        <i class="fas fa-clipboard-check review-icon"></i>
-                        <span class="review-text">${review.message}</span>
-                    </div>
-                `).join('');
-            } else {
-                reviewsList.innerHTML = `
-                    <div class="review-item">
-                        <i class="fas fa-info-circle review-icon"></i>
-                        <span class="review-text">No hay revisiones pendientes</span>
-                    </div>
-                `;
-            }
+            searchResults.style.display = 'block';
         }
 
-        // Funciones de acciones rápidas
-        function scheduleAppointment() {
-            alert('Función de programar cita en desarrollo');
-        }
+        // Load doctor data
+        async function loadDoctorData() {
+            try {
+                const response = await fetch('/api/web/doctor/profile', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
 
-        function viewPatientHistory() {
-            alert('Función de ver historial de paciente en desarrollo');
-        }
+                if (response.ok) {
+                    const data = await response.json();
+                    const doctorName = `Dr. ${data.doctor.nombre} ${data.doctor.apellido}`;
+                    document.getElementById('doctorName').textContent = doctorName;
 
-        function updateProfile() {
-            alert('Función de actualizar perfil en desarrollo');
-        }
-
-        function contactPatient() {
-            alert('Función de contactar paciente en desarrollo');
-        }
-
-        // Función de logout
-        async function handleLogout() {
-            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                try {
-                    const response = await fetch('/logout', {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
-
-                    if (response.ok) {
-                        // Logout exitoso, redirigir al login
-                        window.location.href = '/login';
-                    } else {
-                        console.error('Error en logout:', response.status);
-                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    // Update greeting in top bar
+                    const greetingElement = document.getElementById('doctorGreeting');
+                    if (greetingElement) {
+                        greetingElement.textContent = `Hola, ${doctorName}`;
                     }
-                } catch (error) {
-                    console.error('Error de conexión en logout:', error);
-                    alert('Error de conexión. Inténtalo de nuevo.');
                 }
+            } catch (error) {
+                console.error('Error loading doctor data:', error);
             }
         }
 
-        // Función para mostrar errores
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle me-2"></i>
-                ${message}
-            `;
-            
-            const mainContent = document.querySelector('.main-content');
-            mainContent.insertBefore(errorDiv, mainContent.firstChild);
-            
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
+        // Load appointments
+        async function loadAppointments() {
+            try {
+                const response = await fetch('/api/web/doctor/appointments/today', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appointments = data.appointments || [];
+                    displayAppointments();
+                }
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+            }
+        }
+
+        // Display appointments timeline
+        function displayAppointments() {
+            const timeline = document.getElementById('appointmentsTimeline');
+            const now = new Date();
+
+            if (appointments.length === 0) {
+                timeline.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No hay citas programadas para hoy</h5>
+                        <button class="btn btn-primary mt-3" onclick="scheduleAppointment()">
+                            <i class="fas fa-plus me-1"></i>
+                            Programar Primera Cita
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            timeline.innerHTML = appointments.map((appointment, index) => {
+                const appointmentTime = new Date(`${new Date().toDateString()} ${appointment.hora}`);
+                const isPast = appointmentTime < now;
+                const isCurrent = !isPast && appointments[index - 1] &&
+                    new Date(`${new Date().toDateString()} ${appointments[index - 1].hora}`) < now;
+
+                return `
+                    <div class="timeline-item ${isPast ? 'past' : ''} ${isCurrent ? 'current' : ''}">
+                        <div class="appointment-card ${isPast ? 'past' : ''} ${isCurrent ? 'current' : ''}"
+                             onclick="openPatientRecord('${appointment.id_paciente}')">
+                            <div class="appointment-time">${appointment.hora}</div>
+                            <div class="appointment-patient">${appointment.nombre_paciente}</div>
+                            <div class="appointment-reason">${appointment.motivo || 'Consulta General'}</div>
+                            <div class="appointment-actions">
+                                <button class="btn-open-record" onclick="event.stopPropagation(); openPatientRecord('${appointment.id_paciente}')">
+                                    <i class="fas fa-folder-open me-1"></i>
+                                    Abrir Expediente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load pending tasks
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/web/doctor/tasks/pending', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tasks = data.tasks || [];
+                    displayTasks();
+                }
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+            }
+        }
+
+        // Display tasks
+        function displayTasks() {
+            const tasksContainer = document.getElementById('pendingTasks');
+
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <p class="text-muted small mb-0">No hay tareas pendientes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tasksContainer.innerHTML = tasks.map(task => `
+                <div class="task-item">
+                    <input type="checkbox" class="task-checkbox" onchange="completeTask('${task.id}')">
+                    <div class="task-content">
+                        <div class="task-text">${task.descripcion}</div>
+                        <div class="task-time">${formatTimeAgo(task.fecha_creacion)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load recent patients
+        async function loadRecentPatients() {
+            try {
+                const response = await fetch('/api/web/doctor/patients/recent', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    recentPatients = data.patients || [];
+                    displayRecentPatients();
+                }
+            } catch (error) {
+                console.error('Error loading recent patients:', error);
+            }
+        }
+
+        // Display recent patients
+        function displayRecentPatients() {
+            const container = document.getElementById('recentPatients');
+
+            if (recentPatients.length === 0) {
+                container.innerHTML = '<p class="text-muted small">No hay pacientes recientes</p>';
+                return;
+            }
+
+            container.innerHTML = recentPatients.map(patient => `
+                <div class="recent-patient-item" onclick="openPatientRecord('${patient.id_usuario}')">
+                    <div class="recent-patient-avatar">
+                        ${patient.nombre.charAt(0)}${patient.apellido.charAt(0)}
+                    </div>
+                    <div class="recent-patient-info">
+                        <div class="recent-patient-name">${patient.nombre} ${patient.apellido}</div>
+                        <div class="recent-patient-last-visit">${formatTimeAgo(patient.ultima_visita)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Setup auto-logout security
+        function setupAutoLogout() {
+            let inactivityTimer;
+            const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+
+            function resetTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    alert('Sesión expirada por inactividad. Serás redirigido al login.');
+                    handleLogout();
+                }, INACTIVITY_TIMEOUT);
+            }
+
+            // Reset timer on user activity
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+                document.addEventListener(event, resetTimer, true);
+            });
+
+            resetTimer();
+        }
+
+        // Utility functions
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+            if (diffInHours < 1) return 'Hace menos de 1 hora';
+            if (diffInHours === 1) return 'Hace 1 hora';
+            if (diffInHours < 24) return `Hace ${diffInHours} horas`;
+
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays === 1) return 'Hace 1 día';
+            return `Hace ${diffInDays} días`;
+        }
+
+        // Action functions
+        function loadPage(page) {
+            currentPage = page;
+
+            // Update navigation active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            // Handle page navigation
+            switch(page) {
+                case 'patients':
+                    window.location.href = 'mis_pacientes.html';
+                    break;
+                case 'profile':
+                    // Handle profile page
+                    break;
+            }
+        }
+
+        function openPatientRecord(patientId) {
+            window.location.href = `/patient_record.html?id=${patientId}`;
+        }
+
+        function scheduleAppointment() {
+            alert('Funcionalidad de programar cita próximamente disponible');
+        }
+
+        function quickAddConsultation() {
+            alert('Funcionalidad de registrar consulta próximamente disponible');
+        }
+
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch(`/api/web/doctor/tasks/${taskId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    loadTasks(); // Reload tasks
+                }
+            } catch (error) {
+                console.error('Error completing task:', error);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Error during logout:', error);
+            }
+            window.location.href = '/';
         }
     </script>
 </body>
