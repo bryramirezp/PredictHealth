@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+
   # Base de datos PostgreSQL
   postgres:
     build:
@@ -182,6 +185,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      - DOCKER_HOST=tcp://host.docker.internal:2375    # Connect to Docker Desktop TCP endpoint (puerto 2375 como habilitaste)
+      - DOCKER_TLS_VERIFY=0                            # Disable TLS verification for Docker Desktop
     networks:
       - predicthealth-network
     restart: unless-stopped

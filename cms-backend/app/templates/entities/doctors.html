@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, filter_dropdown_with_sort, action_card, status_badge, confirm_dialog, modal %}
 
 {% block title %}Doctors Management - PredictHealth CMS{% endblock %}
 
@@ -377,6 +377,33 @@ document.addEventListener('DOMContentLoaded', function() {
                        placeholder="0"
                        min="0"
                        value="{{ request.args.get('min_experience', '') }}">
+            </div>
+        </div>
+
+        <!-- Sort Options -->
+        <div class="mt-3">
+            <h6 class="mb-3">Sort Options</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Sort by</label>
+                        <select name="sort_by" class="form-control">
+                            <option value="">Default</option>
+                            <option value="name" {{ 'selected' if request.args.get('sort_by') == 'name' else '' }}>Name</option>
+                            <option value="experience" {{ 'selected' if request.args.get('sort_by') == 'experience' else '' }}>Experience</option>
+                            <option value="consultation_fee" {{ 'selected' if request.args.get('sort_by') == 'consultation_fee' else '' }}>Consultation Fee</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">Order</label>
+                        <select name="sort_order" class="form-control">
+                            <option value="asc" {{ 'selected' if request.args.get('sort_order') == 'asc' else '' }}>Low to High</option>
+                            <option value="desc" {{ 'selected' if request.args.get('sort_order') == 'desc' else '' }}>High to Low</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 

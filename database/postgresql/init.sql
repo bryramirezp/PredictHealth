@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS institution_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
-    category VARCHAR(50) DEFAULT,
+    category VARCHAR(50) DEFAULT NULL,
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS sexes (
     name VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(100) NOT NULL,
     description TEXT,
-    chromosome_pattern VARCHAR(10), -- e.g., 'XX', 'XY', 'XXY'
+    chromosome_pattern VARCHAR(10), 
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -66,19 +66,6 @@ CREATE TABLE IF NOT EXISTS blood_types (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Validation statuses catalog
-CREATE TABLE IF NOT EXISTS validation_statuses (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    display_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    requires_doctor BOOLEAN DEFAULT FALSE,
-    requires_institution BOOLEAN DEFAULT FALSE,
-    allows_full_access BOOLEAN DEFAULT FALSE,
-    sort_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- =============================================
 -- NORMALIZED CONTACT INFORMATION TABLES
@@ -96,7 +83,7 @@ CREATE TABLE IF NOT EXISTS email_types (
 -- Create normalized emails table
 CREATE TABLE IF NOT EXISTS emails (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    entity_type VARCHAR(50) NOT NULL CHECK (entity_type IN ('patient', 'doctor', 'institution', 'cms_user')),
+    entity_type VARCHAR(50) NOT NULL CHECK (entity_type IN ('patient', 'doctor', 'institution')),
     entity_id UUID NOT NULL,
     email_type_id INTEGER REFERENCES email_types(id) ON DELETE SET NULL,
     email_address VARCHAR(255) NOT NULL,
@@ -142,10 +129,13 @@ CREATE TABLE IF NOT EXISTS phones (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
     -- Ensure only one primary phone per entity
-    UNIQUE(entity_type, entity_id, is_primary) DEFERRABLE INITIALLY DEFERRED,
+    UNIQUE(entity_type, entity_id, is_primary),
 
-    -- Phone number format validation
-    CONSTRAINT chk_phone_format CHECK (phone_number ~ '^[0-9\s\-\(\)]{10,}$')
+    -- Phone number format validation (allows both local and international formats)
+    CONSTRAINT chk_phone_format CHECK (
+        phone_number ~ '^[0-9]{10,}$' OR  -- Local format: 10+ digits
+        phone_number ~ '^\+[0-9]{1,4}(-[0-9]{1,10})+$'  -- International: +XX-XX-XXXX... (variable dashes)
+    )
 );
 
 -- Create countries catalog
@@ -169,7 +159,6 @@ CREATE TABLE IF NOT EXISTS regions (
     region_type VARCHAR(50) DEFAULT 'state' CHECK (region_type IN ('state', 'province', 'territory', 'district', 'municipality')),
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
     UNIQUE(country_id, name),
     UNIQUE(country_id, region_code)
 );
@@ -235,10 +224,11 @@ CREATE TABLE IF NOT EXISTS doctor_specialties (
 -- Doctors (Eliminated transitive dependencies)
 CREATE TABLE IF NOT EXISTS doctors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    institution_id UUID REFERENCES medical_institutions(id) ON DELETE SET NULL,
+    institution_id UUID NOT NULL REFERENCES medical_institutions(id) ON DELETE RESTRICT,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     sex_id INTEGER REFERENCES sexes(id), -- Biological sex for medical records
+    gender_id INTEGER REFERENCES genders(id), -- Gender identity (optional)
     medical_license VARCHAR(50) UNIQUE NOT NULL,
     specialty_id UUID REFERENCES doctor_specialties(id) ON DELETE SET NULL,
     years_experience INTEGER DEFAULT 0 CHECK (years_experience >= 0),
@@ -248,29 +238,30 @@ CREATE TABLE IF NOT EXISTS doctors (
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     professional_status VARCHAR(50) DEFAULT 'active' CHECK (professional_status IN ('active','suspended','retired')),
     last_login TIMESTAMP WITH TIME ZONE
+
+    -- Business rule: Doctor must be linked to an institution
 );
 
 
 -- Patients (Normalized validation logic)
 CREATE TABLE IF NOT EXISTS patients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    doctor_id UUID REFERENCES doctors(id) ON DELETE SET NULL,
-    institution_id UUID REFERENCES medical_institutions(id) ON DELETE SET NULL,
+    doctor_id UUID NOT NULL REFERENCES doctors(id) ON DELETE RESTRICT,
+    institution_id UUID NOT NULL REFERENCES medical_institutions(id) ON DELETE RESTRICT,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NOT NULL CHECK (date_of_birth <= CURRENT_DATE),
     sex_id INTEGER REFERENCES sexes(id), -- Biological sex for medical records
     gender_id INTEGER REFERENCES genders(id), -- Gender identity (optional)
     emergency_contact_name VARCHAR(200),
-    validation_status_id INTEGER NOT NULL REFERENCES validation_statuses(id) DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     is_active BOOLEAN DEFAULT TRUE NOT NULL,
     is_verified BOOLEAN DEFAULT FALSE NOT NULL,
     last_login TIMESTAMP WITH TIME ZONE,
 
-    -- Composite constraint for data integrity
-    CONSTRAINT chk_patient_association CHECK (doctor_id IS NOT NULL OR institution_id IS NOT NULL)
+    -- Business rule: Patient must be linked to both a doctor and an institution
+    CONSTRAINT chk_patient_association CHECK (doctor_id IS NOT NULL AND institution_id IS NOT NULL)
 );
 
 -- Health Profiles (Refactorizada)
@@ -371,9 +362,43 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
-    -- Reference validation will be handled by application logic
+    -- Reference validation will be handled by triggers
     CONSTRAINT chk_reference_consistency CHECK (reference_id IS NOT NULL)
 );
+
+-- =============================================
+-- TRIGGER FUNCTION FOR REFERENCE VALIDATION
+-- =============================================
+
+CREATE OR REPLACE FUNCTION validate_user_reference()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Validate that reference_id exists in the correct table based on user_type
+    CASE NEW.user_type
+        WHEN 'patient' THEN
+            IF NOT EXISTS (SELECT 1 FROM patients WHERE id = NEW.reference_id) THEN
+                RAISE EXCEPTION 'Invalid reference_id: patient with ID % does not exist', NEW.reference_id;
+            END IF;
+        WHEN 'doctor' THEN
+            IF NOT EXISTS (SELECT 1 FROM doctors WHERE id = NEW.reference_id) THEN
+                RAISE EXCEPTION 'Invalid reference_id: doctor with ID % does not exist', NEW.reference_id;
+            END IF;
+        WHEN 'institution' THEN
+            IF NOT EXISTS (SELECT 1 FROM medical_institutions WHERE id = NEW.reference_id) THEN
+                RAISE EXCEPTION 'Invalid reference_id: institution with ID % does not exist', NEW.reference_id;
+            END IF;
+        ELSE
+            RAISE EXCEPTION 'Invalid user_type: %', NEW.user_type;
+    END CASE;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for INSERT and UPDATE on users table
+CREATE TRIGGER trg_validate_user_reference
+    BEFORE INSERT OR UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION validate_user_reference();
 
 -- =============================================
 -- CMS SYSTEM (FULLY NORMALIZED)
@@ -629,9 +654,17 @@ DECLARE
     v_patient_id UUID;
     v_user_id UUID;
 BEGIN
+    -- Validate that doctor belongs to the specified institution
+    IF NOT EXISTS (
+        SELECT 1 FROM doctors
+        WHERE id = p_doctor_id AND institution_id = p_institution_id
+    ) THEN
+        RAISE EXCEPTION 'Doctor % does not belong to institution %', p_doctor_id, p_institution_id;
+    END IF;
+
     -- Insert patient (without phone fields)
-    INSERT INTO patients (first_name, last_name, email, date_of_birth, gender, emergency_contact_name, doctor_id, institution_id)
-    VALUES (p_first_name, p_last_name, p_email, p_date_of_birth, p_gender, p_emergency_contact_name, p_doctor_id, p_institution_id)
+    INSERT INTO patients (first_name, last_name, date_of_birth, gender, emergency_contact_name, doctor_id, institution_id)
+    VALUES (p_first_name, p_last_name, p_date_of_birth, p_gender, p_emergency_contact_name, p_doctor_id, p_institution_id)
     RETURNING id INTO v_patient_id;
 
     -- Create user account
@@ -646,16 +679,20 @@ BEGIN
     -- Insert primary phone
     IF p_phone IS NOT NULL AND p_phone != '' THEN
         INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
-        VALUES ('patient', v_patient_id, (SELECT id FROM phone_types WHERE name = 'primary'), p_phone, TRUE, FALSE);
+        VALUES ('patient', v_patient_id, (SELECT id FROM phone_types WHERE name = 'primary'), regexp_replace(p_phone, '[^0-9]', '', 'g'), TRUE, FALSE);
     END IF;
 
     -- Insert emergency contact phone
     IF p_emergency_contact_name IS NOT NULL AND p_emergency_contact_phone IS NOT NULL THEN
         INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
-        VALUES ('emergency_contact', v_patient_id, (SELECT id FROM phone_types WHERE name = 'emergency'), p_emergency_contact_phone, FALSE, FALSE);
+        VALUES ('emergency_contact', v_patient_id, (SELECT id FROM phone_types WHERE name = 'emergency'), regexp_replace(p_emergency_contact_phone, '[^0-9]', '', 'g'), FALSE, FALSE);
     END IF;
 
-    COMMIT;
+    -- No explicit COMMIT - let the caller handle transactions
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Log the error and re-raise it
+        RAISE EXCEPTION 'Error creating patient profile: %', SQLERRM;
 END;
 $$;
 
@@ -664,8 +701,8 @@ CREATE OR REPLACE PROCEDURE sp_get_patient_stats_by_month(
     p_year INTEGER,
     OUT total_patients INTEGER,
     OUT new_patients INTEGER,
-    OUT validated_patients INTEGER,
-    OUT avg_age DECIMAL(5,2)
+    OUT avg_age DECIMAL(5,2),
+    OUT patients_with_valid_relationships INTEGER
 )
 LANGUAGE plpgsql
 AS $$
@@ -681,14 +718,15 @@ BEGIN
     WHERE EXTRACT(YEAR FROM created_at) = v_year
     AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE);
 
-    -- Validated patients
-    SELECT COUNT(*) INTO validated_patients
-    FROM patients
-    WHERE validation_status = 'full_access' AND is_active = TRUE;
-
     -- Average age
     SELECT AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, date_of_birth))) INTO avg_age
     FROM patients WHERE is_active = TRUE;
+
+    -- Patients with valid doctor-institution relationships
+    SELECT COUNT(*) INTO patients_with_valid_relationships
+    FROM patients p
+    INNER JOIN doctors d ON p.doctor_id = d.id
+    WHERE p.is_active = TRUE AND d.institution_id = p.institution_id;
 END;
 $$;
 
@@ -697,14 +735,15 @@ CREATE OR REPLACE PROCEDURE sp_get_doctor_performance_stats(
     p_doctor_id UUID,
     OUT total_patients INTEGER,
     OUT avg_patient_age DECIMAL(5,2),
-    OUT common_conditions TEXT
+    OUT common_conditions TEXT,
+    OUT institution_name VARCHAR(200)
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_doctor_id UUID := p_doctor_id;
 BEGIN
-    -- Total patients under care
+    -- Total patients under care (now guaranteed to be from same institution)
     SELECT COUNT(*) INTO total_patients
     FROM patients p
     WHERE (v_doctor_id IS NULL OR p.doctor_id = v_doctor_id) AND p.is_active = TRUE;
@@ -724,6 +763,14 @@ BEGIN
     GROUP BY p.id
     ORDER BY COUNT(*) DESC
     LIMIT 5; -- Top 5 most common conditions
+
+    -- Institution name (now guaranteed to exist)
+    IF v_doctor_id IS NOT NULL THEN
+        SELECT mi.name INTO institution_name
+        FROM doctors d
+        JOIN medical_institutions mi ON d.institution_id = mi.id
+        WHERE d.id = v_doctor_id;
+    END IF;
 END;
 $$;
 
@@ -733,17 +780,21 @@ CREATE OR REPLACE PROCEDURE sp_get_institution_analytics(
     OUT patient_count INTEGER,
     OUT doctor_count INTEGER,
     OUT avg_consultation_fee DECIMAL(10,2),
-    OUT most_common_specialty VARCHAR(100)
+    OUT most_common_specialty VARCHAR(100),
+    OUT relationship_integrity_status VARCHAR(50)
 )
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_total_patients INTEGER;
+    v_patients_with_doctors INTEGER;
 BEGIN
-    -- Patient count
+    -- Patient count (now guaranteed to have both doctor and institution)
     SELECT COUNT(*) INTO patient_count
     FROM patients
     WHERE institution_id = p_institution_id AND is_active = TRUE;
 
-    -- Doctor count
+    -- Doctor count (now guaranteed to belong to institution)
     SELECT COUNT(*) INTO doctor_count
     FROM doctors
     WHERE institution_id = p_institution_id AND is_active = TRUE;
@@ -761,6 +812,25 @@ BEGIN
     GROUP BY ds.name
     ORDER BY COUNT(*) DESC
     LIMIT 1;
+
+    -- Relationship integrity status
+    SELECT COUNT(*) INTO v_total_patients
+    FROM patients
+    WHERE institution_id = p_institution_id AND is_active = TRUE;
+
+    SELECT COUNT(*) INTO v_patients_with_doctors
+    FROM patients p
+    JOIN doctors d ON p.doctor_id = d.id
+    WHERE p.institution_id = p_institution_id AND p.is_active = TRUE
+    AND d.institution_id = p_institution_id;
+
+    IF v_total_patients = v_patients_with_doctors THEN
+        relationship_integrity_status := 'Perfect';
+    ELSIF v_patients_with_doctors > 0 THEN
+        relationship_integrity_status := 'Partial';
+    ELSE
+        relationship_integrity_status := 'Broken';
+    END IF;
 END;
 $$;
 
@@ -780,11 +850,13 @@ SELECT
     EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.date_of_birth)) AS age,
     s.display_name AS biological_sex,
     g.display_name AS gender_identity,
-    vs.display_name AS validation_status,
     p.is_active,
+    p.is_verified,
     d.first_name AS doctor_first_name,
     d.last_name AS doctor_last_name,
     mi.name AS institution_name,
+    -- Business rule validation: Ensure doctor belongs to patient's institution
+    CASE WHEN d.institution_id = p.institution_id THEN 'Valid' ELSE 'Invalid - Doctor not in institution' END AS relationship_status,
     bt.name AS blood_type,
     STRING_AGG(DISTINCT mc.name, ', ') AS diagnosed_conditions,
     -- Phone information
@@ -799,9 +871,8 @@ SELECT
 FROM patients p
 LEFT JOIN sexes s ON p.sex_id = s.id
 LEFT JOIN genders g ON p.gender_id = g.id
-LEFT JOIN validation_statuses vs ON p.validation_status_id = vs.id
-LEFT JOIN doctors d ON p.doctor_id = d.id
-LEFT JOIN medical_institutions mi ON p.institution_id = mi.id
+INNER JOIN doctors d ON p.doctor_id = d.id  -- Changed to INNER JOIN since doctor_id is now NOT NULL
+INNER JOIN medical_institutions mi ON p.institution_id = mi.id  -- Changed to INNER JOIN since institution_id is now NOT NULL
 LEFT JOIN addresses addr ON addr.entity_type = 'institution' AND addr.entity_id = mi.id AND addr.is_primary = TRUE
 LEFT JOIN regions r ON addr.region_id = r.id
 LEFT JOIN countries c ON addr.country_id = c.id
@@ -811,7 +882,7 @@ LEFT JOIN patient_conditions pc ON p.id = pc.patient_id
 LEFT JOIN medical_conditions mc ON pc.condition_id = mc.id
 WHERE p.is_active = TRUE
 GROUP BY p.id, p.first_name, p.last_name, p.date_of_birth, s.display_name, g.display_name,
-         vs.display_name, p.is_active, d.first_name, d.last_name,
+         p.is_active, p.is_verified, d.first_name, d.last_name, d.institution_id,
          mi.name, bt.name, r.name, c.name, p.created_at;
 
 -- View for doctor performance dashboard
@@ -842,7 +913,7 @@ SELECT
 FROM doctors d
 LEFT JOIN doctor_specialties ds ON d.specialty_id = ds.id
 LEFT JOIN specialty_categories sc ON ds.category_id = sc.id
-LEFT JOIN medical_institutions mi ON d.institution_id = mi.id
+INNER JOIN medical_institutions mi ON d.institution_id = mi.id  -- Changed to INNER JOIN since institution_id is now NOT NULL
 LEFT JOIN institution_types it ON mi.institution_type_id = it.id
 LEFT JOIN addresses addr ON addr.entity_type = 'institution' AND addr.entity_id = mi.id AND addr.is_primary = TRUE
 LEFT JOIN regions r ON addr.region_id = r.id
@@ -858,13 +929,11 @@ CREATE OR REPLACE VIEW vw_monthly_registrations AS
 SELECT
     DATE_TRUNC('month', p.created_at) AS registration_month,
     COUNT(*) AS total_registrations,
-    COUNT(CASE WHEN vs.name = 'full_access' THEN 1 END) AS validated_registrations,
     COUNT(CASE WHEN g.name = 'male' THEN 1 END) AS male_count,
     COUNT(CASE WHEN g.name = 'female' THEN 1 END) AS female_count,
     COUNT(CASE WHEN g.name IN ('non_binary', 'genderqueer', 'genderfluid', 'agender', 'other') THEN 1 END) AS other_gender_count
 FROM patients p
 LEFT JOIN genders g ON p.gender_id = g.id
-LEFT JOIN validation_statuses vs ON p.validation_status_id = vs.id
 WHERE p.is_active = TRUE
 GROUP BY DATE_TRUNC('month', p.created_at)
 ORDER BY registration_month DESC;
@@ -884,25 +953,32 @@ JOIN health_profiles hp ON p.id = hp.patient_id
 LEFT JOIN patient_conditions pc ON p.id = pc.patient_id
 WHERE p.is_active = TRUE;
 
--- Vista: vw_dashboard_overview
+-- Vista corregida: vw_dashboard_overview
 CREATE OR REPLACE VIEW vw_dashboard_overview AS
 SELECT
     (SELECT COUNT(*) FROM patients WHERE is_active = TRUE) as total_patients,
     (SELECT COUNT(*) FROM doctors WHERE is_active = TRUE) as total_doctors,
     (SELECT COUNT(*) FROM medical_institutions WHERE is_active = TRUE) as total_institutions,
     (SELECT COUNT(*) FROM users WHERE is_active = TRUE) as total_users,
-    (SELECT COUNT(*) FROM patients WHERE validation_status = 'full_access') as validated_patients,
-    (SELECT AVG(consultation_fee) FROM doctors WHERE is_active = TRUE) as avg_consultation_fee;
+    (SELECT COUNT(*) FROM patients WHERE is_verified = TRUE AND is_active = TRUE) as validated_patients,
+    (SELECT AVG(consultation_fee) FROM doctors WHERE is_active = TRUE) as avg_consultation_fee,
+    -- New metrics for relationship integrity
+    (SELECT COUNT(*) FROM patients p JOIN doctors d ON p.doctor_id = d.id WHERE p.is_active = TRUE AND d.institution_id = p.institution_id) as patients_with_valid_relationships,
+    (SELECT ROUND(
+        (COUNT(*)::decimal /
+         NULLIF((SELECT COUNT(*) FROM patients WHERE is_active = TRUE), 0)) * 100, 2
+     ) FROM patients p JOIN doctors d ON p.doctor_id = d.id WHERE p.is_active = TRUE AND d.institution_id = p.institution_id) as relationship_integrity_percentage;
 
 -- 1. Vista para gráfico de especialidades médicas
 CREATE OR REPLACE VIEW vw_doctor_specialty_distribution AS
 SELECT
     ds.name as specialty,
-    ds.category,
+    sc.name as category,
     COUNT(d.id) as doctor_count
 FROM doctor_specialties ds
+LEFT JOIN specialty_categories sc ON ds.category_id = sc.id
 LEFT JOIN doctors d ON ds.id = d.specialty_id AND d.is_active = TRUE
-GROUP BY ds.name, ds.category
+GROUP BY ds.name, sc.name
 ORDER BY doctor_count DESC;
 
 -- 2. Vista para distribución geográfica
@@ -935,15 +1011,38 @@ LEFT JOIN patient_conditions pc ON mc.id = pc.condition_id
 GROUP BY mc.name
 ORDER BY patient_count DESC;
 
--- 4. Vista para estado de validación de pacientes
+-- Vista para estado de validación de pacientes
 CREATE OR REPLACE VIEW vw_patient_validation_status AS
 SELECT
-    validation_status,
+    CASE
+        WHEN is_verified = TRUE THEN 'verified'
+        WHEN is_verified = FALSE THEN 'unverified'
+        ELSE 'pending'
+    END as validation_status,
     COUNT(*) as patient_count,
-    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM patients WHERE is_active = TRUE), 2) as percentage
+    ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ()), 1) as percentage
 FROM patients
 WHERE is_active = TRUE
-GROUP BY validation_status;
+GROUP BY is_verified
+ORDER BY patient_count DESC;
+
+-- New view for relationship integrity monitoring
+CREATE OR REPLACE VIEW vw_relationship_integrity AS
+SELECT
+    'Patient-Doctor-Institution Relationships' as check_type,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN p.doctor_id IS NOT NULL AND p.institution_id IS NOT NULL THEN 1 END) as complete_relationships,
+    COUNT(CASE WHEN p.doctor_id IS NULL OR p.institution_id IS NULL THEN 1 END) as incomplete_relationships,
+    COUNT(CASE WHEN p.doctor_id IS NOT NULL AND p.institution_id IS NOT NULL AND d.institution_id = p.institution_id THEN 1 END) as valid_relationships,
+    COUNT(CASE WHEN p.doctor_id IS NOT NULL AND p.institution_id IS NOT NULL AND d.institution_id != p.institution_id THEN 1 END) as invalid_relationships,
+    ROUND(
+        (COUNT(CASE WHEN p.doctor_id IS NOT NULL AND p.institution_id IS NOT NULL AND d.institution_id = p.institution_id THEN 1 END)::decimal /
+         NULLIF(COUNT(*), 0)) * 100, 2
+    ) as integrity_percentage
+FROM patients p
+LEFT JOIN doctors d ON p.doctor_id = d.id
+WHERE p.is_active = TRUE;
+
 
 -- =============================================
 -- INDEXES FOR NORMALIZED TABLES
@@ -982,14 +1081,11 @@ CREATE INDEX IF NOT EXISTS idx_regions_code ON regions(region_code);
 -- Core medical tables indexes
 CREATE INDEX IF NOT EXISTS idx_patients_doctor_id ON patients(doctor_id) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_patients_institution_id ON patients(institution_id) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_patients_email ON patients(email);
-CREATE INDEX IF NOT EXISTS idx_patients_validation_status ON patients(validation_status) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_patients_created_at ON patients(created_at) WHERE is_active = TRUE;
 
 -- Doctor performance indexes
 CREATE INDEX IF NOT EXISTS idx_doctors_institution_id ON doctors(institution_id) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_doctors_specialty_id ON doctors(specialty_id) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_doctors_email ON doctors(email);
 CREATE INDEX IF NOT EXISTS idx_doctors_consultation_fee ON doctors(consultation_fee) WHERE is_active = TRUE;
 
 -- Health profiles indexes
@@ -1011,8 +1107,7 @@ CREATE INDEX IF NOT EXISTS idx_users_user_type ON users(user_type) WHERE is_acti
 CREATE INDEX IF NOT EXISTS idx_users_reference_id ON users(reference_id, user_type);
 
 -- Medical institution indexes
-CREATE INDEX IF NOT EXISTS idx_medical_institutions_region ON medical_institutions(region_state) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_medical_institutions_type ON medical_institutions(institution_type) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_medical_institutions_type ON medical_institutions(institution_type_id) WHERE is_active = TRUE;
 
 -- CMS system indexes
 CREATE INDEX IF NOT EXISTS idx_cms_users_role ON cms_users(role_id) WHERE is_active = TRUE;
@@ -1130,13 +1225,6 @@ INSERT INTO blood_types (name, description, can_donate_to, can_receive_from) VAL
     ('O-', 'O negative blood type (universal donor)', ARRAY['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], ARRAY['O-'])
 ON CONFLICT (name) DO NOTHING;
 
--- Insert validation statuses
-INSERT INTO validation_statuses (name, display_name, description, requires_doctor, requires_institution, allows_full_access, sort_order) VALUES
-    ('pending', 'Pending Validation', 'Patient registration pending validation', false, false, false, 1),
-    ('doctor_validated', 'Doctor Validated', 'Validated by assigned doctor', true, false, false, 2),
-    ('institution_validated', 'Institution Validated', 'Validated by medical institution', false, true, false, 3),
-    ('full_access', 'Full Access', 'Complete validation with full system access', true, true, true, 4)
-ON CONFLICT (name) DO NOTHING;
 
 -- Insert email types
 INSERT INTO email_types (name, description) VALUES
@@ -1263,33 +1351,66 @@ ON CONFLICT (license_number) DO NOTHING;
 
 -- Insert emails for medical institutions
 INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
-VALUES
-    ('institution', '11000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion1@test.predicthealth.com', TRUE, TRUE),
-    ('institution', '12000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion2@test.predicthealth.com', TRUE, TRUE),
-    ('institution', '13000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion3@test.predicthealth.com', TRUE, TRUE),
-    ('institution', '14000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion4@test.predicthealth.com', TRUE, TRUE),
-    ('institution', '15000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion5@test.predicthealth.com', TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+SELECT 'institution', '11000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion1@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'institution' AND entity_id = '11000000-e29b-41d4-a716-446655440001'::uuid AND email_address = 'institucion1@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'institution', '12000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion2@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'institution' AND entity_id = '12000000-e29b-41d4-a716-446655440002'::uuid AND email_address = 'institucion2@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'institution', '13000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion3@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'institution' AND entity_id = '13000000-e29b-41d4-a716-446655440003'::uuid AND email_address = 'institucion3@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'institution', '14000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion4@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'institution' AND entity_id = '14000000-e29b-41d4-a716-446655440004'::uuid AND email_address = 'institucion4@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'institution', '15000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'institucion5@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'institution' AND entity_id = '15000000-e29b-41d4-a716-446655440005'::uuid AND email_address = 'institucion5@test.predicthealth.com');
 
 -- Insert addresses for medical institutions
 INSERT INTO addresses (entity_type, entity_id, address_type, street_address, city, region_id, country_id, is_primary, is_verified)
-VALUES
-    ('institution', '11000000-e29b-41d4-a716-446655440001'::uuid, 'primary', 'Av. Reforma 150, Centro Histórico', 'Ciudad de México', (SELECT id FROM regions WHERE name = 'Ciudad de México'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE),
-    ('institution', '12000000-e29b-41d4-a716-446655440002'::uuid, 'primary', 'Calle Juárez 45, Zona Norte', 'Monterrey', (SELECT id FROM regions WHERE name = 'Nuevo León'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE),
-    ('institution', '13000000-e29b-41d4-a716-446655440003'::uuid, 'primary', 'Blvd. del Sur 89, Colonia del Valle', 'Guadalajara', (SELECT id FROM regions WHERE name = 'Jalisco'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE),
-    ('institution', '14000000-e29b-41d4-a716-446655440004'::uuid, 'primary', 'Paseo de los Héroes 234', 'León', (SELECT id FROM regions WHERE name = 'Guanajuato'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE),
-    ('institution', '15000000-e29b-41d4-a716-446655440005'::uuid, 'primary', 'Malecón 567, Zona Dorada', 'Puerto Vallarta', (SELECT id FROM regions WHERE name = 'Jalisco'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+SELECT 'institution', '11000000-e29b-41d4-a716-446655440001'::uuid, 'primary', 'Av. Reforma 150, Centro Histórico', 'Ciudad de México', (SELECT id FROM regions WHERE name = 'Ciudad de México'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE entity_type = 'institution' AND entity_id = '11000000-e29b-41d4-a716-446655440001'::uuid AND street_address = 'Av. Reforma 150, Centro Histórico');
+
+INSERT INTO addresses (entity_type, entity_id, address_type, street_address, city, region_id, country_id, is_primary, is_verified)
+SELECT 'institution', '12000000-e29b-41d4-a716-446655440002'::uuid, 'primary', 'Calle Juárez 45, Zona Norte', 'Monterrey', (SELECT id FROM regions WHERE name = 'Nuevo León'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE entity_type = 'institution' AND entity_id = '12000000-e29b-41d4-a716-446655440002'::uuid AND street_address = 'Calle Juárez 45, Zona Norte');
+
+INSERT INTO addresses (entity_type, entity_id, address_type, street_address, city, region_id, country_id, is_primary, is_verified)
+SELECT 'institution', '13000000-e29b-41d4-a716-446655440003'::uuid, 'primary', 'Blvd. del Sur 89, Colonia del Valle', 'Guadalajara', (SELECT id FROM regions WHERE name = 'Jalisco'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE entity_type = 'institution' AND entity_id = '13000000-e29b-41d4-a716-446655440003'::uuid AND street_address = 'Blvd. del Sur 89, Colonia del Valle');
+
+INSERT INTO addresses (entity_type, entity_id, address_type, street_address, city, region_id, country_id, is_primary, is_verified)
+SELECT 'institution', '14000000-e29b-41d4-a716-446655440004'::uuid, 'primary', 'Paseo de los Héroes 234', 'León', (SELECT id FROM regions WHERE name = 'Guanajuato'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE entity_type = 'institution' AND entity_id = '14000000-e29b-41d4-a716-446655440004'::uuid AND street_address = 'Paseo de los Héroes 234');
+
+INSERT INTO addresses (entity_type, entity_id, address_type, street_address, city, region_id, country_id, is_primary, is_verified)
+SELECT 'institution', '15000000-e29b-41d4-a716-446655440005'::uuid, 'primary', 'Malecón 567, Zona Dorada', 'Puerto Vallarta', (SELECT id FROM regions WHERE name = 'Jalisco'), (SELECT id FROM countries WHERE iso_code = 'MEX'), TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM addresses WHERE entity_type = 'institution' AND entity_id = '15000000-e29b-41d4-a716-446655440005'::uuid AND street_address = 'Malecón 567, Zona Dorada');
 
 -- Insert phones for medical institutions
 INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
-VALUES
-    ('institution', '11000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-55-2001-0001', TRUE, TRUE),
-    ('institution', '12000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-81-2002-0002', TRUE, TRUE),
-    ('institution', '13000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-33-2003-0003', TRUE, TRUE),
-    ('institution', '14000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-477-2004-0004', TRUE, TRUE),
-    ('institution', '15000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-322-2005-0005', TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+SELECT 'institution', '11000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '5555555555', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'institution' AND entity_id = '11000000-e29b-41d4-a716-446655440001'::uuid AND phone_number = '5555555555');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'institution', '12000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '8181818181', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'institution' AND entity_id = '12000000-e29b-41d4-a716-446655440002'::uuid AND phone_number = '8181818181');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'institution', '13000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '3333333333', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'institution' AND entity_id = '13000000-e29b-41d4-a716-446655440003'::uuid AND phone_number = '3333333333');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'institution', '14000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '4777777777', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'institution' AND entity_id = '14000000-e29b-41d4-a716-446655440004'::uuid AND phone_number = '4777777777');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'institution', '15000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '3222222222', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'institution' AND entity_id = '15000000-e29b-41d4-a716-446655440005'::uuid AND phone_number = '3222222222');
 
 INSERT INTO users (id, email, password_hash, user_type, reference_id, is_active, is_verified)
 VALUES
@@ -1312,13 +1433,24 @@ ON CONFLICT (medical_license) DO NOTHING;
 
 -- Insert emails for doctors
 INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
-VALUES
-    ('doctor', '21000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor1@test.predicthealth.com', TRUE, TRUE),
-    ('doctor', '22000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor2@test.predicthealth.com', TRUE, TRUE),
-    ('doctor', '23000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor3@test.predicthealth.com', TRUE, TRUE),
-    ('doctor', '24000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor4@test.predicthealth.com', TRUE, TRUE),
-    ('doctor', '25000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor5@test.predicthealth.com', TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+SELECT 'doctor', '21000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor1@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'doctor' AND entity_id = '21000000-e29b-41d4-a716-446655440001'::uuid AND email_address = 'doctor1@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'doctor', '22000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor2@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'doctor' AND entity_id = '22000000-e29b-41d4-a716-446655440002'::uuid AND email_address = 'doctor2@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'doctor', '23000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor3@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'doctor' AND entity_id = '23000000-e29b-41d4-a716-446655440003'::uuid AND email_address = 'doctor3@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'doctor', '24000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor4@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'doctor' AND entity_id = '24000000-e29b-41d4-a716-446655440004'::uuid AND email_address = 'doctor4@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'doctor', '25000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'doctor5@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'doctor' AND entity_id = '25000000-e29b-41d4-a716-446655440005'::uuid AND email_address = 'doctor5@test.predicthealth.com');
 
 -- Insert phones for doctors
 INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
@@ -1340,40 +1472,77 @@ VALUES
 ON CONFLICT (email) DO NOTHING;
 
 -- Patients (5)
-INSERT INTO patients (id, doctor_id, institution_id, first_name, last_name, date_of_birth, sex_id, gender_id, emergency_contact_name, validation_status_id, is_active, is_verified)
+INSERT INTO patients (id, doctor_id, institution_id, first_name, last_name, date_of_birth, sex_id, gender_id, emergency_contact_name, is_active, is_verified)
 VALUES
-    ('31000000-e29b-41d4-a716-446655440001'::uuid, '21000000-e29b-41d4-a716-446655440001'::uuid, '11000000-e29b-41d4-a716-446655440001'::uuid, 'Luis', 'Torres', '1978-03-12', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'María Torres', (SELECT id FROM validation_statuses WHERE name = 'full_access'), TRUE, TRUE),
-    ('32000000-e29b-41d4-a716-446655440002'::uuid, '22000000-e29b-41d4-a716-446655440002'::uuid, '12000000-e29b-41d4-a716-446655440002'::uuid, 'Carmen', 'Díaz', '1982-07-25', (SELECT id FROM sexes WHERE name = 'female'), (SELECT id FROM genders WHERE name = 'female'), 'José Díaz', (SELECT id FROM validation_statuses WHERE name = 'doctor_validated'), TRUE, TRUE),
-    ('33000000-e29b-41d4-a716-446655440003'::uuid, '23000000-e29b-41d4-a716-446655440003'::uuid, '13000000-e29b-41d4-a716-446655440003'::uuid, 'Javier', 'Ruiz', '1990-11-08', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'Elena Ruiz', (SELECT id FROM validation_statuses WHERE name = 'institution_validated'), TRUE, TRUE),
-    ('34000000-e29b-41d4-a716-446655440004'::uuid, '24000000-e29b-41d4-a716-446655440004'::uuid, '14000000-e29b-41d4-a716-446655440004'::uuid, 'Isabel', 'Fernández', '1975-05-30', (SELECT id FROM sexes WHERE name = 'female'), (SELECT id FROM genders WHERE name = 'female'), 'Carlos Fernández', (SELECT id FROM validation_statuses WHERE name = 'pending'), TRUE, TRUE),
-    ('35000000-e29b-41d4-a716-446655440005'::uuid, '25000000-e29b-41d4-a716-446655440005'::uuid, '15000000-e29b-41d4-a716-446655440005'::uuid, 'Manuel', 'Gutiérrez', '1988-09-14', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'Rosa Gutiérrez', (SELECT id FROM validation_statuses WHERE name = 'full_access'), TRUE, TRUE)
+    ('31000000-e29b-41d4-a716-446655440001'::uuid, '21000000-e29b-41d4-a716-446655440001'::uuid, '11000000-e29b-41d4-a716-446655440001'::uuid, 'Luis', 'Torres', '1978-03-12', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'María Torres', TRUE, TRUE),
+    ('32000000-e29b-41d4-a716-446655440002'::uuid, '22000000-e29b-41d4-a716-446655440002'::uuid, '12000000-e29b-41d4-a716-446655440002'::uuid, 'Carmen', 'Díaz', '1982-07-25', (SELECT id FROM sexes WHERE name = 'female'), (SELECT id FROM genders WHERE name = 'female'), 'José Díaz', TRUE, TRUE),
+    ('33000000-e29b-41d4-a716-446655440003'::uuid, '23000000-e29b-41d4-a716-446655440003'::uuid, '13000000-e29b-41d4-a716-446655440003'::uuid, 'Javier', 'Ruiz', '1990-11-08', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'Elena Ruiz', TRUE, TRUE),
+    ('34000000-e29b-41d4-a716-446655440004'::uuid, '24000000-e29b-41d4-a716-446655440004'::uuid, '14000000-e29b-41d4-a716-446655440004'::uuid, 'Isabel', 'Fernández', '1975-05-30', (SELECT id FROM sexes WHERE name = 'female'), (SELECT id FROM genders WHERE name = 'female'), 'Carlos Fernández', TRUE, TRUE),
+    ('35000000-e29b-41d4-a716-446655440005'::uuid, '25000000-e29b-41d4-a716-446655440005'::uuid, '15000000-e29b-41d4-a716-446655440005'::uuid, 'Manuel', 'Gutiérrez', '1988-09-14', (SELECT id FROM sexes WHERE name = 'male'), (SELECT id FROM genders WHERE name = 'male'), 'Rosa Gutiérrez', TRUE, TRUE)
 ON CONFLICT DO NOTHING;
 
 -- Insert emails for patients
 INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
-VALUES
-    ('patient', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente1@test.predicthealth.com', TRUE, TRUE),
-    ('patient', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente2@test.predicthealth.com', TRUE, TRUE),
-    ('patient', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente3@test.predicthealth.com', TRUE, TRUE),
-    ('patient', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente4@test.predicthealth.com', TRUE, TRUE),
-    ('patient', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente5@test.predicthealth.com', TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+SELECT 'patient', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente1@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'patient' AND entity_id = '31000000-e29b-41d4-a716-446655440001'::uuid AND email_address = 'paciente1@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'patient', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente2@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'patient' AND entity_id = '32000000-e29b-41d4-a716-446655440002'::uuid AND email_address = 'paciente2@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'patient', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente3@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'patient' AND entity_id = '33000000-e29b-41d4-a716-446655440003'::uuid AND email_address = 'paciente3@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'patient', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente4@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'patient' AND entity_id = '34000000-e29b-41d4-a716-446655440004'::uuid AND email_address = 'paciente4@test.predicthealth.com');
+
+INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
+SELECT 'patient', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM email_types WHERE name = 'primary'), 'paciente5@test.predicthealth.com', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM emails WHERE entity_type = 'patient' AND entity_id = '35000000-e29b-41d4-a716-446655440005'::uuid AND email_address = 'paciente5@test.predicthealth.com');
 
 -- Insert phones for patients (primary and emergency)
 INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
-VALUES
-    ('patient', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-55-4001-0001', TRUE, TRUE),
-    ('patient', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-81-4002-0001', TRUE, TRUE),
-    ('patient', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-33-4003-0001', TRUE, TRUE),
-    ('patient', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-477-4004-0001', TRUE, TRUE),
-    ('patient', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '+52-322-4005-0001', TRUE, TRUE),
-    -- Emergency contacts
-    ('emergency_contact', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '+52-55-4001-0002', FALSE, FALSE),
-    ('emergency_contact', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '+52-81-4002-0002', FALSE, FALSE),
-    ('emergency_contact', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '+52-33-4003-0002', FALSE, FALSE),
-    ('emergency_contact', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '+52-477-4004-0002', FALSE, FALSE),
-    ('emergency_contact', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '+52-322-4005-0002', FALSE, FALSE)
-ON CONFLICT DO NOTHING;
+SELECT 'patient', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '5555555555', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'patient' AND entity_id = '31000000-e29b-41d4-a716-446655440001'::uuid AND phone_number = '5555555555');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'patient', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '8181818181', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'patient' AND entity_id = '32000000-e29b-41d4-a716-446655440002'::uuid AND phone_number = '8181818181');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'patient', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '3333333333', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'patient' AND entity_id = '33000000-e29b-41d4-a716-446655440003'::uuid AND phone_number = '3333333333');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'patient', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '4777777777', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'patient' AND entity_id = '34000000-e29b-41d4-a716-446655440004'::uuid AND phone_number = '4777777777');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'patient', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'primary'), '3222222222', TRUE, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'patient' AND entity_id = '35000000-e29b-41d4-a716-446655440005'::uuid AND phone_number = '3222222222');
+
+-- Emergency contacts
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'emergency_contact', '31000000-e29b-41d4-a716-446655440001'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '5555555556', FALSE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'emergency_contact' AND entity_id = '31000000-e29b-41d4-a716-446655440001'::uuid AND phone_number = '5555555556');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'emergency_contact', '32000000-e29b-41d4-a716-446655440002'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '8181818182', FALSE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'emergency_contact' AND entity_id = '32000000-e29b-41d4-a716-446655440002'::uuid AND phone_number = '8181818182');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'emergency_contact', '33000000-e29b-41d4-a716-446655440003'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '3333333334', FALSE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'emergency_contact' AND entity_id = '33000000-e29b-41d4-a716-446655440003'::uuid AND phone_number = '3333333334');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'emergency_contact', '34000000-e29b-41d4-a716-446655440004'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '4777777778', FALSE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'emergency_contact' AND entity_id = '34000000-e29b-41d4-a716-446655440004'::uuid AND phone_number = '4777777778');
+
+INSERT INTO phones (entity_type, entity_id, phone_type_id, phone_number, is_primary, is_verified)
+SELECT 'emergency_contact', '35000000-e29b-41d4-a716-446655440005'::uuid, (SELECT id FROM phone_types WHERE name = 'emergency'), '3222222224', FALSE, FALSE
+WHERE NOT EXISTS (SELECT 1 FROM phones WHERE entity_type = 'emergency_contact' AND entity_id = '35000000-e29b-41d4-a716-446655440005'::uuid AND phone_number = '3222222224');
 
 INSERT INTO users (id, email, password_hash, user_type, reference_id, is_active, is_verified)
 VALUES
@@ -1561,12 +1730,9 @@ INSERT INTO cms_users (email, password_hash, first_name, last_name, user_type, i
     ('editor.cms@predicthealth.com', '$2b$12$w13etTUCcAshExi34EUPRuGlDsJPS6M4lFNSGy9mcKyv8e.1VfExO', 'Editor', 'CMS', 'editor', TRUE)
 ON CONFLICT DO NOTHING;
 
--- Insert emails for CMS users
-INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
-VALUES
-    ('cms_user', (SELECT id FROM cms_users WHERE email = 'admin.cms@predicthealth.com'), (SELECT id FROM email_types WHERE name = 'work'), 'admin.cms@predicthealth.com', TRUE, TRUE),
-    ('cms_user', (SELECT id FROM cms_users WHERE email = 'editor.cms@predicthealth.com'), (SELECT id FROM email_types WHERE name = 'work'), 'editor.cms@predicthealth.com', TRUE, TRUE)
-ON CONFLICT DO NOTHING;
+-- Note: CMS users handle their own email authentication separately from the main system's contact emails
+-- The emails table is for contact information of medical entities (patients, doctors, institutions)
+-- CMS authentication is handled within the cms_users table
 
 -- CMS user profiles handled by cms_users table directly
 
@@ -1631,8 +1797,3 @@ ON CONFLICT (setting_key) DO NOTHING;
 -- =============================================
 -- END OF DATABASE INITIALIZATION
 -- =============================================
-
-
-
-
-

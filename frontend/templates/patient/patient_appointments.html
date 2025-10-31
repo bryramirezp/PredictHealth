@@ -1,13 +1,11 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Citas Médicas - PredictHealth</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
-    <style>
+{% extends "patient/base_patient.html" %}
+
+{% block title %}Mis Citas Médicas - PredictHealth{% endblock %}
+
+{% block breadcrumb %}Mis Citas{% endblock %}
+
+{% block head_extra %}
+<style>
         :root {
             --primary-color: #059669;
             --primary-dark: #047857;
@@ -602,57 +600,17 @@
             }
         }
     </style>
-</head>
-<body>
-    <!-- Mobile Menu Button -->
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
-    </button>
+{% endblock %}
 
-    <!-- Sidebar Navigation -->
-    <nav class="main-menu" id="mainMenu">
-        <h1>
-            <i class="fas fa-heartbeat"></i>
-            PredictHealth
+{% block content %}
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-calendar-check"></i>
+            Mis Citas Médicas
         </h1>
-        <ul>
-            <li class="nav-item">
-                <a href="patient_dashboard.html">
-                    <i class="fa fa-house nav-icon"></i>
-                    <span class="nav-text">Inicio</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="patient_medical_record.html">
-                    <i class="fa fa-file-medical nav-icon"></i>
-                    <span class="nav-text">Mi Expediente</span>
-                </a>
-            </li>
-            <li class="nav-item active">
-                <a href="patient_appointments.html">
-                    <i class="fa fa-calendar-check nav-icon"></i>
-                    <span class="nav-text">Mis Citas</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="patient_profile.html">
-                    <i class="fa fa-user nav-icon"></i>
-                    <span class="nav-text">Perfil</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Content -->
-    <section class="content" id="content">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-calendar-check"></i>
-                Mis Citas Médicas
-            </h1>
-            <p class="page-subtitle">Gestiona tus citas médicas y programa nuevas consultas</p>
-        </div>
+        <p class="page-subtitle">Gestiona tus citas médicas y programa nuevas consultas</p>
+    </div>
 
         <!-- Appointments Content -->
         <div class="appointments-grid">
@@ -903,10 +861,10 @@
                 </div>
             </div>
         </div>
-    </section>
+{% endblock %}
 
-    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
-    <script>
+{% block scripts_extra %}
+<script>
         // Mobile menu functionality
         function toggleMobileMenu() {
             const menu = document.getElementById('mainMenu');
@@ -1119,6 +1077,5 @@
                 content.classList.remove('mobile-menu-open');
             }
         });
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

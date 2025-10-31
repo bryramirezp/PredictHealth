@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, filter_dropdown_with_sort, action_card, status_badge, confirm_dialog, modal %}
 
 {% block title %}Institutions Management - PredictHealth CMS{% endblock %}
 
@@ -376,6 +376,31 @@ document.addEventListener('DOMContentLoaded', function() {
                        value="{{ request.args.get('region', '') }}">
             </div>
         </div>
+
+<!-- Sort Options -->
+<div class="mt-3">
+    <h6 class="mb-3">Sort Options</h6>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="form-label">Sort by</label>
+                <select name="sort_by" class="form-control">
+                    <option value="">Default</option>
+                    <option value="name" {{ 'selected' if request.args.get('sort_by') == 'name' else '' }}>Name</option>
+                    <option value="created_at" {{ 'selected' if request.args.get('sort_by') == 'created_at' else '' }}>Created Date</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="form-label">Order</label>
+                <select name="sort_order" class="form-control">
+                    <option value="asc" {{ 'selected' if request.args.get('sort_order') == 'asc' else '' }}>A to Z</option>
+                    <option value="desc" {{ 'selected' if request.args.get('sort_order') == 'desc' else '' }}>Z to A</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
         <div class="mt-3">
             <button type="submit" class="btn btn-primary me-2">

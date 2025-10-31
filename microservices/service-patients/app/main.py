@@ -7,7 +7,9 @@ from app.api.v1.endpoints import patients
 app = FastAPI(
     title='Patients Service',
     description='API for medical patients management',
-    version='1.0.0'
+    version='1.0.0',
+    docs_url='/docs',
+    redoc_url='/redoc'
 )
 
 # Configure CORS
@@ -29,7 +31,9 @@ def root():
         'version': '1.0.0',
         'endpoints': {
             'patients': '/api/v1/patients',
-            'health': '/health'
+            'health': '/health',
+            'swagger_ui': '/docs',
+            'redoc': '/redoc'
         }
     }
 

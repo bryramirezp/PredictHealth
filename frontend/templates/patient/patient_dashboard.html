@@ -1,77 +1,10 @@
-<!-- /frontend\templates\patient_dashboard.html -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PredictHealth - Dashboard del Paciente</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
-</head>
-<body>
-    <!-- Mobile Menu Button -->
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
-    </button>
+{% extends "patient/base_patient.html" %}
 
-    <!-- Sidebar Navigation -->
-    <nav class="main-menu" id="mainMenu">
-        <h1>
-            <i class="fas fa-heartbeat"></i>
-            PredictHealth
-        </h1>
-        <ul>
-            <li class="nav-item active">
-                <b></b>
-                <b></b>
-                <a href="#home">
-                    <i class="fa fa-house nav-icon"></i>
-                    <span class="nav-text">Inicio</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <b></b>
-                <b></b>
-                <a href="#medical-record">
-                    <i class="fa fa-file-medical nav-icon"></i>
-                    <span class="nav-text">Mi Expediente</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <b></b>
-                <b></b>
-                <a href="#appointments">
-                    <i class="fa fa-calendar-check nav-icon"></i>
-                    <span class="nav-text">Mis Citas</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <b></b>
-                <b></b>
-                <a href="#profile">
-                    <i class="fa fa-user nav-icon"></i>
-                    <span class="nav-text">Perfil</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+{% block title %}PredictHealth - Dashboard del Paciente{% endblock %}
 
-    <!-- Main Content -->
-    <section class="content" id="content">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="patient-info">
-                <span class="patient-name" id="patientName">Hola, Carlos</span>
-                <span class="patient-type">Portal del Paciente</span>
-            </div>
-            <button class="logout-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i>
-                Cerrar Sesión
-            </button>
-        </div>
+{% block breadcrumb %}Inicio{% endblock %}
+
+{% block content %}
 
         <!-- Welcome Section -->
         <div class="welcome-section">
@@ -319,228 +252,129 @@
                 </div>
             </div>
         </div>
-    </section>
+{% endblock %}
 
-    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
-    <script>
-        // Mobile menu functionality
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mainMenu');
-            const content = document.getElementById('content');
+{% block scripts_extra %}
+<script>
+    // Navigation functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle activity clicks
+        const activities = document.querySelectorAll('.image-container');
+        activities.forEach(activity => {
+            activity.addEventListener('click', function() {
+                const title = this.querySelector('.overlay h3').textContent;
+                console.log('Activity clicked:', title);
 
-            menu.classList.toggle('show');
-            content.classList.toggle('mobile-menu-open');
-        }
-
-        // Navigation functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle navigation clicks
-            const navItems = document.querySelectorAll('.nav-item a');
-            navItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-
-                    // Remove active class from all items
-                    navItems.forEach(nav => nav.parentElement.classList.remove('active'));
-
-                    // Add active class to clicked item
-                    this.parentElement.classList.add('active');
-
-                    // Close mobile menu if open
-                    const menu = document.getElementById('mainMenu');
-                    const content = document.getElementById('content');
-                    menu.classList.remove('show');
-                    content.classList.remove('mobile-menu-open');
-
-                    // Handle navigation (you can add routing logic here)
-                    const href = this.getAttribute('href');
-                    console.log('Navigate to:', href);
-                });
+                // Add navigation logic based on activity type
+                switch(title.toLowerCase()) {
+                    case 'mediciones':
+                        window.location.href = '/patient/patient_measurements.html';
+                        break;
+                    case 'estilo de vida':
+                        window.location.href = '/patient/patient_lifestyle.html';
+                        break;
+                    case 'citas médicas':
+                        window.location.href = '/patient/patient_appointments.html';
+                        break;
+                    case 'recomendaciones':
+                        window.location.href = '/patient/patient_recommendations.html';
+                        break;
+                    case 'notificaciones':
+                        window.location.href = '/patient/patient_notifications.html';
+                        break;
+                    case 'perfil':
+                        window.location.href = '/patient/patient_user_profile.html';
+                        break;
+                }
             });
-
-            // Handle activity clicks
-            const activities = document.querySelectorAll('.image-container');
-            activities.forEach(activity => {
-                activity.addEventListener('click', function() {
-                    const title = this.querySelector('.overlay h3').textContent;
-                    console.log('Activity clicked:', title);
-
-                    // Add navigation logic based on activity type
-                    switch(title.toLowerCase()) {
-                        case 'mediciones':
-                            window.location.href = '/patient/measurements.html';
-                            break;
-                        case 'estilo de vida':
-                            window.location.href = '/patient/lifestyle.html';
-                            break;
-                        case 'citas médicas':
-                            window.location.href = '/patient/appointments.html';
-                            break;
-                        case 'recomendaciones':
-                            window.location.href = '/patient/recommendations.html';
-                            break;
-                        case 'notificaciones':
-                            window.location.href = '/patient/notifications.html';
-                            break;
-                        case 'perfil':
-                            window.location.href = '/patient/user_profile.html';
-                            break;
-                    }
-                });
-            });
-
-            // Handle calendar buttons
-            const calendarBtns = document.querySelectorAll('.btn');
-            calendarBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const activity = this.parentElement.querySelector('.activity h2').textContent;
-                    console.log('Calendar action:', activity);
-
-                    // Add specific actions based on activity type
-                    if (activity.includes('Cita con Dr.')) {
-                        // Open appointment details
-                        alert('Abriendo detalles de la cita...');
-                    } else if (activity.includes('Mediciones')) {
-                        window.location.href = '/patient/measurements.html';
-                    } else if (activity.includes('Chequeo')) {
-                        alert('Confirmando cita...');
-                    }
-                });
-            });
-
-            // Load user data
-            loadUserData();
         });
 
-        // Load user data and initialize dashboard
-        async function loadUserData() {
-            try {
-                // Check authentication
-                const isLoggedIn = await authManager.isLoggedIn();
-                if (!isLoggedIn) {
-                    window.location.href = '/patient_login.html';
-                    return;
+        // Handle calendar buttons
+        const calendarBtns = document.querySelectorAll('.btn');
+        calendarBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const activity = this.parentElement.querySelector('.activity h2').textContent;
+                console.log('Calendar action:', activity);
+
+                // Add specific actions based on activity type
+                if (activity.includes('Cita con Dr.')) {
+                    // Open appointment details
+                    alert('Abriendo detalles de la cita...');
+                } else if (activity.includes('Mediciones')) {
+                    window.location.href = '/patient/patient_measurements.html';
+                } else if (activity.includes('Chequeo')) {
+                    alert('Confirmando cita...');
                 }
+            });
+        });
 
-                const userInfo = await authManager.getUserInfo();
-                if (userInfo.user_type !== 'patient') {
-                    window.location.href = '/';
-                    return;
-                }
+        // Load dashboard data
+        loadDashboardData();
+    });
 
-                // Update user info in UI
-                const patientNameElement = document.getElementById('patientName');
-                if (patientNameElement) {
-                    patientNameElement.textContent = `Hola, ${userInfo.name || userInfo.email || 'Paciente'}`;
-                }
+    // Load dashboard data from API
+    async function loadDashboardData() {
+        try {
+            const response = await fetch('/api/web/patient/dashboard', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
 
-                // Load dashboard data
-                await loadDashboardData();
-
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                showError('Error cargando datos del usuario');
-            }
-        }
-
-        // Load dashboard data from API
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('/api/web/patient/dashboard', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    updateDashboard(data.data);
-                } else if (response.status === 401) {
-                    window.location.href = '/patient_login.html';
-                } else {
-                    console.error('Error loading dashboard:', response.status);
-                    // Keep default demo data
-                }
-            } catch (error) {
-                console.error('Error:', error);
+            if (response.ok) {
+                const data = await response.json();
+                updateDashboard(data.data);
+            } else if (response.status === 401) {
+                window.location.href = '/patient_login.html';
+            } else {
+                console.error('Error loading dashboard:', response.status);
                 // Keep default demo data
             }
+        } catch (error) {
+            console.error('Error:', error);
+            // Keep default demo data
         }
+    }
 
-        // Update dashboard with real data
-        function updateDashboard(data) {
-            if (!data) return;
+    // Update dashboard with real data
+    function updateDashboard(data) {
+        if (!data) return;
 
-            // Update statistics
-            const appointmentsCount = document.getElementById('appointments-count');
-            const medicationsCount = document.getElementById('medications-count');
-            const alertsCount = document.getElementById('alerts-count');
-            const healthScore = document.getElementById('health-score');
+        // Update statistics
+        const appointmentsCount = document.getElementById('appointments-count');
+        const medicationsCount = document.getElementById('medications-count');
+        const alertsCount = document.getElementById('alerts-count');
+        const healthScore = document.getElementById('health-score');
 
-            if (appointmentsCount) appointmentsCount.textContent = data.statistics?.total_appointments || 2;
-            if (medicationsCount) medicationsCount.textContent = data.statistics?.total_medications || 3;
-            if (alertsCount) alertsCount.textContent = data.statistics?.total_alerts || 1;
-            if (healthScore) healthScore.textContent = data.statistics?.health_score || 85;
+        if (appointmentsCount) appointmentsCount.textContent = data.statistics?.total_appointments || 2;
+        if (medicationsCount) medicationsCount.textContent = data.statistics?.total_medications || 3;
+        if (alertsCount) alertsCount.textContent = data.statistics?.total_alerts || 1;
+        if (healthScore) healthScore.textContent = data.statistics?.health_score || 85;
 
-            // Update user name
-            const patientNameElement = document.getElementById('patientName');
-            if (patientNameElement && data.patient) {
-                patientNameElement.textContent = `Hola, ${data.patient.name || 'Carlos'}`;
-            }
+        // Update user name
+        const patientNameElement = document.getElementById('patientName');
+        if (patientNameElement && data.patient) {
+            patientNameElement.textContent = `Hola, ${data.patient.name || 'Carlos'}`;
         }
+    }
 
-        // Logout functionality
-        async function handleLogout() {
-            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-                try {
-                    const response = await fetch('/logout', {
-                        method: 'POST',
-                        credentials: 'include'
-                    });
+    // Error display function
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            ${message}
+        `;
 
-                    if (response.ok) {
-                        window.location.href = '/login';
-                    } else {
-                        console.error('Logout error:', response.status);
-                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
-                    }
-                } catch (error) {
-                    console.error('Logout connection error:', error);
-                    alert('Error de conexión. Inténtalo de nuevo.');
-                }
-            }
-        }
+        const content = document.getElementById('content');
+        content.insertBefore(errorDiv, content.firstChild);
 
-        // Error display function
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-circle me-2"></i>
-                ${message}
-            `;
-
-            const content = document.getElementById('content');
-            content.insertBefore(errorDiv, content.firstChild);
-
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
-        }
-
-        // Close mobile menu when clicking outside
-        document.addEventListener('click', function(e) {
-            const menu = document.getElementById('mainMenu');
-            const menuBtn = document.querySelector('.mobile-menu-btn');
-            const content = document.getElementById('content');
-
-            if (!menu.contains(e.target) && !menuBtn.contains(e.target) && menu.classList.contains('show')) {
-                menu.classList.remove('show');
-                content.classList.remove('mobile-menu-open');
-            }
-        });
-    </script>
-</body>
-</html>
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+</script>
+{% endblock %}

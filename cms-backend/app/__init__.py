@@ -10,6 +10,15 @@ csrf = CSRFProtect()
 def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # Configure UTF-8 encoding
+    app.config['JSON_AS_ASCII'] = False
+    app.config['JSON_SORT_KEYS'] = False
+    
+    # Ensure templates are processed with UTF-8 encoding
+    app.jinja_env.auto_reload = True
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
 
     # Initialize extensions
     db.init_app(app)
@@ -66,9 +75,5 @@ def create_app(config_name='default'):
         if current_user.is_authenticated:
             return redirect(url_for('dashboard.index'))
         return redirect(url_for('auth.login'))
-
-    # Create database tables
-    with app.app_context():
-        db.create_all()
 
     return app

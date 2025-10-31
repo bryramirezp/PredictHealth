@@ -29,42 +29,62 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="institution_type" class="form-label">Institution Type *</label>
-              <select id="institution_type" name="institution_type" class="form-control" required>
+              <label for="institution_type_id" class="form-label">Institution Type *</label>
+              <select id="institution_type_id" name="institution_type_id" class="form-control" required>
                 <option value="">Select type...</option>
-                <option value="preventive_clinic">Preventive Clinic</option>
-                <option value="insurer">Insurer</option>
-                <option value="public_health">Public Health</option>
-                <option value="hospital">Hospital</option>
-                <option value="health_center">Health Center</option>
+                {% for type in institution_types %}
+                <option value="{{ type.id }}">{{ type.name|title }}</option>
+                {% endfor %}
               </select>
               <div class="invalid-feedback">Institution type is required.</div>
             </div>
 
-            <div class="form-group">
-              <label for="contact_email" class="form-label">Contact Email *</label>
-              <input type="email" id="contact_email" name="contact_email" class="form-control" required maxlength="255">
-              <div class="invalid-feedback">Please enter a valid email address.</div>
-            </div>
-          </div>
-
-          <div class="form-row">
             <div class="form-group">
               <label for="license_number" class="form-label">License Number *</label>
               <input type="text" id="license_number" name="license_number" class="form-control" required maxlength="100">
               <small class="form-text text-muted">Unique license number for the institution</small>
               <div class="invalid-feedback">License number is required.</div>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="website" class="form-label">Website</label>
+            <input type="url" id="website" name="website" class="form-control" maxlength="255" placeholder="https://example.com">
+            <small class="form-text text-muted">Include https://</small>
+          </div>
+        </div>
+
+        <!-- Sección 2: Contact Information -->
+        <div class="form-section">
+          <div class="form-section-header">
+            <div class="form-section-icon">
+              <i class="bi bi-envelope"></i>
+            </div>
+            <h3 class="form-section-title">Contact Information</h3>
+          </div>
+
+          <div class="form-group">
+            <label for="contact_email" class="form-label">Primary Email *</label>
+            <input type="email" id="contact_email" name="contact_email" class="form-control" required maxlength="255">
+            <div class="invalid-feedback">Please enter a valid email address.</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="contact_phone" class="form-label">Primary Phone</label>
+              <input type="tel" id="contact_phone" name="contact_phone" class="form-control" pattern="^[0-9\s\-\(\)]{10,}$">
+              <div class="invalid-feedback">Please enter a valid phone number.</div>
+            </div>
 
             <div class="form-group">
-              <label for="phone" class="form-label">Phone Number</label>
-              <input type="tel" id="phone" name="phone" class="form-control" pattern="^\+?[0-9\s\-\(\)]{10,}$">
-              <div class="invalid-feedback">Please enter a valid phone number.</div>
+              <label for="secondary_email" class="form-label">Secondary Email</label>
+              <input type="email" id="secondary_email" name="secondary_email" class="form-control" maxlength="255">
+              <div class="invalid-feedback">Please enter a valid email address.</div>
             </div>
           </div>
         </div>
 
-        <!-- Sección 2: Ubicación -->
+        <!-- Sección 3: Location Information -->
         <div class="form-section">
           <div class="form-section-header">
             <div class="form-section-icon">
@@ -74,59 +94,44 @@
           </div>
 
           <div class="form-group">
-            <label for="address" class="form-label">Address</label>
-            <input type="text" id="address" name="address" class="form-control" maxlength="255">
+            <label for="street_address" class="form-label">Street Address *</label>
+            <input type="text" id="street_address" name="street_address" class="form-control" required maxlength="255">
+            <div class="invalid-feedback">Street address is required.</div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="region_state" class="form-label">State/Region</label>
-              <select id="region_state" name="region_state" class="form-control">
-                <option value="">Select state...</option>
-                <option value="Aguascalientes">Aguascalientes</option>
-                <option value="Baja California">Baja California</option>
-                <option value="Baja California Sur">Baja California Sur</option>
-                <option value="Campeche">Campeche</option>
-                <option value="Chiapas">Chiapas</option>
-                <option value="Chihuahua">Chihuahua</option>
-                <option value="Ciudad de México">Ciudad de México</option>
-                <option value="Coahuila (de Zaragoza)">Coahuila (de Zaragoza)</option>
-                <option value="Colima">Colima</option>
-                <option value="Durango">Durango</option>
-                <option value="Estado de México">Estado de México</option>
-                <option value="Guanajuato">Guanajuato</option>
-                <option value="Guerrero">Guerrero</option>
-                <option value="Hidalgo">Hidalgo</option>
-                <option value="Jalisco">Jalisco</option>
-                <option value="Michoacán">Michoacán</option>
-                <option value="Morelos">Morelos</option>
-                <option value="Nayarit">Nayarit</option>
-                <option value="Nuevo León">Nuevo León</option>
-                <option value="Oaxaca">Oaxaca</option>
-                <option value="Puebla">Puebla</option>
-                <option value="Querétaro">Querétaro</option>
-                <option value="Quintana Roo">Quintana Roo</option>
-                <option value="San Luis Potosí">San Luis Potosí</option>
-                <option value="Sinaloa">Sinaloa</option>
-                <option value="Sonora">Sonora</option>
-                <option value="Tabasco">Tabasco</option>
-                <option value="Tamaulipas">Tamaulipas</option>
-                <option value="Tlaxcala">Tlaxcala</option>
-                <option value="Veracruz">Veracruz</option>
-                <option value="Yucatán">Yucatán</option>
-                <option value="Zacatecas">Zacatecas</option>
-              </select>
+              <label for="city" class="form-label">City *</label>
+              <input type="text" id="city" name="city" class="form-control" required maxlength="100">
+              <div class="invalid-feedback">City is required.</div>
             </div>
 
             <div class="form-group">
-              <label for="website" class="form-label">Website</label>
-              <input type="url" id="website" name="website" class="form-control" maxlength="255" placeholder="https://example.com">
-              <small class="form-text text-muted">Include https://</small>
+              <label for="region_state" class="form-label">State/Region *</label>
+              <select id="region_state" name="region_state" class="form-control" required>
+                <option value="">Select state...</option>
+                {% for region in regions %}
+                <option value="{{ region.name }}">{{ region.name }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">State/Region is required.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="postal_code" class="form-label">Postal Code</label>
+              <input type="text" id="postal_code" name="postal_code" class="form-control" maxlength="20">
+            </div>
+
+            <div class="form-group">
+              <label for="neighborhood" class="form-label">Neighborhood</label>
+              <input type="text" id="neighborhood" name="neighborhood" class="form-control" maxlength="100">
             </div>
           </div>
         </div>
 
-        <!-- Sección 3: Estado y Verificación -->
+        <!-- Sección 4: Status and Verification -->
         <div class="form-section">
           <div class="form-section-header">
             <div class="form-section-icon">

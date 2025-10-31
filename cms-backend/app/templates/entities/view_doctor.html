@@ -2,64 +2,400 @@
 
 {% block title %}Doctor Details - PredictHealth CMS{% endblock %}
 
-{% block page_title %}Doctor Details{% endblock %}
-
-{% block page_subtitle %}View detailed information about {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
-
 {% block content %}
-<div class="row">
-  <div class="col-lg-8">
-    <div class="entity-card">
-      <div class="entity-header-row">
-        <div>
-          <h3 class="entity-name">{{ doctor.first_name }} {{ doctor.last_name }}</h3>
-          <p class="entity-specialty">{{ specialty.name if specialty else 'Specialty not specified' }}</p>
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('entities.doctors') }}">Doctores</a></li>
+    <li class="breadcrumb-item active">{{ doctor.first_name }} {{ doctor.last_name }}</li>
+  </ol>
+</nav>
+
+<!-- Profile Header -->
+<div class="cms-card profile-header-card mb-4">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      <!-- Avatar -->
+      <div class="profile-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+        <span class="h4 mb-0">{{ doctor.first_name[0] }}{{ doctor.last_name[0] }}</span>
+      </div>
+
+      <!-- Profile Info -->
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div>
+            <h2 class="mb-1">{{ doctor.first_name }} {{ doctor.last_name }}</h2>
+            <p class="text-muted mb-2">{{ specialty.name if specialty else 'Especialidad no especificada' }}</p>
+            <span><i class="bi bi-building me-1"></i>{{ institution.name if institution else 'Independiente' }}</span>
+          </div>
+
+          <!-- Status Badge -->
+          <div class="ms-auto">
+            {% if doctor.professional_status == 'active' %}
+              <span class="badge bg-success fs-6 px-3 py-2">
+                <i class="bi bi-check-circle me-1"></i>Activo
+              </span>
+            {% elif doctor.professional_status == 'suspended' %}
+              <span class="badge bg-warning fs-6 px-3 py-2">
+                <i class="bi bi-pause-circle me-1"></i>Suspendido
+              </span>
+            {% else %}
+              <span class="badge bg-secondary fs-6 px-3 py-2">
+                <i class="bi bi-dash-circle me-1"></i>Jubilado
+              </span>
+            {% endif %}
+          </div>
         </div>
-        {% if doctor.professional_status == 'active' %}
-          <span class="badge bg-success">Active</span>
-        {% elif doctor.professional_status == 'suspended' %}
-          <span class="badge bg-warning">Suspended</span>
-        {% else %}
-          <span class="badge bg-secondary">Retired</span>
-        {% endif %}
-      </div>
-
-      <div class="entity-meta">
-        <span><i class="bi bi-building me-1"></i>{{ institution.name if institution else 'Independent' }}</span>
-        <span><i class="bi bi-award me-1"></i>{{ doctor.years_experience }} years experience</span>
-        <span><i class="bi bi-envelope me-1"></i>{{ doctor.email }}</span>
-        <span><i class="bi bi-telephone me-1"></i>{{ doctor.phone }}</span>
-      </div>
-
-      <div class="entity-stats">
-        <span><i class="bi bi-upc me-1"></i>License: {{ doctor.medical_license }}</span>
-        {% if doctor.consultation_fee %}
-          <span><i class="bi bi-cash me-1"></i>Fee: ${{ doctor.consultation_fee }}</span>
-        {% endif %}
-        <span><i class="bi bi-calendar me-1"></i>Joined: {{ doctor.created_at.strftime('%B %d, %Y') if doctor.created_at else 'Unknown' }}</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-4">
-    <div class="entity-card">
-      <h5>Actions</h5>
-      <div class="d-grid gap-2">
-        <a href="{{ url_for('entities.edit_doctor', doctor_id=doctor.id) }}" class="btn btn-primary">
-          <i class="bi bi-pencil me-1"></i>Edit Doctor
-        </a>
-        <form action="{{ url_for('entities.delete_doctor', doctor_id=doctor.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this doctor? This action cannot be undone.')">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <button type="submit" class="btn btn-danger w-100">
-            <i class="bi bi-trash me-1"></i>Delete Doctor
-          </button>
-        </form>
-        <hr>
-        <a href="{{ url_for('entities.doctors') }}" class="btn btn-secondary">
-          <i class="bi bi-arrow-left me-1"></i>Back to Doctors
-        </a>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ doctor.patient_count | default(0) }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-people me-1"></i>Pacientes
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ doctor.years_experience or 0 }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-award me-1"></i>Años Exp.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        {% if doctor.consultation_fee %}
+          <h4 class="mb-1">${{ doctor.consultation_fee }}</h4>
+        {% else %}
+          <h4 class="mb-1">N/A</h4>
+        {% endif %}
+        <p class="text-muted small mb-0">
+          <i class="bi bi-cash me-1"></i>Tarifa
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ doctor.appointments_this_month | default(0) }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-calendar-check me-1"></i>Citas Mes
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content with Tabs -->
+<div class="row">
+  <div class="col-lg-8">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-3" id="doctorTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+          <i class="bi bi-person me-1"></i>Perfil
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="professional-tab" data-bs-toggle="tab" data-bs-target="#professional" type="button" role="tab">
+          <i class="bi bi-briefcase me-1"></i>Profesional
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
+          <i class="bi bi-telephone me-1"></i>Contacto
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="doctorTabsContent">
+      <!-- Profile Tab -->
+      <div class="tab-pane fade show active" id="profile" role="tabpanel">
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-person-circle me-2"></i>Información Personal</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Nombres</h6>
+                <p class="mb-0">{{ doctor.first_name }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Apellidos</h6>
+                <p class="mb-0">{{ doctor.last_name }}</p>
+              </div>
+              {% if doctor.date_of_birth %}
+              <div class="col-md-6 mb-3">
+                <h6>Fecha de Nacimiento</h6>
+                <p class="mb-0">{{ doctor.date_of_birth.strftime('%d/%m/%Y') }}</p>
+              </div>
+              {% endif %}
+              <div class="col-md-6 mb-3">
+                <h6>Edad</h6>
+                <p class="mb-0">{{ ((today_date - doctor.date_of_birth).days // 365) if doctor.date_of_birth and today_date else 'No especificada' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Professional Tab -->
+      <div class="tab-pane fade" id="professional" role="tabpanel">
+        <div class="cms-card mb-3">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Información Profesional</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Licencia Médica</h6>
+                <p class="mb-0">{{ doctor.medical_license }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Especialidad</h6>
+                <p class="mb-0">{{ specialty.name if specialty else 'No especificada' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Años de Experiencia</h6>
+                <p class="mb-0">{{ doctor.years_experience or 0 }} años</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Tarifa de Consulta</h6>
+                <p class="mb-0">{{ '$%g'|format(doctor.consultation_fee) if doctor.consultation_fee else 'No especificada' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Estado Profesional</h6>
+                <p class="mb-0">
+                  {% if doctor.professional_status == 'active' %}Activo
+                  {% elif doctor.professional_status == 'suspended' %}Suspendido
+                  {% else %}Jubilado{% endif %}
+                </p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Fecha de Registro</h6>
+                <p class="mb-0">{{ doctor.created_at.strftime('%d/%m/%Y') if doctor.created_at else 'Desconocida' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if institution %}
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Institución Afiliada</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Nombre de la Institución</h6>
+                <p class="mb-0">{{ institution.name }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Tipo de Institución</h6>
+                <p class="mb-0">{{ institution.institution_type.replace('_', ' ').title() }}</p>
+              </div>
+              {% if institution.license_number %}
+              <div class="col-md-6 mb-3">
+                <h6>Licencia de Institución</h6>
+                <p class="mb-0">{{ institution.license_number }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Contact Tab -->
+      <div class="tab-pane fade" id="contact" role="tabpanel">
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Información de Contacto</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% if doctor.email %}
+              <div class="col-md-6 mb-3">
+                <h6>Correo Electrónico</h6>
+                <p class="mb-0">
+                  <i class="bi bi-envelope me-1"></i>
+                  <a href="mailto:{{ doctor.email }}">{{ doctor.email }}</a>
+                </p>
+              </div>
+              {% endif %}
+              {% if doctor.phone %}
+              <div class="col-md-6 mb-3">
+                <h6>Teléfono</h6>
+                <p class="mb-0">
+                  <i class="bi bi-telephone me-1"></i>{{ doctor.phone }}
+                </p>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if not doctor.email and not doctor.phone %}
+            <div class="text-center text-muted">
+              <i class="bi bi-info-circle me-2"></i>No hay información de contacto registrada
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Sidebar -->
+  <div class="col-lg-4">
+    <div class="cms-card">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-gear me-1"></i>Acciones</h6>
+      </div>
+      <div class="card-body d-grid gap-2">
+        <a href="{{ url_for('entities.edit_doctor', doctor_id=doctor.id) }}" class="btn btn-primary">
+          <i class="bi bi-pencil-square me-2"></i>Editar Doctor
+        </a>
+        <button class="btn btn-success" onclick="scheduleAppointment()">
+          <i class="bi bi-calendar-plus me-2"></i>Agendar Cita
+        </button>
+        <button class="btn btn-info" onclick="viewPatients()">
+          <i class="bi bi-people me-2"></i>Ver Pacientes
+        </button>
+        <hr>
+        <form action="{{ url_for('entities.delete_doctor', doctor_id=doctor.id) }}" method="POST" onsubmit="return confirm('¿Está seguro que desea eliminar este doctor? Esta acción no se puede deshacer.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <button type="submit" class="btn btn-danger w-100">
+            <i class="bi bi-trash me-2"></i>Eliminar Doctor
+          </button>
+        </form>
+        <a href="{{ url_for('entities.doctors') }}" class="btn btn-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Regresar a Doctores
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="cms-card mt-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-graph-up me-1"></i>Estadísticas Rápidas</h6>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">Pacientes este mes</small>
+          <strong>{{ doctor.patients_this_month | default(0) }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">Citas pendientes</small>
+          <strong>{{ doctor.pending_appointments | default(0) }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function scheduleAppointment(doctorId) {
+  alert('Función de agendar cita próximamente disponible');
+}
+
+function viewPatients(doctorId) {
+  alert('Función de ver pacientes próximamente disponible');
+}
+</script>
+
+<style>
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.stats-card .card-body {
+  padding: 1.5rem 1rem;
+}
+
+.stats-card h4 {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: transparent;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.cms-card .card-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cms-card .card-header h5, .cms-card .card-header h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cms-card .card-body {
+  padding: 1.5rem;
+}
+
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-header-card {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.profile-header-card .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.profile-header-card .badge {
+  font-size: 0.85em;
+}
+
+@media (max-width: 768px) {
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.25rem;
+  }
+
+  .stats-card .card-body {
+    padding: 1rem 0.5rem;
+  }
+}
+</style>
 {% endblock %}

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PredictHealth Doctor{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_dashboard.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu" role="navigation" aria-label="Main navigation">
+        <h1>
+            <i class="fas fa-stethoscope" aria-hidden="true"></i>
+            PredictHealth
+        </h1>
+        <ul role="list">
+            <li class="nav-item" data-page="mi-jornada">
+                <a href="/doctor/mi-jornada" id="navDashboard">
+                    <i class="fa fa-calendar-check nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Mi Jornada</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="mis-pacientes">
+                <a href="/doctor/mis-pacientes" id="navPatients">
+                    <i class="fa fa-users nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Mis Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="estadisticas">
+                <a href="/doctor/estadisticas" id="navAnalytics">
+                    <i class="fa fa-chart-bar nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Estadísticas</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="configuracion">
+                <a href="/doctor/configuracion" id="navSettings">
+                    <i class="fa fa-cog nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- User Profile Section -->
+        <div class="user-profile-section">
+            <div class="user-avatar" role="img" aria-label="User avatar">
+                <i class="fas fa-user-md" aria-hidden="true"></i>
+            </div>
+            <div class="user-details">
+                <div class="user-name" id="doctorName">Dr. Nombre</div>
+                <div class="user-role">Médico General</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="content">
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" id="currentPage">{% block breadcrumb %}Mi Jornada{% endblock %}</li>
+            </ol>
+        </nav>
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="patient-info">
+                <span class="patient-name" id="doctorGreeting">Hola, Dr. Nombre</span>
+                <span class="patient-type">Portal Médico</span>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn" id="refreshButton" aria-label="Refresh data">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    Actualizar
+                </button>
+                <button class="logout-btn" id="logoutButton" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p>Cargando datos médicos...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error de carga</h3>
+                <p>No se pudieron cargar los datos médicos. Inténtalo de nuevo.</p>
+                <button onclick="loadData()" class="btn btn-primary">Reintentar</button>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </section>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="addConsultation()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script>
+        // Global variables
+        let appointments = [];
+        let tasks = [];
+        let recentPatients = [];
+        let allPatients = [];
+        let searchTimeout;
+
+        // Logout functionality
+        window.handleLogout = async function() {
+            console.log('handleLogout function called.');
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                try {
+                    const response = await fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    console.log('Logout API response:', response);
+
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Logout error:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Logout connection error:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
+                }
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadDoctorDataFromAPI();
+            setupEventListeners();
+            // currentPage will be set by the specific page
+        });
+
+        // Setup event listeners for navigation and other actions
+        function setupEventListeners() {
+            // Handle navigation clicks
+            document.querySelectorAll('.nav-item a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Prevent default navigation if it's handled by Flask routing
+                    // For now, let Flask handle the navigation
+                });
+            });
+
+            // Handle logout button click
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                console.log('Logout button found, attaching event listener.');
+                logoutButton.addEventListener('click', window.handleLogout);
+            }
+
+            // Handle refresh button click
+            const refreshButton = document.getElementById('refreshButton');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', refreshData);
+            }
+
+            // Handle mobile menu toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Set active navigation item based on current URL
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.main-menu .nav-item a').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.closest('.nav-item').classList.add('active');
+                } else {
+                    link.closest('.nav-item').classList.remove('active');
+                }
+            });
+        }
+
+        // Update breadcrumb
+        function updateCurrentPage(title) {
+            const currentPageElement = document.getElementById('currentPage');
+            if (currentPageElement) {
+                currentPageElement.textContent = title;
+            }
+        }
+
+        // Data loading functions
+        async function loadDoctorDataFromAPI() {
+            try {
+                const response = await fetch('/api/web/doctor/profile', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDoctorInfo(data);
+                    return data;
+                } else if (response.status === 401) {
+                    window.location.href = '/doctor_login.html';
+                    return null;
+                } else {
+                    console.error('Error loading doctor data:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error loading doctor data:', error);
+                return null;
+            }
+        }
+
+        // Update doctor information in UI
+        function updateDoctorInfo(data) {
+            if (data.doctor) {
+                const doctorName = `Dr. ${data.doctor.nombre} ${data.doctor.apellido}`;
+                const doctorNameElement = document.getElementById('doctorName');
+                if (doctorNameElement) {
+                    doctorNameElement.textContent = doctorName;
+                }
+
+                // Update greeting
+                const greetingElement = document.getElementById('doctorGreeting');
+                if (greetingElement) {
+                    greetingElement.textContent = `Hola, ${doctorName}`;
+                }
+            }
+        }
+
+        // Utility functions
+        function showLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content'); // Assuming content is within .page-content
+
+            if (loading) loading.style.display = 'block';
+            if (error) error.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function hideLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'block';
+        }
+
+        function showErrorState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'block';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            if (menu && content) {
+                menu.classList.toggle('show');
+                content.classList.toggle('mobile-menu-open');
+            }
+        }
+
+        function loadData() {
+            // This function will be overridden by specific page scripts if needed
+            console.log('loadData called from base_doctor.html');
+        }
+
+        function refreshData() {
+            // This function will be overridden by specific page scripts if needed
+            console.log('refreshData called from base_doctor.html');
+        }
+
+        // Placeholder functions for actions
+        function showStatMenu(type) {
+            alert(`Menú de estadísticas para ${type} - próximamente disponible`);
+        }
+
+        function scheduleAppointment() {
+            alert('Funcionalidad para programar cita próximamente disponible');
+        }
+
+        function addConsultation() {
+            alert('Funcionalidad para registrar consulta próximamente disponible');
+        }
+
+        function addNewPatient() {
+            alert('Funcionalidad para agregar paciente próximamente disponible');
+        }
+
+        function viewReports() {
+            alert('Funcionalidad para ver reportes próximamente disponible');
+        }
+
+        function emergencyAlert() {
+            alert('Funcionalidad para alerta médica próximamente disponible');
+        }
+
+        function viewPatient(patientId) {
+            alert('Funcionalidad para ver paciente próximamente disponible');
+        }
+
+        function openPatientRecord(patientId) {
+            window.location.href = `/patient_record.html?id=${patientId}`;
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'active': 'Activo',
+                'urgent': 'Urgente',
+                'inactive': 'Inactivo',
+                'completed': 'Completado'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>

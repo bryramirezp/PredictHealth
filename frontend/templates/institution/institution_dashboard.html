@@ -1,385 +1,812 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Institucional - PredictHealth</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/institution_dashboard.css') }}">
-</head>
-<body>
-    <!-- Sidebar Navigation -->
-    <nav class="main-menu" id="mainMenu">
-        <div class="logo-container">
-            <div class="logo-icon">
-                <i class="fas fa-hospital"></i>
-            </div>
-            <div class="logo-text">PredictHealth</div>
-            <div class="institution-badge">
-                <i class="fas fa-building me-1"></i>
-                <span id="institutionType">Institución</span>
+{% extends "institution/base_institution.html" %}
+
+{% block title %}Dashboard Institucional - PredictHealth{% endblock %}
+
+{% block page_title %}Dashboard Institucional{% endblock %}
+{% block page_subtitle %}Vista general de tu institución médica{% endblock %}
+
+{% block current_page %}dashboard{% endblock %}
+
+{% block head_extra %}{% endblock %}
+
+{% block content %}
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p>Cargando datos...</p>
             </div>
         </div>
 
-        <ul class="nav-menu">
-            <li class="nav-item active" data-page="dashboard">
-                <b></b>
-                <b></b>
-                <a href="#" onclick="loadPage('dashboard')">
-                    <i class="fa fa-house nav-icon"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error de carga</h3>
+                <p>No se pudieron cargar los datos. Inténtalo de nuevo.</p>
+                <button onclick="loadData()" class="btn btn-primary">Reintentar</button>
+            </div>
+        </div>
 
-            <li class="nav-item" data-page="doctors">
-                <b></b>
-                <b></b>
-                <a href="#" onclick="loadPage('doctors')">
-                    <i class="fa fa-user-md nav-icon"></i>
-                    <span class="nav-text">Doctores</span>
-                </a>
-            </li>
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="page-content">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1 class="welcome-title" id="welcomeTitle">Dashboard Institucional</h1>
+                <p class="welcome-subtitle" id="welcomeSubtitle">Vista general de tu institución médica</p>
+            </div>
 
-            <li class="nav-item" data-page="patients">
-                <b></b>
-                <b></b>
-                <a href="#" onclick="loadPage('patients')">
-                    <i class="fa fa-users nav-icon"></i>
-                    <span class="nav-text">Pacientes</span>
-                </a>
-            </li>
-
-            <li class="nav-item" data-page="analytics">
-                <b></b>
-                <b></b>
-                <a href="#" onclick="loadPage('analytics')">
-                    <i class="fa fa-chart-bar nav-icon"></i>
-                    <span class="nav-text">Analíticas</span>
-                </a>
-            </li>
-
-            <li class="nav-item" data-page="settings">
-                <b></b>
-                <b></b>
-                <a href="#" onclick="loadPage('settings')">
-                    <i class="fa fa-cog nav-icon"></i>
-                    <span class="nav-text">Configuración</span>
-                </a>
-            </li>
-        </ul>
-
-        <div class="user-profile">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon doctors">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="stat-menu">
+                            <i class="fas fa-ellipsis-h" onclick="showStatMenu('doctors')"></i>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="doctors-count">--</div>
+                    <div class="stat-label">Doctores Activos</div>
+                    <div class="stat-trend" id="doctors-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+2 esta semana</span>
+                    </div>
                 </div>
-                <div class="user-details">
-                    <div class="user-name" id="userName">Institución</div>
-                    <div class="user-role">Administrador</div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon patients">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-menu">
+                            <i class="fas fa-ellipsis-h" onclick="showStatMenu('patients')"></i>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="patients-count">--</div>
+                    <div class="stat-label">Pacientes Totales</div>
+                    <div class="stat-trend positive" id="patients-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+12 este mes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon appointments">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-menu">
+                            <i class="fas fa-ellipsis-h" onclick="showStatMenu('appointments')"></i>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="appointments-count">--</div>
+                    <div class="stat-label">Citas Programadas</div>
+                    <div class="stat-trend warning" id="appointments-trend">
+                        <i class="fas fa-minus"></i>
+                        <span>3 hoy</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon revenue">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-number" id="revenue-amount">$--</div>
+                    <div class="stat-label">Ingresos Mensuales</div>
+                    <div class="stat-trend positive" id="revenue-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+8.2%</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- Main Content -->
-    <section class="content" id="mainContent">
-        <div class="content-header">
-            <div class="page-info">
-                <h1 id="pageTitle">Dashboard</h1>
-                <p id="pageSubtitle">Bienvenido a tu panel institucional</p>
-            </div>
-            <div class="header-actions">
-                <button class="menu-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-        </div>
+            <!-- Main Content Grid -->
+            <div class="main-content">
+                <!-- Left Content -->
+                <div class="left-content">
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <h2 class="section-title">
+                            <i class="fas fa-bolt"></i>
+                            Acciones Rápidas
+                        </h2>
+                        <div class="actions-grid">
+                            <a href="#" onclick="navigateTo('doctors')" class="action-card">
+                                <div class="action-icon add-doctor">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h3>Agregar Doctor</h3>
+                                    <p>Registrar nuevo profesional médico</p>
+                                </div>
+                            </a>
 
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <div class="patient-info">
-                <span class="patient-name" id="institutionGreeting">Hola, Institución</span>
-                <span class="patient-type">Portal Institucional</span>
-            </div>
-            <button class="logout-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i>
-                Cerrar Sesión
-            </button>
-        </div>
+                            <a href="#" onclick="navigateTo('patients')" class="action-card">
+                                <div class="action-icon view-reports">
+                                    <i class="fas fa-user-injured"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h3>Ver Pacientes</h3>
+                                    <p>Gestionar registros de pacientes</p>
+                                </div>
+                            </a>
 
-        <div class="dashboard-content" id="dashboardContent">
-            <!-- Dashboard content will be loaded here -->
+                            <a href="#" onclick="navigateTo('analytics')" class="action-card">
+                                <div class="action-icon analytics">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h3>Estadísticas</h3>
+                                    <p>Análisis detallado de rendimiento</p>
+                                </div>
+                            </a>
+
+                            <a href="#" onclick="createAlert()" class="action-card">
+                                <div class="action-icon alert">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h3>Crear Alerta</h3>
+                                    <p>Notificaciones importantes</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="recent-activity">
+                        <h2 class="section-title">
+                            <i class="fas fa-clock"></i>
+                            Actividad Reciente
+                        </h2>
+                        <div class="activity-list" id="activityList">
+                            <div class="activity-item">
+                                <div class="activity-icon doctor-added">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Nuevo doctor registrado</div>
+                                    <div class="activity-meta">Dra. María González • Cardiología</div>
+                                    <div class="activity-time">Hace 2 horas</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon patient-care">
+                                    <i class="fas fa-stethoscope"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Consulta completada</div>
+                                    <div class="activity-meta">5 pacientes atendidos hoy</div>
+                                    <div class="activity-time">Hace 4 horas</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon appointment">
+                                    <i class="fas fa-calendar-plus"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Nueva cita programada</div>
+                                    <div class="activity-meta">Juan Pérez • Dermatología</div>
+                                    <div class="activity-time">Hace 6 horas</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon report">
+                                    <i class="fas fa-file-medical"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Informe mensual generado</div>
+                                    <div class="activity-meta">Estadísticas de rendimiento</div>
+                                    <div class="activity-time">Hace 1 día</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduler Preview -->
+                    <div class="scheduler-preview">
+                        <h2 class="section-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Agenda del Día
+                        </h2>
+                        <div class="scheduler-content">
+                            <div class="time-slot">
+                                <div class="time">09:00</div>
+                                <div class="appointment-card">
+                                    <div class="appointment-info">
+                                        <h4>Dr. Carlos Rodríguez</h4>
+                                        <p>Consulta General - Ana López</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="time-slot">
+                                <div class="time">10:30</div>
+                                <div class="appointment-card urgent">
+                                    <div class="appointment-info">
+                                        <h4>Dra. María González</h4>
+                                        <p>Cardiología - Roberto Sánchez</p>
+                                    </div>
+                                    <div class="appointment-label">
+                                        <span class="badge urgent">Urgente</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="time-slot">
+                                <div class="time">14:00</div>
+                                <div class="appointment-card">
+                                    <div class="appointment-info">
+                                        <h4>Dr. Javier Morales</h4>
+                                        <p>Neurología - Carmen Vega</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Content -->
+                <div class="right-content">
+                    <!-- Institution Health -->
+                    <div class="institution-health">
+                        <h3 class="section-title">
+                            <i class="fas fa-heartbeat"></i>
+                            Estado del Sistema
+                        </h3>
+                        <div class="health-metrics">
+                            <div class="health-item">
+                                <div class="health-label">Base de Datos</div>
+                                <div class="health-status healthy">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Conectado</span>
+                                </div>
+                            </div>
+
+                            <div class="health-item">
+                                <div class="health-label">API Services</div>
+                                <div class="health-status healthy">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>8/8 Online</span>
+                                </div>
+                            </div>
+
+                            <div class="health-item">
+                                <div class="health-label">Redis Cache</div>
+                                <div class="health-status healthy">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Activo</span>
+                                </div>
+                            </div>
+
+                            <div class="health-item">
+                                <div class="health-label">Backup</div>
+                                <div class="health-status warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Próximo en 2h</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weather Widget -->
+                    <div class="weather-widget">
+                        <h3 class="section-title">
+                            <i class="fas fa-cloud-sun"></i>
+                            Clima
+                        </h3>
+                        <div class="weather-content">
+                            <div class="weather-main">
+                                <div class="weather-icon">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                                <div class="weather-info">
+                                    <div class="temperature">28°C</div>
+                                    <div class="condition">Soleado</div>
+                                </div>
+                            </div>
+                            <div class="weather-details">
+                                <div class="detail-item">
+                                    <span>Humedad:</span>
+                                    <span>65%</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>Viento:</span>
+                                    <span>12 km/h</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span>Índice UV:</span>
+                                    <span>7 Alto</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="notifications-widget">
+                        <h3 class="section-title">
+                            <i class="fas fa-bell"></i>
+                            Notificaciones
+                        </h3>
+                        <div class="notifications-list">
+                            <div class="notification-item unread">
+                                <div class="notification-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Recordatorio de cita</div>
+                                    <div class="notification-message">Juan Pérez - Mañana 10:00 AM</div>
+                                    <div class="notification-time">Hace 5 min</div>
+                                </div>
+                            </div>
+
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Nuevo paciente registrado</div>
+                                    <div class="notification-message">María Torres - Cardiología</div>
+                                    <div class="notification-time">Hace 1 hora</div>
+                                </div>
+                            </div>
+
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-file-medical"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Resultados disponibles</div>
+                                    <div class="notification-message">Laboratorios de Roberto Sánchez</div>
+                                    <div class="notification-time">Hace 3 horas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Estadísticas Hoy
+                        </h3>
+                        <div class="stats-list">
+                            <div class="mini-stat">
+                                <div class="mini-stat-number">23</div>
+                                <div class="mini-stat-label">Citas Completadas</div>
+                            </div>
+
+                            <div class="mini-stat">
+                                <div class="mini-stat-number">8</div>
+                                <div class="mini-stat-label">Nuevos Pacientes</div>
+                            </div>
+
+                            <div class="mini-stat">
+                                <div class="mini-stat-number">95%</div>
+                                <div class="mini-stat-label">Satisfacción</div>
+                            </div>
+
+                            <div class="mini-stat">
+                                <div class="mini-stat-number">24</div>
+                                <div class="mini-stat-label">Doctores Activos</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <script>
-        // Global variables
-        let currentPage = 'dashboard';
-        let institutionData = {};
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="showQuickActions()">
+        <i class="fas fa-plus"></i>
+    </button>
 
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            loadInstitutionData();
-            loadPage('dashboard');
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+        // Global variables
+        let institutionData = {};
+        let charts = {};
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadInstitutionData();
+            setupNavigation();
+            updateCurrentPage('Dashboard Institucional');
+            await loadDashboardData();
         });
 
-        // Toggle sidebar
-        function toggleSidebar() {
-            const menu = document.getElementById('mainMenu');
-            const content = document.getElementById('mainContent');
-
-            menu.classList.toggle('collapsed');
-            content.classList.toggle('expanded');
+        // Setup navigation
+        function setupNavigation() {
+            // Handle navigation clicks
+            document.querySelectorAll('.nav-item a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#') {
+                        // Let the browser handle the navigation for actual URLs
+                        return;
+                    }
+                    e.preventDefault();
+                    const page = this.closest('.nav-item').dataset.page;
+                    navigateTo(page);
+                });
+            });
         }
 
-        // Load institution data
-        async function loadInstitutionData() {
-            try {
-                const response = await fetch('/api/web/institution/dashboard', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
+        // Navigation function
+        function navigateTo(page) {
+            // Redirect to actual pages instead of rendering content
+            const pageUrls = {
+                'doctors': '/institution/doctors',
+                'patients': '/institution/patients',
+                'analytics': '/institution/analytics',
+                'settings': '/institution/settings'
+            };
 
-                if (response.ok) {
-                    const data = await response.json();
-                    institutionData = data.data || {};
-
-                    // Update UI with institution data
-                    updateInstitutionInfo(institutionData);
-                } else if (response.status === 401) {
-                    window.location.href = '/institution_login.html';
-                }
-            } catch (error) {
-                console.error('Error loading institution data:', error);
+            if (pageUrls[page]) {
+                window.location.href = pageUrls[page];
+            } else {
+                // Stay on dashboard
+                currentPage = page;
+                updateCurrentPage('Dashboard Institucional');
+                loadPageContent(page);
             }
         }
 
-        // Update institution information in UI
-        function updateInstitutionInfo(data) {
-            if (data.institution) {
-                document.getElementById('userName').textContent = data.institution.nombre || 'Institución';
-                document.getElementById('institutionType').textContent = data.institution.tipo_institucion || 'Institución';
-
-                // Update greeting in top bar
-                const greetingElement = document.getElementById('institutionGreeting');
-                if (greetingElement) {
-                    greetingElement.textContent = `Hola, ${data.institution.nombre || 'Institución'}`;
-                }
+        // Update breadcrumb
+        function updateCurrentPage(title) {
+            const breadcrumbElement = document.getElementById('currentPage');
+            if (breadcrumbElement) {
+                breadcrumbElement.textContent = title;
             }
         }
 
         // Load page content
-        function loadPage(page) {
-            currentPage = page;
+        function loadPageContent(page) {
+            const content = document.getElementById('dashboardContent');
 
-            // Update navigation active state
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            // Show loading
+            showLoadingState();
 
-            // Update page title and subtitle
-            updatePageInfo(page);
+            // Simulate content loading
+            setTimeout(() => {
+                switch(page) {
+                    case 'dashboard':
+                        renderDashboardContent();
+                        break;
+                    case 'doctors':
+                        renderDoctorsContent();
+                        break;
+                    case 'patients':
+                        renderPatientsContent();
+                        break;
+                    case 'analytics':
+                        renderAnalyticsContent();
+                        break;
+                    case 'settings':
+                        renderSettingsContent();
+                        break;
+                }
 
-            // Load page content
-            switch(page) {
-                case 'dashboard':
-                    loadDashboardContent();
-                    break;
-                case 'doctors':
-                    loadDoctorsContent();
-                    break;
-                case 'patients':
-                    loadPatientsContent();
-                    break;
-                case 'analytics':
-                    loadAnalyticsContent();
-                    break;
-                case 'settings':
-                    loadSettingsContent();
-                    break;
-            }
+                // Hide loading
+                hideLoadingState();
+            }, 500);
         }
 
-        // Update page information
-        function updatePageInfo(page) {
-            const pageInfo = {
-                dashboard: { title: 'Dashboard', subtitle: 'Vista general de tu institución' },
-                doctors: { title: 'Gestión de Doctores', subtitle: 'Administra el personal médico' },
-                patients: { title: 'Pacientes', subtitle: 'Revisa los pacientes atendidos' },
-                analytics: { title: 'Analíticas', subtitle: 'Estadísticas y tendencias de salud' },
-                settings: { title: 'Configuración', subtitle: 'Administra tu institución' }
-            };
-
-            const info = pageInfo[page] || pageInfo.dashboard;
-            document.getElementById('pageTitle').textContent = info.title;
-            document.getElementById('pageSubtitle').textContent = info.subtitle;
-        }
-
-        // Load dashboard content
-        function loadDashboardContent() {
+        // Render dashboard content
+        function renderDashboardContent() {
             const content = document.getElementById('dashboardContent');
 
             content.innerHTML = `
-                <!-- Statistics -->
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Dashboard Institucional</h1>
+                    <p class="welcome-subtitle">Vista general de tu institución médica</p>
+                </div>
+
+                <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header">
                             <div class="stat-icon doctors">
                                 <i class="fas fa-user-md"></i>
                             </div>
+                            <div class="stat-menu">
+                                <i class="fas fa-ellipsis-h" onclick="showStatMenu('doctors')"></i>
+                            </div>
                         </div>
-                        <div class="stat-number" id="doctors-count">0</div>
-                        <div class="stat-label">Doctores Registrados</div>
+                        <div class="stat-number" id="doctors-count">--</div>
+                        <div class="stat-label">Doctores Activos</div>
+                        <div class="stat-trend" id="doctors-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+2 esta semana</span>
+                        </div>
                     </div>
+
                     <div class="stat-card">
-                        <div class="stat-icon patients">
-                            <i class="fas fa-users"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon patients">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-menu">
+                                <i class="fas fa-ellipsis-h" onclick="showStatMenu('patients')"></i>
+                            </div>
                         </div>
-                        <div class="stat-number" id="patients-count">0</div>
-                        <div class="stat-label">Pacientes Atendidos</div>
+                        <div class="stat-number" id="patients-count">--</div>
+                        <div class="stat-label">Pacientes Totales</div>
+                        <div class="stat-trend positive" id="patients-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+12 este mes</span>
+                        </div>
                     </div>
+
                     <div class="stat-card">
-                        <div class="stat-icon predictions">
-                            <i class="fas fa-chart-line"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon appointments">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-menu">
+                                <i class="fas fa-ellipsis-h" onclick="showStatMenu('appointments')"></i>
+                            </div>
                         </div>
-                        <div class="stat-number" id="predictions-count">0</div>
-                        <div class="stat-label">Predicciones Generadas</div>
+                        <div class="stat-number" id="appointments-count">--</div>
+                        <div class="stat-label">Citas Programadas</div>
+                        <div class="stat-trend warning" id="appointments-trend">
+                            <i class="fas fa-minus"></i>
+                            <span>3 hoy</span>
+                        </div>
                     </div>
+
                     <div class="stat-card">
-                        <div class="stat-icon recommendations">
-                            <i class="fas fa-clipboard-list"></i>
+                        <div class="stat-header">
+                            <div class="stat-icon revenue">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
                         </div>
-                        <div class="stat-number" id="recommendations-count">0</div>
-                        <div class="stat-label">Recomendaciones Activas</div>
+                        <div class="stat-number" id="revenue-amount">$--</div>
+                        <div class="stat-label">Ingresos Mensuales</div>
+                        <div class="stat-trend positive" id="revenue-trend">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8.2%</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Actions -->
-                <div class="actions-grid">
-                    <div class="action-card" onclick="loadPage('doctors')">
-                        <div class="action-icon manage-doctors">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                        <h3 class="action-title">Gestionar Doctores</h3>
-                        <p class="action-description">
-                            Administra los doctores de tu institución, revisa sus perfiles y especialidades.
-                        </p>
-                    </div>
-                    <div class="action-card" onclick="loadPage('patients')">
-                        <div class="action-icon view-patients">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3 class="action-title">Ver Pacientes</h3>
-                        <p class="action-description">
-                            Revisa los pacientes atendidos por los doctores de tu institución.
-                        </p>
-                    </div>
-                    <div class="action-card" onclick="loadPage('analytics')">
-                        <div class="action-icon analytics">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h3 class="action-title">Analíticas</h3>
-                        <p class="action-description">
-                            Visualiza estadísticas y tendencias de salud de tus pacientes.
-                        </p>
-                    </div>
-                    <div class="action-card" onclick="loadPage('settings')">
-                        <div class="action-icon settings">
-                            <i class="fas fa-cog"></i>
-                        </div>
-                        <h3 class="action-title">Configuración</h3>
-                        <p class="action-description">
-                            Administra la configuración de tu institución y preferencias.
-                        </p>
-                    </div>
-                </div>
+                <!-- Main Content Grid -->
+                <div class="main-content">
+                    <!-- Left Content -->
+                    <div class="left-content">
+                        <!-- Quick Actions -->
+                        <div class="quick-actions">
+                            <h2 class="section-title">
+                                <i class="fas fa-bolt"></i>
+                                Acciones Rápidas
+                            </h2>
+                            <div class="actions-grid">
+                                <a href="#" onclick="addNewDoctor()" class="action-card">
+                                    <div class="action-icon add-doctor">
+                                        <i class="fas fa-user-plus"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h3>Agregar Doctor</h3>
+                                        <p>Registrar nuevo profesional médico</p>
+                                    </div>
+                                </a>
 
-                <!-- Recent Activity -->
-                <div class="recent-activity">
-                    <h2 class="section-title">
-                        <i class="fas fa-clock"></i>
-                        Actividad Reciente
-                    </h2>
-                    <div id="recent-activity-list">
-                        <div class="activity-item">
-                            <div class="activity-icon doctor-registered">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">Nuevo doctor registrado</div>
-                                <div class="activity-time">Hace 2 horas</div>
+                                <a href="#" onclick="scheduleAppointment()" class="action-card">
+                                    <div class="action-icon schedule">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h3>Programar Cita</h3>
+                                        <p>Agendar consulta con paciente</p>
+                                    </div>
+                                </a>
+
+                                <a href="#" onclick="viewReports()" class="action-card">
+                                    <div class="action-icon reports">
+                                        <i class="fas fa-file-medical"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h3>Ver Reportes</h3>
+                                        <p>Estadísticas y análisis de datos</p>
+                                    </div>
+                                </a>
+
+                                <a href="#" onclick="createAlert()" class="action-card">
+                                    <div class="action-icon alert">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h3>Crear Alerta</h3>
+                                        <p>Notificaciones del sistema</p>
+                                    </div>
+                                </a>
                             </div>
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-icon patient-added">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <div class="activity-content">
-                                <div class="activity-title">5 nuevos pacientes agregados</div>
-                                <div class="activity-time">Hace 4 horas</div>
+
+                        <!-- Recent Activity -->
+                        <div class="recent-activity">
+                            <h2 class="section-title">
+                                <i class="fas fa-clock"></i>
+                                Actividad Reciente
+                            </h2>
+                            <div class="activity-list" id="activityList">
+                                <div class="activity-item">
+                                    <div class="activity-icon doctor-added">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Nuevo doctor verificado</div>
+                                        <div class="activity-meta">Dra. Ana López • Cardiología</div>
+                                        <div class="activity-time">Hace 2 horas</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon patient-care">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">15 pacientes atendidos hoy</div>
+                                        <div class="activity-meta">5 especialidades activas</div>
+                                        <div class="activity-time">Hace 4 horas</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon appointment">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">8 nuevas citas agendadas</div>
+                                        <div class="activity-meta">Para mañana</div>
+                                        <div class="activity-time">Hace 6 horas</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon report">
+                                        <i class="fas fa-file-medical"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Informe semanal generado</div>
+                                        <div class="activity-meta">Estadísticas médicas</div>
+                                        <div class="activity-time">Hace 1 día</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-icon prediction-generated">
-                                <i class="fas fa-chart-line"></i>
+                    </div>
+
+                    <!-- Right Content -->
+                    <div class="right-content">
+                        <!-- Institution Health -->
+                        <div class="institution-health">
+                            <h3 class="section-title">
+                                <i class="fas fa-heartbeat"></i>
+                                Estado del Sistema
+                            </h3>
+                            <div class="health-metrics">
+                                <div class="health-item">
+                                    <div class="health-label">Base de Datos</div>
+                                    <div class="health-status healthy">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Conectado</span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-label">API Services</div>
+                                    <div class="health-status healthy">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>8/8 Online</span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-label">Redis Cache</div>
+                                    <div class="health-status healthy">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Activo</span>
+                                    </div>
+                                </div>
+
+                                <div class="health-item">
+                                    <div class="health-label">Backup</div>
+                                    <div class="health-status warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>Próximo en 2h</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="activity-content">
-                                <div class="activity-title">12 predicciones de riesgo generadas</div>
-                                <div class="activity-time">Hace 6 horas</div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="notifications-widget">
+                            <h3 class="section-title">
+                                <i class="fas fa-bell"></i>
+                                Notificaciones
+                            </h3>
+                            <div class="notifications-list">
+                                <div class="notification-item unread">
+                                    <div class="notification-icon urgent">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">Mantenimiento programado</div>
+                                        <div class="notification-message">Backup semanal mañana 2:00 AM</div>
+                                        <div class="notification-time">Hace 5 min</div>
+                                    </div>
+                                </div>
+
+                                <div class="notification-item">
+                                    <div class="notification-icon info">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">Nuevo paciente registrado</div>
+                                        <div class="notification-message">Roberto Sánchez - Cardiología</div>
+                                        <div class="notification-time">Hace 1 hora</div>
+                                    </div>
+                                </div>
+
+                                <div class="notification-item">
+                                    <div class="notification-icon success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">Satisfacción pacienda</div>
+                                        <div class="notification-message">92% esta semana (+2%)</div>
+                                        <div class="notification-time">Hace 3 horas</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-
-            // Load dashboard statistics
-            loadDashboardStats();
         }
 
-        // Load dashboard statistics
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch('/api/web/institution/dashboard', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const stats = data.data.statistics || {};
-
-                    animateNumber('doctors-count', stats.total_doctors || 0);
-                    animateNumber('patients-count', stats.total_patients || 0);
-                    animateNumber('predictions-count', stats.active_appointments || 0);
-                    animateNumber('recommendations-count', stats.pending_reviews || 0);
-                }
-            } catch (error) {
-                console.error('Error loading dashboard stats:', error);
-            }
-        }
-
-        // Load doctors content
-        function loadDoctorsContent() {
+        // Render doctors content
+        function renderDoctorsContent() {
             const content = document.getElementById('dashboardContent');
 
             content.innerHTML = `
-                <div class="page-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div></div>
-                    <button class="btn btn-primary" onclick="showAddDoctorModal()">
-                        <i class="fas fa-plus me-1"></i>
-                        Agregar Doctor
-                    </button>
+                <div class="section-header">
+                    <div class="section-info">
+                        <h1 class="section-title">Gestión de Doctores</h1>
+                        <p class="section-subtitle">Administra los profesionales médicos de tu institución</p>
+                    </div>
+                    <div class="section-actions">
+                        <div class="filter-group">
+                            <select id="specialtyFilter" class="filter-select">
+                                <option value="">Todas las especialidades</option>
+                                <option value="cardiologia">Cardiología</option>
+                                <option value="dermatologia">Dermatología</option>
+                                <option value="neurologia">Neurología</option>
+                                <option value="pediatria">Pediatría</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="addNewDoctor()">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Agregar Doctor
+                        </button>
+                    </div>
                 </div>
 
-                <div class="doctors-grid" id="doctorsList">
+                <!-- Doctors Grid -->
+                <div class="doctors-grid" id="doctorsGrid">
                     <!-- Doctors will be loaded here -->
                 </div>
             `;
@@ -387,44 +814,88 @@
             loadDoctors();
         }
 
-        // Load patients content
-        function loadPatientsContent() {
+        // Render patients content
+        function renderPatientsContent() {
             const content = document.getElementById('dashboardContent');
 
             content.innerHTML = `
-                <div class="stats-grid" style="margin-bottom: 2rem;">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-patients">0</div>
-                        <div class="stat-label">Total Pacientes</div>
+                <div class="section-header">
+                    <div class="section-info">
+                        <h1 class="section-title">Pacientes</h1>
+                        <p class="section-subtitle">Gestiona los pacientes de tu institución médica</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="active-patients">0</div>
-                        <div class="stat-label">Pacientes Activos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="high-risk">0</div>
-                        <div class="stat-label">Alto Riesgo</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="new-patients">0</div>
-                        <div class="stat-label">Nuevos este Mes</div>
+                    <div class="section-actions">
+                        <div class="search-group">
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="patientSearch" class="search-input" placeholder="Buscar paciente...">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">Todos los estados</option>
+                                <option value="active">Activos</option>
+                                <option value="inactive">Inactivos</option>
+                                <option value="pending">Pendientes</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Patients Stats -->
+                <div class="patients-stats">
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="totalPatients">--</div>
+                            <div class="stat-label">Pacientes Totales</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-icon positive">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="activePatients">--</div>
+                            <div class="stat-label">Pacientes Activos</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="pendingReviews">--</div>
+                            <div class="stat-label">Pendientes de Revisión</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-icon urgent">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="highRisk">--</div>
+                            <div class="stat-label">Alto Riesgo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patients Table -->
                 <div class="patients-table">
-                    <h3 class="mb-3">
-                        <i class="fas fa-list me-2"></i>
-                        Lista de Pacientes
-                    </h3>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
+                    <div class="table-container">
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Paciente</th>
                                     <th>Doctor Asignado</th>
-                                    <th>Última Visita</th>
-                                    <th>Riesgo</th>
+                                    <th>Última Consulta</th>
                                     <th>Estado</th>
+                                    <th>Riesgo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -436,271 +907,409 @@
                 </div>
             `;
 
-            loadPatients();
+            loadPatientsData();
         }
 
-        // Load analytics content
-        function loadAnalyticsContent() {
+        // Render analytics content
+        function renderAnalyticsContent() {
             const content = document.getElementById('dashboardContent');
 
             content.innerHTML = `
-                <div class="alert alert-info" style="margin-bottom: 2rem;">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Privacidad de Datos:</strong>
-                    Toda la información mostrada es anónima y agregada para proteger la privacidad del paciente,
-                    en cumplimiento con las normativas de protección de datos.
+                <div class="section-header">
+                    <div class="section-info">
+                        <h1 class="section-title">Analíticas e Informes</h1>
+                        <p class="section-subtitle">Estadísticas detalladas y tendencias de tu institución</p>
+                    </div>
+                    <div class="section-actions">
+                        <div class="filter-group">
+                            <select id="timeRange" class="filter-select">
+                                <option value="7">Última semana</option>
+                                <option value="30">Último mes</option>
+                                <option value="90">Últimos 3 meses</option>
+                                <option value="365">Último año</option>
+                            </select>
+                            <button class="btn btn-outline-primary" onclick="exportReport()">
+                                <i class="fas fa-download me-2"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="charts-grid">
+                <!-- Analytics Grid -->
+                <div class="analytics-grid">
+                    <!-- Appointments Chart -->
                     <div class="chart-card">
-                        <h3 class="chart-title">
-                            <i class="fas fa-chart-pie"></i>
-                            Distribución de Riesgos
-                        </h3>
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-calendar-alt"></i>
+                                Tendencia de Citas
+                            </h3>
+                        </div>
                         <div class="chart-container">
-                            <canvas id="riskDistributionChart"></canvas>
+                            <canvas id="appointmentsChart"></canvas>
                         </div>
                     </div>
 
+                    <!-- Patients by Specialty -->
                     <div class="chart-card">
-                        <h3 class="chart-title">
-                            <i class="fas fa-chart-line"></i>
-                            Predicciones por Mes
-                        </h3>
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-stethoscope"></i>
+                                Pacientes por Especialidad
+                            </h3>
+                        </div>
                         <div class="chart-container">
-                            <canvas id="predictionsChart"></canvas>
+                            <canvas id="specialtyChart"></canvas>
                         </div>
                     </div>
 
+                    <!-- Revenue Chart -->
                     <div class="chart-card">
-                        <h3 class="chart-title">
-                            <i class="fas fa-user-md"></i>
-                            Pacientes por Doctor
-                        </h3>
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-dollar-sign"></i>
+                                Ingresos Mensuales
+                            </h3>
+                        </div>
                         <div class="chart-container">
-                            <canvas id="patientsPerDoctorChart"></canvas>
+                            <canvas id="revenueChart"></canvas>
                         </div>
                     </div>
 
+                    <!-- Patient Satisfaction -->
                     <div class="chart-card">
-                        <h3 class="chart-title">
-                            <i class="fas fa-heartbeat"></i>
-                            Condiciones Más Comunes
-                        </h3>
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-smile"></i>
+                                Satisfacción Pacientes
+                            </h3>
+                        </div>
                         <div class="chart-container">
-                            <canvas id="conditionsChart"></canvas>
+                            <canvas id="satisfactionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPIs Section -->
+                <div class="kpis-section">
+                    <h3 class="section-title">Indicadores Clave de Rendimiento</h3>
+                    <div class="kpis-grid">
+                        <div class="kpi-item">
+                            <div class="kpi-value">96.2%</div>
+                            <div class="kpi-label">Tasa de Ocupación</div>
+                            <div class="kpi-change positive">+2.1%</div>
+                        </div>
+
+                        <div class="kpi-item">
+                            <div class="kpi-value">12.5</div>
+                            <div class="kpi-label">Días Promedio de Cita</div>
+                            <div class="kpi-change negative">-1.3</div>
+                        </div>
+
+                        <div class="kpi-item">
+                            <div class="kpi-value">$2,450</div>
+                            <div class="kpi-label">Ingreso por Paciente</div>
+                            <div class="kpi-change positive">+15.2%</div>
+                        </div>
+
+                        <div class="kpi-item">
+                            <div class="kpi-value">4.8/5</div>
+                            <div class="kpi-label">Calificación Promedio</div>
+                            <div class="kpi-change positive">+0.2</div>
                         </div>
                     </div>
                 </div>
             `;
 
-            // Load Chart.js and initialize charts
-            loadAnalyticsCharts();
+            loadAnalyticsData();
         }
 
-        // Load settings content
-        function loadSettingsContent() {
+        // Render settings content
+        function renderSettingsContent() {
             const content = document.getElementById('dashboardContent');
 
             content.innerHTML = `
-                <div class="settings-content">
-                    <h3>Configuración de la Institución</h3>
-                    <p>Funcionalidad de configuración próximamente disponible.</p>
+                <div class="section-header">
+                    <div class="section-info">
+                        <h1 class="section-title">Configuración de la Institución</h1>
+                        <p class="section-subtitle">Administra la configuración y preferencias de tu institución médica</p>
+                    </div>
+                </div>
+
+                <!-- Settings Grid -->
+                <div class="settings-grid">
+                    <!-- Institution Info -->
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h3>Información de la Institución</h3>
+                            <p>Configura los datos básicos de tu institución</p>
+                        </div>
+                        <div class="settings-content">
+                            <form id="institutionForm">
+                                <div class="form-group">
+                                    <label>Nombre de la Institución</label>
+                                    <input type="text" id="institutionName" class="form-control" placeholder="Hospital General">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Tipo de Institución</label>
+                                    <select id="institutionType" class="form-control">
+                                        <option value="hospital">Hospital General</option>
+                                        <option value="clinic">Clínica</option>
+                                        <option value="specialty">Centro Especializado</option>
+                                        <option value="diagnostic">Centro Diagnóstico</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Dirección</label>
+                                    <textarea id="institutionAddress" class="form-control" rows="3"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Working Hours -->
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h3>Horarios de Trabajo</h3>
+                            <p>Establece los horarios de atención</p>
+                        </div>
+                        <div class="settings-content">
+                            <div class="schedule-grid">
+                                <div class="schedule-item">
+                                    <div class="day">Lunes - Viernes</div>
+                                    <div class="hours">
+                                        <input type="time" value="08:00">
+                                        <span>a</span>
+                                        <input type="time" value="17:00">
+                                    </div>
+                                </div>
+
+                                <div class="schedule-item">
+                                    <div class="day">Sábados</div>
+                                    <div class="hours">
+                                        <input type="time" value="09:00">
+                                        <span>a</span>
+                                        <input type="time" value="13:00">
+                                    </div>
+                                </div>
+
+                                <div class="schedule-item">
+                                    <div class="day">Domingos y Festivos</div>
+                                    <div class="hours">Cerrado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h3>Configuración de Seguridad</h3>
+                            <p>Administra la seguridad y permisos</p>
+                        </div>
+                        <div class="settings-content">
+                            <div class="security-options">
+                                <div class="option-item">
+                                    <div class="option-info">
+                                        <label>Autenticación de 2 factores</label>
+                                        <small>Requerir código adicional para iniciar sesión</small>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="option-item">
+                                    <div class="option-info">
+                                        <label>Verificación IP</label>
+                                        <small>Restringir acceso por ubicación</small>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="option-item">
+                                    <div class="option-info">
+                                        <label>Notificaciones de seguridad</label>
+                                        <small>Alertas sobre actividades sospechosas</small>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Preferences -->
+                    <div class="settings-card">
+                        <div class="settings-header">
+                            <h3>Preferencias del Sistema</h3>
+                            <p>Configura tu experiencia en el sistema</p>
+                        </div>
+                        <div class="settings-content">
+                            <div class="preference-options">
+                                <div class="option-item">
+                                    <div class="option-info">
+                                        <label>Idioma</label>
+                                        <small>Selecciona el idioma preferido</small>
+                                    </div>
+                                    <select class="form-control">
+                                        <option value="es">Español</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+
+                                <div class="option-item">
+                                    <div class="option-info">
+                                        <label>Zona horaria</label>
+                                        <small>Ajusta la zona horaria local</small>
+                                    </div>
+                                    <select class="form-control">
+                                        <option value="-6">America/Mexico_City (GMT-6)</option>
+                                        <option value="-5">America/New_York (GMT-5)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
-        // Load doctors data
-        async function loadDoctors() {
+        // Data loading functions
+        async function loadInstitutionData() {
             try {
-                const response = await fetch('/api/web/institution/doctors', {
+                const response = await fetch('/api/web/institution/dashboard', {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.status === 'success') {
-                    displayDoctors(data.doctors || []);
-                } else {
-                    displayDoctors([]);
-                }
-            } catch (error) {
-                console.error('Error loading doctors:', error);
-                displayDoctors([]);
-            }
-        }
-
-        // Display doctors
-        function displayDoctors(doctors) {
-            const doctorsList = document.getElementById('doctorsList');
-
-            if (doctors.length === 0) {
-                doctorsList.innerHTML = `
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
-                            <h4 class="text-muted">No hay doctores registrados</h4>
-                            <p class="text-muted">Comienza agregando el primer doctor a tu institución</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            doctorsList.innerHTML = doctors.map(doctor => `
-                <div class="doctor-card">
-                    <div class="doctor-header">
-                        <div class="doctor-avatar">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                        <div class="doctor-info">
-                            <h3>Dr. ${doctor.nombre || doctor.first_name} ${doctor.apellido || doctor.last_name}</h3>
-                            <p>${doctor.email || doctor.contact_email}</p>
-                        </div>
-                    </div>
-                    <div class="doctor-specialty">${doctor.especialidad || doctor.specialty || 'Sin especialidad'}</div>
-                    <div class="doctor-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewDoctor('${doctor.id_doctor || doctor.id}')">
-                            <i class="fas fa-eye me-1"></i>
-                            Ver Perfil
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteDoctor('${doctor.id_doctor || doctor.id}', '${doctor.nombre || doctor.first_name}')">
-                            <i class="fas fa-trash me-1"></i>
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Load patients data
-        async function loadPatients() {
-            try {
-                const response = await fetch('/api/web/institution/patients', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     credentials: 'include'
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    displayPatients(data.patients || []);
-                    updatePatientStats(data.stats || {});
+                    institutionData = data.data || {};
+
+                    // Update UI with institution data
+                    updateInstitutionInfo(institutionData);
+                    return data;
+                } else if (response.status === 401) {
+                    window.location.href = '/institution_login.html';
+                    return null;
                 } else {
-                    displayPatients([]);
+                    console.error('Error loading institution data:', response.status);
+                    return null;
                 }
             } catch (error) {
-                console.error('Error loading patients:', error);
-                displayPatients([]);
+                console.error('Error loading institution data:', error);
+                return null;
             }
         }
 
-        // Display patients
-        function displayPatients(patients) {
-            const tableBody = document.getElementById('patientsTableBody');
+        // Update institution information in UI
+        function updateInstitutionInfo(data) {
+            if (data.institution) {
+                const institutionNameElement = document.getElementById('institutionName');
+                if (institutionNameElement) {
+                    institutionNameElement.textContent = data.institution.nombre || 'Institución';
+                }
 
-            if (patients.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No hay pacientes registrados</h5>
-                            <p class="text-muted">Los pacientes aparecerán aquí cuando los doctores los registren</p>
-                        </td>
-                    </tr>
-                `;
-                return;
+                const userNameElement = document.getElementById('userName');
+                if (userNameElement) {
+                    userNameElement.textContent = data.institution.nombre || 'Institución';
+                }
+
+                // Update greeting
+                const greetingElement = document.getElementById('institutionGreeting');
+                if (greetingElement) {
+                    greetingElement.textContent = `Hola, ${data.institution.nombre || 'Institución'}`;
+                }
             }
-
-            tableBody.innerHTML = patients.map(patient => {
-                const initials = `${patient.nombre.charAt(0)}${patient.apellido.charAt(0)}`;
-                const riskLevel = getRiskLevel(patient.risk_score);
-                const riskClass = `risk-${riskLevel.toLowerCase()}`;
-
-                return `
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="patient-avatar">${initials}</div>
-                                <div>
-                                    <div class="fw-semibold">${patient.nombre} ${patient.apellido}</div>
-                                    <small class="text-muted">${patient.email}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${patient.doctor_name || 'Sin asignar'}</td>
-                        <td>${formatDate(patient.ultima_visita) || 'N/A'}</td>
-                        <td><span class="risk-badge ${riskClass}">${riskLevel}</span></td>
-                        <td><span class="badge bg-primary">${getStatusText(patient.estado_validacion)}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewPatient('${patient.id_usuario}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Update patient statistics
-        function updatePatientStats(stats) {
-            document.getElementById('total-patients').textContent = stats.total_patients || 0;
-            document.getElementById('active-patients').textContent = stats.active_patients || 0;
-            document.getElementById('high-risk').textContent = stats.high_risk || 0;
-            document.getElementById('new-patients').textContent = stats.new_this_month || 0;
-        }
-
-        // Load analytics charts
-        async function loadAnalyticsCharts() {
-            // Load Chart.js if not loaded
-            if (typeof Chart === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-                script.onload = initializeCharts;
-                document.head.appendChild(script);
-            } else {
-                initializeCharts();
-            }
-        }
-
-        // Initialize charts
-        function initializeCharts() {
-            // Risk Distribution Chart
-            const riskCtx = document.getElementById('riskDistributionChart');
-            if (riskCtx) {
-                new Chart(riskCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo'],
-                        datasets: [{
-                            data: [89, 55, 12],
-                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
-                    }
-                });
-            }
-
-            // Other charts would be initialized similarly
-            // For brevity, only showing the risk distribution chart initialization
         }
 
         // Utility functions
+        function showLoadingState() {
+            const content = document.getElementById('dashboardContent');
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+        }
+
+        function hideLoadingState() {
+            const content = document.getElementById('dashboardContent');
+            const loading = document.getElementById('loadingState');
+
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        }
+
+        function showErrorState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+
+            loading.style.display = 'none';
+            error.style.display = 'block';
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            menu.classList.toggle('show');
+            content.classList.toggle('mobile-menu-open');
+        }
+
+        function loadData() {
+            // Refresh current page
+            loadPageContent(currentPage);
+        }
+
+        function refreshData() {
+            // Refresh dashboard data
+            loadDashboardData();
+        }
+
+        // Dummy data loading functions
+        async function loadDashboardData() {
+            // Simulate API calls with dummy data
+            try {
+                // Animate counters
+                setTimeout(() => {
+                    animateNumber('doctors-count', 24);
+                }, 500);
+
+                setTimeout(() => {
+                    animateNumber('patients-count', 156);
+                }, 700);
+
+                setTimeout(() => {
+                    animateNumber('appointments-count', 12);
+                }, 900);
+
+                setTimeout(() => {
+                    document.getElementById('revenue-amount').textContent = '$45,230';
+                }, 1100);
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
         function animateNumber(elementId, targetNumber) {
             const element = document.getElementById(elementId);
+            if (!element) return;
+
             const duration = 2000;
             const startTime = performance.now();
             const startNumber = 0;
@@ -721,48 +1330,139 @@
             requestAnimationFrame(updateNumber);
         }
 
-        function getRiskLevel(score) {
-            if (score >= 70) return 'Alto';
-            if (score >= 40) return 'Medio';
-            return 'Bajo';
+        function loadDoctors() {
+            const doctorsGrid = document.getElementById('doctorsGrid');
+            if (!doctorsGrid) return;
+
+            // Dummy doctors data
+            const doctors = [
+                { name: 'Dra. Ana López', specialty: 'Cardiología', status: 'active', patients: 45 },
+                { name: 'Dr. Carlos Rodríguez', specialty: 'Neurología', status: 'active', patients: 28 },
+                { name: 'Dra. María González', specialty: 'Dermatología', status: 'active', patients: 32 },
+                { name: 'Dr. Javier Morales', specialty: 'Pediatría', status: 'active', patients: 67 },
+                { name: 'Dra. Silvia Torres', specialty: 'Ginecología', status: 'active', patients: 39 },
+                { name: 'Dr. Roberto Sánchez', specialty: 'Oftalmología', status: 'active', patients: 22 }
+            ];
+
+            doctorsGrid.innerHTML = doctors.map(doctor => `
+                <div class="doctor-card">
+                    <div class="doctor-header">
+                        <div class="doctor-avatar">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="doctor-info">
+                            <h4>${doctor.name}</h4>
+                            <p>${doctor.specialty}</p>
+                        </div>
+                    </div>
+                    <div class="doctor-stats">
+                        <div class="stat">
+                            <span class="stat-number">${doctor.patients}</span>
+                            <span class="stat-label">Pacientes</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">${doctor.status === 'active' ? 'Activo' : 'Inactivo'}</span>
+                        </div>
+                    </div>
+                    <div class="doctor-actions">
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Ver Perfil
+                        </button>
+                        <button class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-calendar"></i> Citas
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function getStatusText(status) {
-            switch(status) {
-                case 'full_access': return 'Activo';
-                case 'institution_validated': return 'Validado';
-                case 'doctor_validated': return 'En Revisión';
-                case 'pending': return 'Pendiente';
-                default: return 'Desconocido';
-            }
+        function loadPatientsData() {
+            // Dummy patient stats
+            document.getElementById('totalPatients').textContent = '156';
+            document.getElementById('activePatients').textContent = '142';
+            document.getElementById('pendingReviews').textContent = '8';
+            document.getElementById('highRisk').textContent = '12';
+
+            const patientsBody = document.getElementById('patientsTableBody');
+            if (!patientsBody) return;
+
+            // Dummy patient data
+            const patients = [
+                { name: 'Juan Pérez', doctor: 'Dra. Ana López', lastVisit: '2024-01-15', status: 'active', risk: 'low' },
+                { name: 'María Torres', doctor: 'Dr. Javier Morales', lastVisit: '2024-01-14', status: 'active', risk: 'medium' },
+                { name: 'Carlos Guzmán', doctor: 'Dr. Roberto Sánchez', lastVisit: '2024-01-10', status: 'active', risk: 'high' },
+                { name: 'Ana Vargas', doctor: 'Dra. María González', lastVisit: '2024-01-12', status: 'active', risk: 'low' }
+            ];
+
+            patientsBody.innerHTML = patients.map(patient => `
+                <tr>
+                    <td>
+                        <div class="patient-info">
+                            <div class="patient-avatar">${patient.name.charAt(0)}</div>
+                            <div>
+                                <div class="fw-semibold">${patient.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${patient.doctor}</td>
+                    <td>${new Date(patient.lastVisit).toLocaleDateString('es-ES')}</td>
+                    <td>
+                        <span class="badge bg-${patient.status === 'active' ? 'success' : 'secondary'}">
+                            ${patient.status === 'active' ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge risk-${patient.risk}">
+                            ${patient.risk === 'high' ? 'Alto' : patient.risk === 'medium' ? 'Medio' : 'Bajo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        function formatDate(dateString) {
-            if (!dateString) return null;
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-ES');
+        function loadAnalyticsData() {
+            // Initialize sample charts with dummy data
+            setTimeout(() => {
+                // We'll initialize charts here if Chart.js is available
+                console.log('Analytics data loaded');
+            }, 1000);
         }
 
-        // Placeholder functions for actions
-        function showAddDoctorModal() {
-            alert('Funcionalidad de agregar doctor próximamente disponible');
+        // Placeholder functions
+        function showStatMenu(type) {
+            alert(`Menú de estadísticas para ${type} - próximamente disponible`);
         }
 
-        function viewDoctor(doctorId) {
-            alert('Funcionalidad de ver perfil próximamente disponible');
+        function addNewDoctor() {
+            alert('Funcionalidad para agregar doctor próximamente disponible');
         }
 
-        function deleteDoctor(doctorId, doctorName) {
-            if (confirm(`¿Estás seguro de que deseas eliminar al Dr. ${doctorName}?`)) {
-                alert('Funcionalidad de eliminar doctor próximamente disponible');
-            }
+        function scheduleAppointment() {
+            alert('Funcionalidad para programar cita próximamente disponible');
         }
 
-        function viewPatient(patientId) {
-            alert('Funcionalidad de ver paciente próximamente disponible');
+        function viewReports() {
+            alert('Funcionalidad para ver reportes próximamente disponible');
         }
 
-        // Handle logout
+        function createAlert() {
+            alert('Funcionalidad para crear alerta próximamente disponible');
+        }
+
+        function showQuickActions() {
+            alert('Acciones rápidas - próximamente disponible');
+        }
+
+        function exportReport() {
+            alert('Funcionalidad de exportar reportes próximamente disponible');
+        }
+
+        // Logout functionality
         async function handleLogout() {
             if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
                 try {
@@ -774,26 +1474,14 @@
                     if (response.ok) {
                         window.location.href = '/';
                     } else {
-                        console.error('Error en logout:', response.status);
+                        console.error('Logout error:', response.status);
                         alert('Error al cerrar sesión. Inténtalo de nuevo.');
                     }
                 } catch (error) {
-                    console.error('Error de conexión en logout:', error);
+                    console.error('Logout connection error:', error);
                     alert('Error de conexión. Inténtalo de nuevo.');
                 }
             }
         }
-
-        // Handle window resize for responsive sidebar
-        window.addEventListener('resize', function() {
-            if (window.innerWidth <= 768) {
-                const menu = document.getElementById('mainMenu');
-                const content = document.getElementById('mainContent');
-
-                menu.classList.add('collapsed');
-                content.classList.add('expanded');
-            }
-        });
-    </script>
-</body>
-</html>
+</script>
+{% endblock %}

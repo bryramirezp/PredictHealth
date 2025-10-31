@@ -17,7 +17,10 @@ def index():
         'total_institutions': overview_row.total_institutions if overview_row else 0,
         'total_users': overview_row.total_users if overview_row else 0,
         'validated_patients': overview_row.validated_patients if overview_row else 0,
-        'avg_consultation_fee': float(overview_row.avg_consultation_fee) if overview_row and overview_row.avg_consultation_fee else 0.0
+        'avg_consultation_fee': float(overview_row.avg_consultation_fee) if overview_row and overview_row.avg_consultation_fee else 0.0,
+        # New relationship integrity metrics
+        'patients_with_valid_relationships': overview_row.patients_with_valid_relationships if overview_row and hasattr(overview_row, 'patients_with_valid_relationships') else 0,
+        'relationship_integrity_percentage': float(overview_row.relationship_integrity_percentage) if overview_row and hasattr(overview_row, 'relationship_integrity_percentage') and overview_row.relationship_integrity_percentage else 0.0
     } if overview_row else None
 
     # Get monthly registrations for chart

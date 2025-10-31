@@ -22,9 +22,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app \
+# Create docker group with common GID and non-root user
+# GID 999 is commonly used for docker group, but may vary
+RUN groupadd -g 999 docker || groupadd docker \
+    && useradd --create-home --shell /bin/bash app \
+    && usermod -aG docker app \
     && chown -R app:app /app
+
 USER app
 
 # Expose port

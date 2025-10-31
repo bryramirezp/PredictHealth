@@ -20,6 +20,7 @@
             line-height: 1.6;
         }
 
+        /* Header */
         .header {
             position: sticky;
             top: 0;
@@ -73,6 +74,7 @@
             border-color: #4dd9d6;
         }
 
+        /* Main Layout */
         .docs-container {
             display: flex;
             max-width: 1400px;
@@ -80,6 +82,7 @@
             min-height: calc(100vh - 65px);
         }
 
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: white;
@@ -130,6 +133,7 @@
             font-weight: 600;
         }
 
+        /* Content */
         .content {
             flex: 1;
             padding: 3rem;
@@ -138,31 +142,150 @@
             margin: 1rem;
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            text-align: center;
         }
 
-        .content h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #1d1d1d;
-            margin-bottom: 2rem;
+        .page-title {
             display: flex;
             align-items: center;
             gap: 1rem;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1d1d1d;
+            margin-bottom: 1.5rem;
         }
 
-        .construction-message {
-            font-size: 1.5rem;
-            color: #6b7280;
-            margin: 3rem 0;
+        .page-title .emoji {
+            font-size: 2.5rem;
         }
 
-        .construction-icon {
-            font-size: 4rem;
-            color: #4dd9d6;
+        .intro-text {
+            color: #4b5563;
+            font-size: 1.05rem;
+            margin-bottom: 3rem;
+            line-height: 1.7;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1d1d1d;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #1d1d1d;
+            margin-top: 2rem;
             margin-bottom: 1rem;
         }
 
+        p {
+            color: #4b5563;
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        ul {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #4b5563;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.7;
+        }
+
+        /* Tech Grid */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tech-card {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            border-color: #4dd9d6;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(77, 217, 214, 0.15);
+            background: white;
+        }
+
+        .tech-card h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1d1d1d;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tech-card p {
+            font-size: 0.95rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Code Block */
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            color: #e2e8f0;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e0f2f1;
+            color: #00897b;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer Note */
+        .footer-note {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .footer-note i {
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
             .docs-container {
                 flex-direction: column;
@@ -180,8 +303,24 @@
                 margin: 0.5rem;
             }
 
-            .content h1 {
+            .page-title {
                 font-size: 2rem;
+            }
+
+            .page-title .emoji {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -267,20 +406,182 @@
 
         <!-- Content -->
         <main class="content">
-            <h1>
-                <span style="font-size: 2rem;">🧩</span>
+            <h1 class="page-title">
+                <span class="emoji">🧩</span>
                 Componentes Frontend
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Los componentes son las piezas básicas que construyen la interfaz de usuario de PredictHealth.
+                Cada componente está diseñado para ser reutilizable y consistente en toda la aplicación.
+            </p>
+
+            <h2>¿Qué son los componentes?</h2>
+            <p>
+                Imagina que construir una aplicación web es como armar un rompecabezas. Los componentes
+                son las piezas individuales que encajan perfectamente para crear la imagen completa.
+                En lugar de dibujar cada pieza desde cero, usamos componentes prefabricados.
+            </p>
+
+            <h3>¿Por qué usar componentes?</h3>
+            <ul>
+                <li><strong>Reutilización:</strong> Un componente se puede usar en muchas páginas</li>
+                <li><strong>Consistencia:</strong> Todos los botones se ven igual</li>
+                <li><strong>Mantenimiento:</strong> Cambiar un componente actualiza toda la aplicación</li>
+                <li><strong>Velocidad:</strong> Los desarrolladores trabajan más rápido</li>
+            </ul>
+
+            <h2>Tipos de componentes</h2>
+
+            <h3>Componentes de navegación</h3>
+            <p>
+                Estos componentes ayudan a los usuarios a moverse por la aplicación. Incluyen menús,
+                barras de navegación y breadcrumbs.
+            </p>
+
+            <h3>Componentes de contenido</h3>
+            <p>
+                Muestran información al usuario. Incluyen tarjetas, tablas, listas y paneles de información.
+            </p>
+
+            <h3>Componentes de formulario</h3>
+            <p>
+                Permiten a los usuarios ingresar información. Incluyen campos de texto, selectores,
+                checkboxes y botones de envío.
+            </p>
+
+            <h3>Componentes de feedback</h3>
+            <p>
+                Informan al usuario sobre el estado de la aplicación. Incluyen mensajes de éxito,
+                error, carga y confirmaciones.
+            </p>
+
+            <h2>Componentes principales de PredictHealth</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-bars" style="color: #4dd9d6;"></i> Main Menu</h4>
+                    <p>Barra lateral de navegación con enlaces a todas las secciones.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-chart-bar" style="color: #667eea;"></i> Stat Cards</h4>
+                    <p>Tarjetas que muestran estadísticas importantes con iconos y números.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-table" style="color: #f59e0b;"></i> Data Tables</h4>
+                    <p>Tablas organizadas para mostrar listas de datos como pacientes o citas.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-edit" style="color: #8b5cf6;"></i> Form Components</h4>
+                    <p>Campos de entrada, selectores y validaciones para formularios.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-window-restore" style="color: #10b981;"></i> Modals</h4>
+                    <p>Ventanas emergentes para confirmaciones y información adicional.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-hand-pointer" style="color: #ef4444;"></i> Action Buttons</h4>
+                    <p>Botones para realizar acciones como guardar, editar o eliminar.</p>
+                </div>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Cómo crear un componente</h2>
+            <p>
+                Crear un componente es simple. Solo necesitas escribir el HTML con las clases CSS apropiadas.
+                Por ejemplo, para crear una tarjeta de estadísticas:
+            </p>
+
+            <pre><code>&lt;div class="stat-card"&gt;
+    &lt;div class="stat-icon appointments"&gt;
+        &lt;i class="fas fa-calendar-check"&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class="stat-number" id="appointments-count"&gt;2&lt;/div&gt;
+    &lt;div class="stat-label"&gt;Citas Programadas&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+            <h2>Convenciones de nomenclatura</h2>
+            <p>
+                Todos los componentes siguen reglas de nomenclatura consistentes para facilitar el mantenimiento:
+            </p>
+
+            <h3>Clases CSS</h3>
+            <ul>
+                <li><strong>kebab-case:</strong> Para nombres de clases (stat-card, main-menu)</li>
+                <li><strong>BEM:</strong> Block Element Modifier (stat-card__icon--active)</li>
+                <li><strong>Prefijos:</strong> Para evitar conflictos (btn-primary, text-muted)</li>
+            </ul>
+
+            <h3>IDs de elementos</h3>
+            <ul>
+                <li><strong>camelCase:</strong> Para identificadores únicos (patientName, appointmentsCount)</li>
+                <li><strong>Descriptivos:</strong> Deben explicar claramente su propósito</li>
+            </ul>
+
+            <h2>Componentes disponibles</h2>
+
+            <h3>Navegación</h3>
+            <div>
+                <span class="badge">main-menu</span>
+                <span class="badge">nav-item</span>
+                <span class="badge">breadcrumb</span>
+                <span class="badge">mobile-menu-btn</span>
             </div>
-        </main>
+
+            <h3>Contenido</h3>
+            <div>
+                <span class="badge">stat-card</span>
+                <span class="badge">welcome-section</span>
+                <span class="badge">activity-container</span>
+                <span class="badge">user-info</span>
+            </div>
+
+            <h3>Formularios</h3>
+            <div>
+                <span class="badge">form-group</span>
+                <span class="badge">input-field</span>
+                <span class="badge">select-field</span>
+                <span class="badge">checkbox-field</span>
+            </div>
+
+            <h3>Acciones</h3>
+            <div>
+                <span class="badge">btn</span>
+                <span class="badge">btn-primary</span>
+                <span class="badge">btn-secondary</span>
+                <span class="badge">logout-btn</span>
+            </div>
+
+            <h2>Buenas prácticas</h2>
+            <p>
+                Para mantener la calidad del código y la consistencia de la interfaz, seguimos estas prácticas:
+            </p>
+
+            <h3>Diseño</h3>
+            <ul>
+                <li>Usar siempre las variables CSS definidas</li>
+                <li>Mantener proporciones y espaciado consistente</li>
+                <li>Asegurar accesibilidad (contraste, tamaños de toque)</li>
+                <li>Probar en diferentes dispositivos y navegadores</li>
+            </ul>
+
+            <h3>Código</h3>
+            <ul>
+                <li>Separar HTML, CSS y JavaScript</li>
+                <li>Usar clases semánticas y descriptivas</li>
+                <li>Evitar estilos inline</li>
+                <li>Comentar código complejo</li>
+            </ul>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                Los componentes están diseñados siguiendo principios de usabilidad y accesibilidad para ofrecer la mejor experiencia posible.
+            </p>
+        </div>
     </div>
 </body>
 </html>

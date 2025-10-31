@@ -215,11 +215,11 @@
 <!-- Health Cards Grid -->
 <div class="health-cards-grid">
     {% if health_data %}
-        {% for service_key, service_data in health_data.items() %}
+            {% for service_key, service_data in health_data.items() %}
             {% set config = service_data.config %}
             {% set status = service_data.status %}
             {% set response_time = service_data.response_time %}
-            <div class="health-card {{ status }}">
+            <div class="health-card {{ status }}" onclick="showServiceDetails('{{ service_key }}')" style="cursor: pointer;">
                 <div class="health-card-header">
                     <div>
                         <h3 class="service-name">{{ config.name }}</h3>
@@ -227,7 +227,7 @@
                     </div>
                     <div class="status-indicator">
                         <span class="status-badge {{ status }}">
-                            {% if status == 'healthy' %}✓{% elif status == 'warning' %}⚠{% else %}✗{% endif %} {{ status.upper() }}
+                            {% if status == 'healthy' %}✓ RUNNING{% elif status == 'warning' %}⚠ WARNING{% else %}✗ ERROR{% endif %}
                         </span>
                     </div>
                 </div>
@@ -265,5 +265,289 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Service Details Modal -->
+<div class="modal fade" id="serviceDetailsModal" tabindex="-1" aria-labelledby="serviceDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="serviceDetailsModalLabel">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="service-name">Cargando...</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-loading" class="text-center py-4">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Obteniendo métricas detalladas...</p>
+                </div>
+
+                <div id="modal-content" style="display: none;">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3"><i class="bi bi-hdd me-2"></i>Información Básica</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr><td class="fw-semibold">Contenedor:</td><td id="detail-container-name">-</td></tr>
+                                <tr><td class="fw-semibold">Estado:</td><td id="detail-status">-</td></tr>
+                                <tr><td class="fw-semibold">Imagen:</td><td id="detail-image">-</td></tr>
+                                <tr><td class="fw-semibold">Creado:</td><td id="detail-created">-</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3"><i class="bi bi-cpu me-2"></i>Rendimiento</h6>
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <h4 class="text-success mb-1" id="cpu-usage">-</h4>
+                                            <small class="text-muted">CPU %</small>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-primary mb-1" id="memory-usage">-</h4>
+                                            <small class="text-muted">RAM %</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network & Storage -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-3"><i class="bi bi-wifi me-2"></i>Red (Network I/O)</h6>
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6 text-center">
+                                            <div class="mb-2">
+                                                <i class="bi bi-arrow-down text-success" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                            <h5 id="network-rx" class="mb-1">-</h5>
+                                            <small class="text-muted">Recibido</small>
+                                        </div>
+                                        <div class="col-6 text-center">
+                                            <div class="mb-2">
+                                                <i class="bi bi-arrow-up text-danger" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                            <h5 id="network-tx" class="mb-1">-</h5>
+                                            <small class="text-muted">Enviado</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning mb-3"><i class="bi bi-hdd me-2"></i>Disco (Disk I/O)</h6>
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6 text-center">
+                                            <div class="mb-2">
+                                                <i class="bi bi-file-earmark-arrow-down text-success" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                            <h5 id="disk-read" class="mb-1">-</h5>
+                                            <small class="text-muted">Lecturas</small>
+                                        </div>
+                                        <div class="col-6 text-center">
+                                            <div class="mb-2">
+                                                <i class="bi bi-file-earmark-arrow-up text-danger" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                            <h5 id="disk-write" class="mb-1">-</h5>
+                                            <small class="text-muted">Escrituras</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Environment Variables -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-secondary mb-3"><i class="bi bi-gear me-2"></i>Variables de Entorno (no sensibles)</h6>
+                            <div id="environment-vars" class="bg-light p-3 rounded">
+                                <!-- Environment variables will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Logs -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h6 class="text-dark mb-3"><i class="bi bi-terminal me-2"></i>Logs Recientes (últimas 20 líneas)</h6>
+                            <div id="recent-logs" class="bg-dark text-light p-3 rounded font-monospace" style="font-size: 0.8rem; max-height: 300px; overflow-y: auto;">
+                                <!-- Logs will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+// Function to format bytes
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Function to show service details modal
+async function showServiceDetails(serviceName) {
+    const modal = new bootstrap.Modal(document.getElementById('serviceDetailsModal'));
+    const modalContent = document.getElementById('modal-content');
+    const modalLoading = document.getElementById('modal-loading');
+    const serviceTitle = document.getElementById('service-name');
+
+    // Show loading state
+    modalContent.style.display = 'none';
+    modalLoading.style.display = 'block';
+    serviceTitle.textContent = `Cargando detalles de ${serviceName}...`;
+
+    // Show modal
+    modal.show();
+
+    try {
+        // Fetch detailed service data
+        const response = await fetch(`/monitoring/api/service-details/${serviceName}`);
+        const data = await response.json();
+
+        if (response.ok) {
+            // Update modal with data
+            document.getElementById('detail-container-name').textContent = data.container_name || 'N/A';
+            document.getElementById('detail-status').textContent = data.status || 'N/A';
+            document.getElementById('detail-image').textContent = data.image || 'N/A';
+            document.getElementById('detail-created').textContent = data.created ? new Date(data.created).toLocaleString() : 'N/A';
+
+            // CPU and Memory
+            document.getElementById('cpu-usage').textContent = `${data.cpu_percent || 0}%`;
+            document.getElementById('memory-usage').textContent = `${data.memory_percent || 0}%`;
+
+            // Network I/O
+            document.getElementById('network-rx').textContent = formatBytes(data.network_rx || 0);
+            document.getElementById('network-tx').textContent = formatBytes(data.network_tx || 0);
+
+            // Disk I/O
+            document.getElementById('disk-read').textContent = formatBytes(data.disk_read || 0);
+            document.getElementById('disk-write').textContent = formatBytes(data.disk_write || 0);
+
+            // Environment variables
+            const envContainer = document.getElementById('environment-vars');
+            if (data.environment && data.environment.length > 0) {
+                envContainer.innerHTML = '<div class="row">';
+                data.environment.forEach(env => {
+                    const envParts = env.split('=', 2);
+                    envContainer.innerHTML += `
+                        <div class="col-md-6 mb-2">
+                            <code class="text-primary">${envParts[0]}</code>=${envParts[1] || '***'}
+                        </div>
+                    `;
+                });
+                envContainer.innerHTML += '</div>';
+            } else {
+                envContainer.innerHTML = '<em class="text-muted">No hay variables de entorno disponibles</em>';
+            }
+
+            // Recent logs
+            const logsContainer = document.getElementById('recent-logs');
+            if (data.logs && data.logs.trim()) {
+                // Replace line breaks with HTML breaks
+                const formattedLogs = data.logs.replace(/\n/g, '<br>');
+                logsContainer.innerHTML = formattedLogs;
+            } else {
+                logsContainer.innerHTML = '<em class="text-warning">No se pudieron obtener los logs del contenedor</em>';
+            }
+
+            // Update service name in title
+            serviceTitle.textContent = `Detalles de ${data.container_name || serviceName}`;
+        } else {
+            throw new Error(data.error || 'Error al obtener datos del servicio');
+        }
+
+    } catch (error) {
+        console.error('Error loading service details:', error);
+        document.getElementById('service-name').textContent = `Error al cargar ${serviceName}`;
+        modalLoading.innerHTML = `
+            <div class="text-danger">
+                <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                <p class="mt-2">${error.message}</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Hide loading, show content
+    modalLoading.style.display = 'none';
+    modalContent.style.display = 'block';
+}
+
+// Add hover effect for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.health-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+    });
+});
+</script>
+
+<style>
+/* Additional styles for the detail modal */
+#environment-vars code {
+    font-size: 0.85rem;
+    background: rgba(0,123,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+#recent-logs {
+    font-size: 0.8rem !important;
+}
+
+.health-card {
+    transition: transform 0.2s ease;
+}
+
+.health-card:hover {
+    transform: translateY(-4px) !important;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Make sure modal is properly sized */
+.modal-xl .modal-dialog {
+    max-width: 95vw;
+}
+
+@media (max-width: 768px) {
+    .modal-xl .modal-dialog {
+        max-width: 98vw;
+        margin: 0.5rem;
+    }
+}
+</style>
 
 {% endblock %}

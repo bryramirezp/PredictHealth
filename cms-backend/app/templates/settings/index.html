@@ -115,55 +115,5 @@
         </div>
     </div>
 
-    <!-- System Statistics Sidebar -->
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">System Statistics</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="border rounded p-3 mb-3">
-                            <h3 class="text-primary">{{ stats.total_doctors }}</h3>
-                            <small class="text-muted">Doctors</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="border rounded p-3 mb-3">
-                            <h3 class="text-success">{{ stats.total_patients }}</h3>
-                            <small class="text-muted">Patients</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="border rounded p-3 mb-3">
-                            <h3 class="text-info">{{ stats.total_institutions }}</h3>
-                            <small class="text-muted">Institutions</small>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="border rounded p-3 mb-3">
-                            <div class="text-{{ 'success' if stats.db_status == 'Conectado' else 'danger' }}">
-                                <i class="fas fa-{{ 'check-circle' if stats.db_status == 'Conectado' else 'times-circle' }}"></i>
-                            </div>
-                            <small class="text-muted">Database</small>
-                        </div>
-                    </div>
-                </div>
-
-                <hr>
-
-                <div class="mb-2">
-                    <strong>PostgreSQL Version:</strong><br>
-                    <small class="text-muted">{{ stats.db_version }}</small>
-                </div>
-
-                <div class="mb-2">
-                    <strong>Last Updated:</strong><br>
-                    <small class="text-muted">{{ settings.get('updated_at', 'Never') }}</small>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}

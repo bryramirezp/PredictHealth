@@ -74,10 +74,65 @@ def patient_dashboard_page():
     """Panel principal del paciente."""
     return render_template('patient/patient_dashboard.html')
 
+@app.route('/patient_medical_record.html')
+def patient_medical_record_page():
+    """Expediente médico del paciente."""
+    return render_template('patient/patient_medical_record.html')
+
+@app.route('/patient_appointments.html')
+def patient_appointments_page():
+    """Citas médicas del paciente."""
+    return render_template('patient/patient_appointments.html')
+
+@app.route('/patient_lifestyle.html')
+def patient_lifestyle_page():
+    """Hábitos de vida del paciente."""
+    return render_template('patient/patient_lifestyle.html')
+
+@app.route('/patient_measurements.html')
+def patient_measurements_page():
+    """Medidas y métricas del paciente."""
+    return render_template('patient/patient_measurements.html')
+
+@app.route('/patient_notifications.html')
+def patient_notifications_page():
+    """Notificaciones del paciente."""
+    return render_template('patient/patient_notifications.html')
+
+@app.route('/patient_recommendations.html')
+def patient_recommendations_page():
+    """Recomendaciones personalizadas del paciente."""
+    return render_template('patient/patient_recommendations.html')
+
+@app.route('/patient_profile.html')
+def patient_profile_page():
+    """Perfil del paciente."""
+    return render_template('patient/patient_user_profile.html')
+
 @app.route('/doctor_dashboard.html')
 def doctor_dashboard_page():
     """Panel principal del doctor."""
-    return render_template('doctor/doctor_dashboard.html')
+    return render_template('doctor/index.html')
+
+@app.route('/doctor/mi-jornada')
+def doctor_mi_jornada_page():
+    """Página de Mi Jornada del doctor."""
+    return render_template('doctor/mi-jornada.html')
+
+@app.route('/doctor/mis-pacientes')
+def doctor_mis_pacientes_page():
+    """Página de Mis Pacientes del doctor."""
+    return render_template('doctor/mis_pacientes.html')
+
+@app.route('/doctor/estadisticas')
+def doctor_estadisticas_page():
+    """Página de Estadísticas del doctor."""
+    return render_template('doctor/estadisticas.html')
+
+@app.route('/doctor/configuracion')
+def doctor_configuracion_page():
+    """Página de Configuración del doctor."""
+    return render_template('doctor/configuracion.html')
 
 @app.route('/register_patient.html')
 def register_patient_page():
@@ -98,6 +153,16 @@ def institution_doctors_page():
 def institution_patients_page():
     """Página de visualización de pacientes para instituciones."""
     return render_template('institution/institution_patients.html')
+
+@app.route('/institution/analytics')
+def institution_analytics_page():
+    """Página de analíticas para instituciones."""
+    return render_template('institution/institution_analytics.html')
+
+@app.route('/institution/settings')
+def institution_settings_page():
+    """Página de configuración para instituciones."""
+    return render_template('institution/institution_settings.html')
 
 @app.route('/admin_dashboard.html')
 def admin_dashboard_page():

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, action_card, status_badge, confirm_dialog, modal %}
+{% from "dashboard/widgets.html" import data_table, pagination, search_form, filter_dropdown, filter_dropdown_with_sort, action_card, status_badge, confirm_dialog, modal %}
 
 {% block title %}Patients Management - PredictHealth CMS{% endblock %}
 
@@ -358,13 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             {{ filter_dropdown('Institution', 'institution', institutions, request.args.get('institution')) }}
 
-            {{ filter_dropdown('Validation Status', 'validation_status', [
-                {'value': 'pending', 'text': 'Pending'},
-                {'value': 'doctor_validated', 'text': 'Doctor Validated'},
-                {'value': 'institution_validated', 'text': 'Institution Validated'},
-                {'value': 'full_access', 'text': 'Full Access'}
-            ], request.args.get('validation_status')) }}
-
             {{ filter_dropdown('Gender', 'gender', [
                 {'value': 'male', 'text': 'Male'},
                 {'value': 'female', 'text': 'Female'},
@@ -385,6 +378,32 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </form>
 </div>
+
+<!-- Sort Options -->
+<div class="mt-3">
+    <h6 class="mb-3">Sort Options</h6>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="form-label">Sort by</label>
+                <select name="sort_by" class="form-control">
+                    <option value="">Default</option>
+                    <option value="name" {{ 'selected' if request.args.get('sort_by') == 'name' else '' }}>Name</option>
+                    <option value="date_of_birth" {{ 'selected' if request.args.get('sort_by') == 'date_of_birth' else '' }}>Date of Birth</option>
+                    <option value="gender" {{ 'selected' if request.args.get('sort_by') == 'gender' else '' }}>Gender</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="form-label">Order</label>
+                <select name="sort_order" class="form-control">
+                    <option value="asc" {{ 'selected' if request.args.get('sort_order') == 'asc' else '' }}>A to Z</option>
+                    <option value="desc" {{ 'selected' if request.args.get('sort_order') == 'desc' else '' }}>Z to A</option>
+                </select>
+            </div>
+        </div>
+    </div>
 
 <!-- View Toggle -->
 <div class="view-toggle">
@@ -407,10 +426,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Date of Birth</th>
+                    <th>Biological Sex</th>
                     <th>Gender</th>
                     <th>Doctor</th>
                     <th>Institution</th>
-                    <th>Validation Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -425,20 +444,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                     <td>{{ patient.email }}</td>
                     <td>{{ patient.date_of_birth.strftime('%b %d, %Y') if patient.date_of_birth else '-' }}</td>
-                    <td>{{ patient.gender.title() if patient.gender else '-' }}</td>
+                    <td>{{ patient.biological_sex or 'N/A' }}</td>
+                    <td>{{ patient.gender_identity or (patient.gender.title() if patient.gender else '-') }}</td>
                     <td class="doctor-cell">{{ patient.doctor_name or 'Not assigned' }}</td>
                     <td>{{ patient.institution_name or 'Not assigned' }}</td>
-                    <td class="status-cell">
-                        {% if patient.validation_status == 'pending' %}
-                            <span class="badge bg-warning">Pending</span>
-                        {% elif patient.validation_status == 'doctor_validated' %}
-                            <span class="badge bg-info">Doctor Validated</span>
-                        {% elif patient.validation_status == 'institution_validated' %}
-                            <span class="badge bg-primary">Institution Validated</span>
-                        {% else %}
-                            <span class="badge bg-success">Full Access</span>
-                        {% endif %}
-                    </td>
                     <td>
                         <div class="entity-actions">
                             <a href="{{ url_for('entities.view_patient', patient_id=patient.id) }}" class="btn btn-outline-info btn-sm" title="View Details">
@@ -489,20 +498,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h3 class="entity-name">{{ patient.first_name }} {{ patient.last_name }}</h3>
                         <p class="entity-specialty">{{ patient.email }}</p>
                     </div>
-                    {% if patient.validation_status == 'full_access' %}
-                        <span class="badge bg-success">Full Access</span>
-                    {% elif patient.validation_status == 'institution_validated' %}
-                        <span class="badge bg-primary">Institution Validated</span>
-                    {% elif patient.validation_status == 'doctor_validated' %}
-                        <span class="badge bg-info">Doctor Validated</span>
-                    {% else %}
-                        <span class="badge bg-warning">Pending</span>
-                    {% endif %}
                 </div>
 
                 <div class="entity-meta">
                     <span><i class="bi bi-calendar me-1"></i>{{ patient.date_of_birth.strftime('%b %d, %Y') if patient.date_of_birth else 'No DOB' }}</span>
-                    <span><i class="bi bi-gender-{{ 'male' if patient.gender == 'male' else 'female' if patient.gender == 'female' else 'ambiguous' }} me-1"></i>{{ patient.gender.title() if patient.gender else 'Not specified' }}</span>
+                    <span><i class="bi bi-person me-1"></i>{{ patient.biological_sex or 'N/A' }}</span>
+                    <span><i class="bi bi-gender-{{ 'male' if patient.gender == 'male' else 'female' if patient.gender == 'female' else 'ambiguous' }} me-1"></i>{{ patient.gender_identity or (patient.gender.title() if patient.gender else 'Not specified') }}</span>
                     <span><i class="bi bi-telephone me-1"></i>{{ patient.phone or 'No phone' }}</span>
                 </div>
 

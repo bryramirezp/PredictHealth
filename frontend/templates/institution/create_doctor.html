@@ -1,174 +1,158 @@
-<!-- /frontend\templates\create_doctor.html -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Doctor - Institución</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .form-container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #34495e;
-        }
-        input[type="text"], input[type="email"], input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            display: none;
-        }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .instructions {
-            background-color: #e8f4fd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
-        }
-    </style>
-</head>
-<body>
+{% extends "institution/base_institution.html" %}
+
+{% block title %}Crear Doctor - PredictHealth Institución{% endblock %}
+
+{% block page_title %}Crear Nuevo Doctor{% endblock %}
+{% block page_subtitle %}Registra un nuevo profesional médico en tu institución{% endblock %}
+
+{% block current_page %}doctors{% endblock %}
+
+{% block head_extra %}{% endblock %}
+
+{% block content %}
+<div class="create-doctor-content">
     <div class="form-container">
-        <h1>🏥 Crear Doctor para Institución</h1>
-        
+        <h2 class="form-title">🏥 Crear Nuevo Doctor</h2>
+
         <div class="instructions">
-            <strong>Instrucciones:</strong>
+            <h4>Instrucciones para crear doctor</h4>
             <ol>
                 <li>Asegúrate de estar logueado como institución</li>
-                <li>Completa todos los campos requeridos</li>
-                <li>El doctor será creado y asociado a tu institución</li>
+                <li>Completa todos los campos requeridos marcados con *</li>
+                <li>El doctor será creado y asociado automáticamente a tu institución</li>
+                <li>Se enviará un email de confirmación al doctor creado</li>
             </ol>
         </div>
-        
+
         <div id="alert" class="alert"></div>
-        
-        <form id="doctorForm" action="/institution/doctors" method="POST">
-            <div class="form-group">
-                <label for="nombre">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" required>
+
+        <form id="doctorForm" action="{{ url_for('web.institution_create_doctor') }}" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="nombre">Nombre *</label>
+                    <input type="text" id="nombre" name="nombre" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="apellido">Apellido *</label>
+                    <input type="text" id="apellido" name="apellido" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email *</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="licencia_medica">Licencia Médica *</label>
+                    <input type="text" id="licencia_medica" name="licencia_medica" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="especialidad">Especialidad</label>
+                    <input type="text" id="especialidad" name="especialidad" class="form-input"
+                           placeholder="Ej: Cardiología, Neurología, Pediatría, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" class="form-input"
+                           placeholder="+52 55 1234 5678">
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="password">Contraseña *</label>
+                    <input type="password" id="password" name="password" class="form-input"
+                           required minlength="8" placeholder="Mínimo 8 caracteres">
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="confirm_password">Confirmar Contraseña *</label>
+                    <input type="password" id="confirm_password" name="confirm_password"
+                           class="form-input" required minlength="8">
+                </div>
             </div>
-            
-            <div class="form-group">
-                <label for="apellido">Apellido:</label>
-                <input type="text" id="apellido" name="apellido" required>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Crear Doctor
+                </button>
+                <a href="{{ url_for('web.institution_get_doctors') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
             </div>
-            
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="licencia_medica">Licencia Médica:</label>
-                <input type="text" id="licencia_medica" name="licencia_medica" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="especialidad">Especialidad:</label>
-                <input type="text" id="especialidad" name="especialidad" placeholder="Ej: Cardiología, Neurología, etc.">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            
-            <button type="submit">Crear Doctor</button>
         </form>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        document.getElementById('doctorForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const alertDiv = document.getElementById('alert');
-            
-            fetch('/institution/doctors', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    showAlert('Doctor creado exitosamente!', 'success');
-                    document.getElementById('doctorForm').reset();
-                } else {
-                    return response.text().then(text => {
-                        showAlert('Error al crear doctor: ' + text, 'error');
-                    });
-                }
-            })
-            .catch(error => {
-                showAlert('Error de conexión: ' + error.message, 'error');
-            });
-        });
-        
-        function showAlert(message, type) {
-            const alertDiv = document.getElementById('alert');
-            alertDiv.textContent = message;
-            alertDiv.className = 'alert alert-' + type;
-            alertDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                alertDiv.style.display = 'none';
-            }, 5000);
+{% block scripts_extra %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('doctorForm');
+    const alertDiv = document.getElementById('alert');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate passwords match
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (password !== confirmPassword) {
+            showAlert('Las contraseñas no coinciden', 'error');
+            return;
         }
-    </script>
-</body>
-</html>
+
+        const formData = new FormData(this);
+
+        fetch('/api/web/institution/doctors', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                showAlert('¡Doctor creado exitosamente! Se ha enviado un email de confirmación.', 'success');
+                form.reset();
+                // Redirect after success
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("web.institution_get_doctors") }}';
+                }, 2000);
+            } else {
+                return response.json().then(data => {
+                    showAlert('Error al crear doctor: ' + (data.message || 'Error desconocido'), 'error');
+                });
+            }
+        })
+        .catch(error => {
+            showAlert('Error de conexión: ' + error.message, 'error');
+        });
+    });
+
+    // Password confirmation validation
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+
+        if (confirmPassword && password !== confirmPassword) {
+            this.setCustomValidity('Las contraseñas no coinciden');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+});
+
+function showAlert(message, type) {
+    const alertDiv = document.getElementById('alert');
+    alertDiv.textContent = message;
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.style.display = 'block';
+
+    setTimeout(() => {
+        alertDiv.style.display = 'none';
+    }, 5000);
+}
+</script>
+{% endblock %}

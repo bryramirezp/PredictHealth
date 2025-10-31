@@ -1,0 +1,29 @@
+{% extends "patient/base_patient.html" %}
+
+{% block title %}Notificaciones — PredictHealth{% endblock %}
+
+{% block breadcrumb %}Notificaciones{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}" />
+<script src="{{ url_for('static', filename='js/notifications.js') }}" defer></script>
+{% endblock %}
+
+{% block content %}
+<main class="container card">
+      <h1>Notificaciones y recordatorios</h1>
+      <div id="notificationsList" class="list">
+        <div class="empty">
+          No hay notificaciones por ahora. (Placeholder para integración con
+          Firebase)
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnAddMock" class="btn primary">
+          Añadir recordatorio demo
+        </button>
+        <a class="btn ghost" href="user_dashboard.html">Volver al panel</a>
+      </div>
+</main>
+{% endblock %}

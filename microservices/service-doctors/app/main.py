@@ -7,7 +7,9 @@ from app.api.v1.endpoints import doctors
 app = FastAPI(
     title='Doctors Service',
     description='API para gestión de doctores médicos',
-    version='1.0.0'
+    version='1.0.0',
+    docs_url='/docs',
+    redoc_url='/redoc'
 )
 
 # Configure CORS
@@ -29,7 +31,9 @@ def root():
         'version': '1.0.0',
         'endpoints': {
             'doctors': '/api/v1/doctors',
-            'health': '/health'
+            'health': '/health',
+            'swagger_ui': '/docs',
+            'redoc': '/redoc'
         }
     }
 

@@ -91,11 +91,23 @@
 
           <div class="form-row">
             <div class="form-group">
+              <label for="sex_id" class="form-label">Biological Sex</label>
+              <select id="sex_id" name="sex_id" class="form-control">
+                <option value="">Select sex...</option>
+                <option value="1" {{ 'selected' if doctor.sex_id == 1 else '' }}>Male</option>
+                <option value="2" {{ 'selected' if doctor.sex_id == 2 else '' }}>Female</option>
+                <option value="3" {{ 'selected' if doctor.sex_id == 3 else '' }}>Intersex</option>
+              </select>
+            </div>
+
+            <div class="form-group">
               <label for="years_experience" class="form-label">Years of Experience</label>
               <input type="number" id="years_experience" name="years_experience" class="form-control" min="0" max="80" value="{{ doctor.years_experience or 0 }}">
               <div class="invalid-feedback">Years of experience cannot be negative.</div>
             </div>
+          </div>
 
+          <div class="form-row">
             <div class="form-group">
               <label for="consultation_fee" class="form-label">Consultation Fee ($)</label>
               <input type="number" id="consultation_fee" name="consultation_fee" class="form-control" min="0" max="10000" step="0.01" value="{{ doctor.consultation_fee or '' }}">

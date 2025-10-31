@@ -6,9 +6,14 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'cms-secret-key-change-in-production')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL',
-        'postgresql://predictHealth_user:password@postgres:5432/predicthealth_db')
+        'postgresql://predictHealth_user:password@postgres:5432/predicthealth_db?client_encoding=utf8')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    
+    # Encoding configuration
+    JSON_AS_ASCII = False
+    JSON_SORT_KEYS = False
+    JSONIFY_PRETTYPRINT_REGULAR = True
 
     # Flask-Login settings
     LOGIN_VIEW = 'auth.login'

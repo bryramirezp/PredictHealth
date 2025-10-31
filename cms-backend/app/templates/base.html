@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}{{ cms_title }}{% endblock %}</title>
@@ -420,7 +421,6 @@
                 <span class="sidebar-logo-text">{{ cms_title }}</span>
             </div>
             <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <i class="bi bi-chevron-left"></i>
             </button>
         </div>
 
@@ -552,7 +552,7 @@
     <!-- Custom JavaScript -->
     <script>
         // Sidebar toggle functionality
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
+        function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
 
@@ -562,7 +562,10 @@
             // Save preference
             const collapsed = sidebar.classList.contains('collapsed');
             localStorage.setItem('sidebarCollapsed', collapsed);
-        });
+        }
+
+        // Original sidebar toggle (inside sidebar)
+        document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
 
         // Mobile sidebar toggle
         document.getElementById('mobileSidebarToggle').addEventListener('click', function() {

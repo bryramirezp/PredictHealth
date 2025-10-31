@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PredictHealth Institución{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/institution.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu" role="navigation" aria-label="Main navigation">
+        <div class="logo-container">
+            <div class="logo-icon">
+                <i class="fas fa-hospital"></i>
+            </div>
+            <div class="logo-text">PredictHealth</div>
+            <div class="institution-badge">
+                <i class="fas fa-building"></i>
+                <span id="institutionType">Institución</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu" role="list">
+            <li class="nav-item" data-page="dashboard">
+                <a href="{{ url_for('web.institution_dashboard') }}" id="navDashboard">
+                    <i class="fa fa-house nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="doctors">
+                <a href="/institution/doctors" id="navDoctors">
+                    <i class="fa fa-user-md nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Doctores</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="patients">
+                <a href="/institution/patients" id="navPatients">
+                    <i class="fa fa-users nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Pacientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="analytics">
+                <a href="/institution/analytics" id="navAnalytics">
+                    <i class="fa fa-chart-bar nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Analíticas</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="settings">
+                <a href="/institution/settings" id="navSettings">
+                    <i class="fa fa-cog nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Configuración</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- User Profile Section -->
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="user-avatar" role="img" aria-label="Institution avatar">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name" id="institutionName">Institución</div>
+                    <div class="user-role">Administrador</div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="content">
+        <!-- Content Header -->
+        <div class="content-header">
+            <div class="page-info">
+                <h1>{% block page_title %}Dashboard Institucional{% endblock %}</h1>
+                <p>{% block page_subtitle %}Vista general de tu institución médica{% endblock %}</p>
+            </div>
+            <div class="header-actions">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p>Cargando datos de institución...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error de carga</h3>
+                <p>No se pudieron cargar los datos de la institución. Inténtalo de nuevo.</p>
+                <button onclick="loadInstitutionData()" class="btn btn-primary">Reintentar</button>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </section>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="showQuickActions()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Global variables
+        let institutionData = {};
+        let currentPage = '{% block current_page %}dashboard{% endblock %}';
+
+        // Logout functionality
+        async function handleLogout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Error en logout:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Error de conexión en logout:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
+                }
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadInstitutionData();
+            setupEventListeners();
+            updateActiveNavigation();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Handle mobile menu toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Set active navigation item
+            updateActiveNavigation();
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('mainContent');
+
+            menu.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+        }
+
+        // Load institution data
+        async function loadInstitutionData() {
+            try {
+                const response = await fetch('/api/web/institution/dashboard', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    institutionData = data.data || {};
+                    updateInstitutionInfo(institutionData);
+                    return data;
+                } else if (response.status === 401) {
+                    window.location.href = '/institution_login.html';
+                    return null;
+                } else {
+                    console.error('Error loading institution data:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error loading institution data:', error);
+                return null;
+            }
+        }
+
+        // Update institution information in UI
+        function updateInstitutionInfo(data) {
+            if (data.institution) {
+                document.getElementById('institutionName').textContent = data.institution.nombre || 'Institución';
+                document.getElementById('institutionType').textContent = data.institution.tipo_institucion || 'Institución';
+            }
+        }
+
+        // Update active navigation
+        function updateActiveNavigation() {
+            // Remove active class from all items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Add active class to current page
+            const activeItem = document.querySelector(`[data-page="${currentPage}"]`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+
+        // Utility functions
+        function showLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'block';
+            if (error) error.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function hideLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'block';
+        }
+
+        function showErrorState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'block';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            menu.classList.toggle('show');
+            content.classList.toggle('mobile-menu-open');
+        }
+
+        // Placeholder functions for actions
+        function showQuickActions() {
+            alert('Acciones rápidas próximamente disponible');
+        }
+
+        function refreshData() {
+            // This function will be overridden by specific page scripts if needed
+            console.log('refreshData called from base_institution.html');
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'active': 'Activo',
+                'inactive': 'Inactivo',
+                'pending': 'Pendiente',
+                'completed': 'Completado'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>

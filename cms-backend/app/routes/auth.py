@@ -19,25 +19,18 @@ def login():
             flash('Please provide both email and password.', 'danger')
             return render_template('auth/login.html')
 
+        # Only authenticate CMS users (admin/editor) from cms_users table
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            # Determine user role by checking admin_cms and editor_cms tables
-            admin_cms = AdminCMS.query.filter_by(user_id=user.id).first()
-            editor_cms = EditorCMS.query.filter_by(user_id=user.id).first()
-
-            user_role = None
-            if admin_cms:
-                user_role = 'admin'
+            # Determine user role by checking user_type field
+            if user.user_type == 'admin':
                 session['user_role'] = 'admin'
                 session['role_display'] = 'Administrator'
-            elif editor_cms:
-                user_role = 'editor'
+            elif user.user_type == 'editor':
                 session['user_role'] = 'editor'
                 session['role_display'] = 'Editor'
             else:
-                # Default role if not found in role tables
-                user_role = 'user'
                 session['user_role'] = 'user'
                 session['role_display'] = 'User'
 

@@ -70,13 +70,14 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="institution_id" class="form-label">Medical Institution</label>
-              <select id="institution_id" name="institution_id" class="form-control">
+              <label for="institution_id" class="form-label">Medical Institution *</label>
+              <select id="institution_id" name="institution_id" class="form-control" required>
                 <option value="">Select institution...</option>
                 {% for institution in institutions %}
                 <option value="{{ institution.id }}">{{ institution.name }}</option>
                 {% endfor %}
               </select>
+              <div class="invalid-feedback">Medical institution is required.</div>
             </div>
 
             <div class="form-group">
@@ -91,11 +92,23 @@
 
           <div class="form-row">
             <div class="form-group">
+              <label for="sex_id" class="form-label">Biological Sex</label>
+              <select id="sex_id" name="sex_id" class="form-control">
+                <option value="">Select sex...</option>
+                <option value="1">Male</option>
+                <option value="2">Female</option>
+                <option value="3">Intersex</option>
+              </select>
+            </div>
+
+            <div class="form-group">
               <label for="years_experience" class="form-label">Years of Experience</label>
               <input type="number" id="years_experience" name="years_experience" class="form-control" min="0" max="80" value="0">
               <div class="invalid-feedback">Years of experience cannot be negative.</div>
             </div>
+          </div>
 
+          <div class="form-row">
             <div class="form-group">
               <label for="consultation_fee" class="form-label">Consultation Fee ($)</label>
               <input type="number" id="consultation_fee" name="consultation_fee" class="form-control" min="0" max="10000" step="0.01">

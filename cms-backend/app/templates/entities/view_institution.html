@@ -2,83 +2,473 @@
 
 {% block title %}Institution Details - PredictHealth CMS{% endblock %}
 
-{% block page_title %}Institution Details{% endblock %}
-
-{% block page_subtitle %}View detailed information about {{ institution.name }}{% endblock %}
-
 {% block content %}
-<div class="row">
-  <div class="col-lg-8">
-    <div class="entity-card">
-      <div class="entity-header-row">
-        <div>
-          <h3 class="entity-name">{{ institution.name }}</h3>
-          <p class="entity-specialty">{{ institution.institution_type.replace('_', ' ').title() }}</p>
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('entities.institutions') }}">Instituciones</a></li>
+    <li class="breadcrumb-item active">{{ institution.name }}</li>
+  </ol>
+</nav>
+
+<!-- Profile Header -->
+<div class="cms-card profile-header-card mb-4">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-4 flex-wrap">
+      <!-- Avatar -->
+      <div class="profile-avatar bg-info text-white rounded-circle d-flex align-items-center justify-content-center">
+        <span class="h4 mb-0">{{ institution.name[0].upper() }}</span>
+      </div>
+
+      <!-- Profile Info -->
+      <div class="flex-grow-1">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div>
+            <h2 class="mb-1">{{ institution.name }}</h2>
+            <p class="text-muted mb-2">{{ institution.institution_type.replace('_', ' ').title() }}</p>
+            {% if institution.region_state %}
+              <span><i class="bi bi-geo-alt me-1"></i>{{ institution.region_state }}, México</span>
+            {% endif %}
+          </div>
+
+          <!-- Status Badges -->
+          <div class="ms-auto d-flex gap-2">
+            {% if institution.is_active %}
+              <span class="badge bg-success fs-6 px-3 py-2">
+                <i class="bi bi-check-circle me-1"></i>Activa
+              </span>
+            {% else %}
+              <span class="badge bg-secondary fs-6 px-3 py-2">
+                <i class="bi bi-x-circle me-1"></i>Inactiva
+              </span>
+            {% endif %}
+            {% if institution.is_verified %}
+              <span class="badge bg-info fs-6 px-3 py-2">
+                <i class="bi bi-shield-check me-1"></i>Verificada
+              </span>
+            {% else %}
+              <span class="badge bg-warning fs-6 px-3 py-2">
+                <i class="bi bi-shield-x me-1"></i>No Verificada
+              </span>
+            {% endif %}
+          </div>
         </div>
-        {% if institution.is_active %}
-          <span class="badge bg-success">Active</span>
-        {% else %}
-          <span class="badge bg-secondary">Inactive</span>
-        {% endif %}
-      </div>
-
-      <div class="entity-meta">
-        {% if institution.contact_email %}
-          <span><i class="bi bi-envelope me-1"></i>{{ institution.contact_email }}</span>
-        {% endif %}
-        {% if institution.phone %}
-          <span><i class="bi bi-telephone me-1"></i>{{ institution.phone }}</span>
-        {% endif %}
-        {% if institution.region_state %}
-          <span><i class="bi bi-geo-alt me-1"></i>{{ institution.region_state }}</span>
-        {% endif %}
-      </div>
-
-      <div class="entity-stats">
-        {% if institution.license_number %}
-          <span><i class="bi bi-upc me-1"></i>License: {{ institution.license_number }}</span>
-        {% endif %}
-        {% if institution.is_verified %}
-          <span><i class="bi bi-shield-check me-1"></i>Verified</span>
-        {% else %}
-          <span><i class="bi bi-shield-x me-1"></i>Not Verified</span>
-        {% endif %}
-        <span><i class="bi bi-calendar me-1"></i>Joined: {{ institution.created_at.strftime('%B %d, %Y') if institution.created_at else 'Unknown' }}</span>
-      </div>
-
-      {% if institution.address %}
-      <div class="entity-meta">
-        <span><i class="bi bi-house me-1"></i>{{ institution.address }}</span>
-      </div>
-      {% endif %}
-
-      {% if institution.website %}
-      <div class="entity-meta">
-        <span><i class="bi bi-globe me-1"></i><a href="{{ institution.website }}" target="_blank">{{ institution.website }}</a></span>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="col-lg-4">
-    <div class="entity-card">
-      <h5>Actions</h5>
-      <div class="d-grid gap-2">
-        <a href="{{ url_for('entities.edit_institution', institution_id=institution.id) }}" class="btn btn-primary">
-          <i class="bi bi-pencil me-1"></i>Edit Institution
-        </a>
-        <form action="{{ url_for('entities.delete_institution', institution_id=institution.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this institution? This action cannot be undone.')">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <button type="submit" class="btn btn-danger w-100">
-            <i class="bi bi-trash me-1"></i>Delete Institution
-          </button>
-        </form>
-        <hr>
-        <a href="{{ url_for('entities.institutions') }}" class="btn btn-secondary">
-          <i class="bi bi-arrow-left me-1"></i>Back to Institutions
-        </a>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ institution.doctor_count | default(0) }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-person-check me-1"></i>Doctores
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ institution.patient_count | default(0) }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-people me-1"></i>Pacientes
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">
+          {% set anios_op = institution.years_since_creation | default(0) %}
+          {% if anios_op > 0 %}{{ anios_op }}{% else %}N/A{% endif %}
+        </h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-calendar-star me-1"></i>Años Op.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-3">
+    <div class="cms-card stats-card text-center">
+      <div class="card-body">
+        <h4 class="mb-1">{{ institution.specialty_count | default(0) }}</h4>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-star me-1"></i>Especialidades
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content with Tabs -->
+<div class="row">
+  <div class="col-lg-8">
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-3" id="institutionTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+          <i class="bi bi-building me-1"></i>Perfil
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="facilities-tab" data-bs-toggle="tab" data-bs-target="#facilities" type="button" role="tab">
+          <i class="bi bi-hospital me-1"></i>Instalaciones
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
+          <i class="bi bi-telephone me-1"></i>Contacto
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="institutionTabsContent">
+      <!-- Profile Tab -->
+      <div class="tab-pane fade show active" id="profile" role="tabpanel">
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-building-check me-2"></i>Información Legal y General</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Nombre de la Institución</h6>
+                <p class="mb-0">{{ institution.name }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Tipo de Institución</h6>
+                <p class="mb-0">{{ institution.institution_type.replace('_', ' ').title() }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Número de Licencia</h6>
+                <p class="mb-0">{{ institution.license_number or 'No especificada' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Estado</h6>
+                <p class="mb-0">{{ 'Activa' if institution.is_active else 'Inactiva' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Estado de Verificación</h6>
+                <p class="mb-0">{{ 'Verificada' if institution.is_verified else 'No verificada' }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Fecha de Registro</h6>
+                <p class="mb-0">{{ institution.created_at.strftime('%d/%m/%Y') if institution.created_at else 'Desconocida' }}</p>
+              </div>
+              {% if institution.website %}
+              <div class="col-md-6 mb-3">
+                <h6>Sitio Web</h6>
+                <p class="mb-0">
+                  <a href="{{ institution.website }}" target="_blank">
+                    <i class="bi bi-globe me-1"></i>{{ institution.website }}
+                  </a>
+                </p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Facilities Tab -->
+      <div class="tab-pane fade" id="facilities" role="tabpanel">
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-hospital me-2"></i>Instalaciones y Capacidad</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% if institution.address %}
+              <div class="col-md-12 mb-3">
+                <h6>Dirección</h6>
+                <p class="mb-0">
+                  <i class="bi bi-geo-alt me-1"></i>{{ institution.address }}
+                </p>
+              </div>
+              {% endif %}
+              {% if institution.region_state %}
+              <div class="col-md-6 mb-3">
+                <h6>Estado</h6>
+                <p class="mb-0">{{ institution.region_state }}</p>
+              </div>
+              {% endif %}
+              {% if institution.country %}
+              <div class="col-md-6 mb-3">
+                <h6>País</h6>
+                <p class="mb-0">México</p>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Facilities Info -->
+            <div class="mt-4">
+              <h6 class="mb-3">Servicios y Especialidades</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="facility-item mb-2">
+                    <i class="bi bi-person-check text-primary me-2"></i>
+                    <strong>{{ institution.doctor_count | default(0) }}</strong> Doctores afiliados
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="facility-item mb-2">
+                    <i class="bi bi-people text-success me-2"></i>
+                    <strong>{{ institution.patient_count | default(0) }}</strong> Pacientes atendidos
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="facility-item mb-2">
+                    <i class="bi bi-star text-warning me-2"></i>
+                    <strong>{{ institution.specialty_count | default(0) }}</strong> Especialidades médicas
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="facility-item mb-2">
+                    <i class="bi bi-calendar-check text-info me-2"></i>
+                    <strong>{{ institution.years_since_creation | default(0) }}</strong> Años de operación
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Tab -->
+      <div class="tab-pane fade" id="contact" role="tabpanel">
+        <div class="cms-card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Información de Contacto</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% if institution.contact_email %}
+              <div class="col-md-6 mb-3">
+                <h6>Correo Electrónico Principal</h6>
+                <p class="mb-0">
+                  <i class="bi bi-envelope me-1"></i>
+                  <a href="mailto:{{ institution.contact_email }}">{{ institution.contact_email }}</a>
+                </p>
+              </div>
+              {% endif %}
+              {% if institution.phone %}
+              <div class="col-md-6 mb-3">
+                <h6>Teléfono Principal</h6>
+                <p class="mb-0">
+                  <i class="bi bi-telephone me-1"></i>{{ institution.phone }}
+                </p>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if institution.region_state or institution.address %}
+            <div class="mt-4">
+              <h6 class="mb-3">Información Adicional</h6>
+              <div class="row">
+                {% if institution.region_state %}
+                <div class="col-md-6 mb-2">
+                  <div class="additional-info">
+                    <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                    <strong>{{ institution.region_state }}, México</strong>
+                  </div>
+                </div>
+                {% endif %}
+                {% if institution.website %}
+                <div class="col-md-6 mb-2">
+                  <div class="additional-info">
+                    <i class="bi bi-globe text-info me-2"></i>
+                    <a href="{{ institution.website }}" target="_blank">Visitar sitio web</a>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if not institution.contact_email and not institution.phone %}
+            <div class="text-center py-4">
+              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+              <h5 class="mt-3 text-muted">Información de Contacto Incompleta</h5>
+              <p class="text-muted">Esta institución aún no tiene información de contacto registrada.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Sidebar -->
+  <div class="col-lg-4">
+    <div class="cms-card">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-gear me-1"></i>Acciones</h6>
+      </div>
+      <div class="card-body d-grid gap-2">
+        <a href="{{ url_for('entities.edit_institution', institution_id=institution.id) }}" class="btn btn-primary">
+          <i class="bi bi-pencil-square me-2"></i>Editar Institución
+        </a>
+        <a href="#" class="btn btn-success" onclick="viewDoctors()">
+          <i class="bi bi-person-badge me-2"></i>Ver Doctores
+        </a>
+        <a href="#" class="btn btn-info" onclick="viewPatients()">
+          <i class="bi bi-people me-2"></i>Ver Pacientes
+        </a>
+        <a href="#" class="btn btn-warning" onclick="viewAnalytics()">
+          <i class="bi bi-graph-up me-2"></i>Ver Análisis
+        </a>
+        {% if not institution.is_verified %}
+        <a href="#" class="btn btn-secondary" onclick="requestVerification()">
+          <i class="bi bi-shield-check me-2"></i>Solicitar Verificación
+        </a>
+        {% endif %}
+        <hr>
+        <form action="{{ url_for('entities.delete_institution', institution_id=institution.id) }}" method="POST" onsubmit="return confirm('¿Está seguro que desea eliminar esta institución? Esta acción no se puede deshacer y afectará a todos los doctores y pacientes asociados.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <button type="submit" class="btn btn-danger w-100">
+            <i class="bi bi-trash me-2"></i>Eliminar Institución
+          </button>
+        </form>
+        <a href="{{ url_for('entities.institutions') }}" class="btn btn-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Regresar a Instituciones
+        </a>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="cms-card mt-3">
+      <div class="card-header">
+        <h6 class="mb-0"><i class="bi bi-speedometer me-1"></i>Métricas Rápidas</h6>
+      </div>
+      <div class="card-body">
+        {% if institution.is_verified %}
+        <div class="verification-badge verified mb-2">
+          <i class="bi bi-shield-check-fill text-success"></i>
+          <span class="ms-1">Institución Verificada</span>
+        </div>
+        {% else %}
+        <div class="verification-badge unverified mb-2">
+          <i class="bi bi-shield-x-fill text-warning"></i>
+          <span class="ms-1">Requiere Verificación</span>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <small class="text-muted">Capacidad Utilizada</small>
+          <strong>{{ institution.capacity_used | default('0%') }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">Calificación Promedio</small>
+          <strong>{{ institution.average_rating | default('N/A') }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function viewDoctors() {
+  alert('Función para ver doctores próximamente disponible');
+}
+
+function viewPatients() {
+  alert('Función para ver pacientes próximamente disponible');
+}
+
+function viewAnalytics() {
+  alert('Función de análisis próximamente disponible');
+}
+
+function requestVerification() {
+  alert('Función de solicitud de verificación próximamente disponible');
+}
+</script>
+
+<style>
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.stats-card .card-body {
+  padding: 1.5rem 1rem;
+}
+
+.stats-card h4 {
+  color: var(--info-color);
+  font-weight: 700;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: transparent;
+  border-color: var(--info-color);
+  color: var(--info-color);
+}
+
+.nav-tabs .nav-link:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.cms-card .card-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cms-card .card-header h5, .cms-card .card-header h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cms-card .card-body {
+  padding: 1.5rem;
+}
+
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-header-card {
+  background: linear-gradient(135deg, #06b6d4, #0ca5b0);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+}
+
+.profile-header-card .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.profile-header-card .badge {
+  font-size: 0.85em;
+}
+
+@media (max-width: 768px) {
+  .profile-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.25rem;
+  }
+
+  .stats-card .card-body {
+    padding: 1rem 0.5rem;
+  }
+}
+</style>
 {% endblock %}

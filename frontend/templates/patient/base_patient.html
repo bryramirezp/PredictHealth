@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PredictHealth Paciente{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="main-menu" id="mainMenu" role="navigation" aria-label="Main navigation">
+        <h1>
+            <i class="fas fa-heartbeat" aria-hidden="true"></i>
+            PredictHealth
+        </h1>
+        <ul role="list">
+            <li class="nav-item" data-page="dashboard">
+                <a href="/patient_dashboard.html" id="navDashboard">
+                    <i class="fa fa-house nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Inicio</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="medical-record">
+                <a href="/patient_medical_record.html" id="navMedicalRecord">
+                    <i class="fa fa-file-medical nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Mi Expediente</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="appointments">
+                <a href="/patient_appointments.html" id="navAppointments">
+                    <i class="fa fa-calendar-check nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Mis Citas</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="lifestyle">
+                <a href="/patient_lifestyle.html" id="navLifestyle">
+                    <i class="fa fa-heart nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Hábitos</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="measurements">
+                <a href="/patient_measurements.html" id="navMeasurements">
+                    <i class="fa fa-chart-line nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Medidas</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="notifications">
+                <a href="/patient_notifications.html" id="navNotifications">
+                    <i class="fa fa-bell nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Notificaciones</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="recommendations">
+                <a href="/patient_recommendations.html" id="navRecommendations">
+                    <i class="fa fa-lightbulb nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Recomendaciones</span>
+                </a>
+            </li>
+
+            <li class="nav-item" data-page="profile">
+                <a href="/patient_profile.html" id="navProfile">
+                    <i class="fa fa-user nav-icon" aria-hidden="true"></i>
+                    <span class="nav-text">Perfil</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- User Profile Section -->
+        <div class="user-profile-section">
+            <div class="user-avatar" role="img" aria-label="User avatar">
+                <i class="fas fa-user" aria-hidden="true"></i>
+            </div>
+            <div class="user-details">
+                <div class="user-name" id="patientName">Paciente</div>
+                <div class="user-role">Portal del Paciente</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="content" id="content">
+        <!-- Breadcrumb Navigation -->
+        <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" id="currentPage">{% block breadcrumb %}Inicio{% endblock %}</li>
+            </ol>
+        </nav>
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="patient-info">
+                <span class="patient-name" id="patientGreeting">Hola, Paciente</span>
+                <span class="patient-type">Portal del Paciente</span>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn" id="refreshButton" aria-label="Refresh data">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    Actualizar
+                </button>
+                <button class="logout-btn" id="logoutButton" aria-label="Logout">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p>Cargando datos médicos...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-state" style="display: none;">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error de carga</h3>
+                <p>No se pudieron cargar los datos médicos. Inténtalo de nuevo.</p>
+                <button onclick="loadData()" class="btn btn-primary">Reintentar</button>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </section>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="addMeasurement()" id="fabButton">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+    <script>
+        // Global variables
+        let appointments = [];
+        let tasks = [];
+        let recentPatients = [];
+        let allPatients = [];
+        let searchTimeout;
+
+        // Logout functionality
+        window.handleLogout = async function() {
+            console.log('handleLogout function called.');
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                try {
+                    const response = await fetch('/api/v1/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    console.log('Logout API response:', response);
+
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Logout error:', response.status);
+                        alert('Error al cerrar sesión. Inténtalo de nuevo.');
+                    }
+                } catch (error) {
+                    console.error('Logout connection error:', error);
+                    alert('Error de conexión. Inténtalo de nuevo.');
+                }
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadPatientDataFromAPI();
+            setupEventListeners();
+            // currentPage will be set by the specific page
+        });
+
+        // Setup event listeners for navigation and other actions
+        function setupEventListeners() {
+            // Handle navigation clicks
+            document.querySelectorAll('.nav-item a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Prevent default navigation if it's handled by Flask routing
+                    // For now, let Flask handle the navigation
+                });
+            });
+
+            // Handle logout button click
+            const logoutButton = document.getElementById('logoutButton');
+            if (logoutButton) {
+                console.log('Logout button found, attaching event listener.');
+                logoutButton.addEventListener('click', window.handleLogout);
+            }
+
+            // Handle refresh button click
+            const refreshButton = document.getElementById('refreshButton');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', refreshData);
+            }
+
+            // Handle mobile menu toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Set active navigation item based on current URL
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.main-menu .nav-item a').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.closest('.nav-item').classList.add('active');
+                } else {
+                    link.closest('.nav-item').classList.remove('active');
+                }
+            });
+        }
+
+        // Update breadcrumb
+        function updateCurrentPage(title) {
+            const currentPageElement = document.getElementById('currentPage');
+            if (currentPageElement) {
+                currentPageElement.textContent = title;
+            }
+        }
+
+        // Data loading functions
+        async function loadPatientDataFromAPI() {
+            try {
+                const response = await fetch('/api/web/patient/profile', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updatePatientInfo(data);
+                    return data;
+                } else if (response.status === 401) {
+                    window.location.href = '/patient_login.html';
+                    return null;
+                } else {
+                    console.error('Error loading patient data:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error loading patient data:', error);
+                return null;
+            }
+        }
+
+        // Update patient information in UI
+        function updatePatientInfo(data) {
+            if (data.patient) {
+                const patientName = `${data.patient.nombre} ${data.patient.apellido}`;
+                const patientNameElement = document.getElementById('patientName');
+                if (patientNameElement) {
+                    patientNameElement.textContent = patientName;
+                }
+
+                // Update greeting
+                const greetingElement = document.getElementById('patientGreeting');
+                if (greetingElement) {
+                    greetingElement.textContent = `Hola, ${data.patient.nombre}`;
+                }
+            }
+        }
+
+        // Utility functions
+        function showLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content'); // Assuming content is within .page-content
+
+            if (loading) loading.style.display = 'block';
+            if (error) error.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function hideLoadingState() {
+            const loading = document.getElementById('loadingState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (contentBlock) contentBlock.style.display = 'block';
+        }
+
+        function showErrorState() {
+            const loading = document.getElementById('loadingState');
+            const error = document.getElementById('errorState');
+            const contentBlock = document.querySelector('.page-content');
+
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'block';
+            if (contentBlock) contentBlock.style.display = 'none';
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mainMenu');
+            const content = document.getElementById('content');
+
+            if (menu && content) {
+                menu.classList.toggle('show');
+                content.classList.toggle('mobile-menu-open');
+            }
+        }
+
+        function loadData() {
+            // This function will be overridden by specific page scripts if needed
+            console.log('loadData called from base_patient.html');
+        }
+
+        function refreshData() {
+            // This function will be overridden by specific page scripts if needed
+            console.log('refreshData called from base_patient.html');
+        }
+
+        // Placeholder functions for actions
+        function showStatMenu(type) {
+            alert(`Menú de estadísticas para ${type} - próximamente disponible`);
+        }
+
+        function scheduleAppointment() {
+            alert('Funcionalidad para programar cita próximamente disponible');
+        }
+
+        function addMeasurement() {
+            alert('Funcionalidad para registrar medida próximamente disponible');
+        }
+
+        function addNewPatient() {
+            alert('Funcionalidad para agregar paciente próximamente disponible');
+        }
+
+        function viewReports() {
+            alert('Funcionalidad para ver reportes próximamente disponible');
+        }
+
+        function emergencyAlert() {
+            alert('Funcionalidad para alerta médica próximamente disponible');
+        }
+
+        function viewPatient(patientId) {
+            alert('Funcionalidad para ver paciente próximamente disponible');
+        }
+
+        function openPatientRecord(patientId) {
+            window.location.href = `/patient_record.html?id=${patientId}`;
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'active': 'Activo',
+                'urgent': 'Urgente',
+                'inactive': 'Inactivo',
+                'completed': 'Completado'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+    {% block scripts_extra %}{% endblock %}
+</body>
+</html>

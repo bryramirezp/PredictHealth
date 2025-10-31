@@ -1,6 +1,5 @@
 {# Jinja2 Macros for reusable UI components #}
 
-{# Data Table Macro #}
 {% macro data_table(headers, data, actions=true) %}
 <div class="table-responsive">
     <table class="table table-hover">
@@ -57,7 +56,9 @@
         {% endif %}
 
         {# Page numbers #}
-        {% for page_num in range(max(1, current_page - 2), min(total_pages + 1, current_page + 3)) %}
+        {% set start_page = [1, current_page - 2]|max %}
+        {% set end_page = [total_pages, current_page + 2]|min %}
+        {% for page_num in range(start_page, end_page + 1) %}
         <li class="page-item {{ 'active' if page_num == current_page else '' }}">
             <a class="page-link" href="{{ url_for_page(page_num) }}">{{ page_num }}</a>
         </li>
@@ -106,6 +107,42 @@
         {% endfor %}
     </select>
 </div>
+{% endmacro %}
+
+{# Enhanced Filter Dropdown with Sort Options #}
+{% macro filter_dropdown_with_sort(label, name, options, selected_value="", sort_options=[], sort_selected="") %}
+<div class="form-group">
+    <label class="form-label">{{ label }}</label>
+    <select name="{{ name }}" class="form-control">
+        <option value="">All {{ label|lower }}</option>
+        {% for option in options %}
+        <option value="{{ option.value }}" {{ 'selected' if option.value == selected_value else '' }}>
+            {{ option.text }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+{% if sort_options %}
+<div class="form-group">
+    <label class="form-label">Sort by</label>
+    <select name="sort_by" class="form-control">
+        {% for option in sort_options %}
+        <option value="{{ option.value }}" {{ 'selected' if option.value == sort_selected else '' }}>
+            {{ option.text }}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+
+<div class="form-group">
+    <label class="form-label">Order</label>
+    <select name="sort_order" class="form-control">
+        <option value="asc" {{ 'selected' if sort_order == 'asc' else '' }}>Low to High</option>
+        <option value="desc" {{ 'selected' if sort_order == 'desc' else '' }}>High to Low</option>
+    </select>
+</div>
+{% endif %}
 {% endmacro %}
 
 {# Action Card Macro #}

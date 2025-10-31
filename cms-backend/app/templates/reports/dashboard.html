@@ -729,7 +729,8 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Age</th>
-                    <th>Gender</th>
+                    <th>Biological Sex</th>
+                    <th>Gender Identity</th>
                     <th>Validation Status</th>
                     <th>Doctor</th>
                     <th>Institution</th>
@@ -743,7 +744,8 @@
                     <td>{{ patient.first_name }} {{ patient.last_name }}</td>
                     <td>{{ patient.email }}</td>
                     <td>{{ patient.age }}</td>
-                    <td>{{ patient.gender|title }}</td>
+                    <td>{{ patient.biological_sex or 'N/A' }}</td>
+                    <td>{{ patient.gender_identity or 'N/A' }}</td>
                     <td>
                         <span class="status-badge status-{{ 'success' if patient.validation_status == 'full_access' else 'warning' if patient.validation_status in ['doctor_validated', 'institution_validated'] else 'error' }}">
                             {{ patient.validation_status|replace('_', ' ')|title }}

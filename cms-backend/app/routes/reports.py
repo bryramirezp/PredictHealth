@@ -54,16 +54,15 @@ def generate_patients_report(page, per_page, date_from, date_to, validation_stat
                 last_name,
                 email,
                 age,
-                gender,
-                validation_status,
+                biological_sex,
+                gender_identity,
+                CASE WHEN is_verified THEN 'verified' ELSE 'unverified' END as validation_status,
                 is_active,
                 doctor_first_name,
                 doctor_last_name,
                 institution_name,
                 blood_type,
-                hypertension_diagnosis,
-                diabetes_diagnosis,
-                high_cholesterol_diagnosis,
+                diagnosed_conditions,
                 created_at
             FROM vw_patient_demographics
             WHERE 1=1
@@ -104,9 +103,9 @@ def generate_patients_report(page, per_page, date_from, date_to, validation_stat
         summary_query = """
             SELECT
                 COUNT(*) as total_patients,
-                COUNT(CASE WHEN validation_status = 'full_access' THEN 1 END) as validated_patients,
-                COUNT(CASE WHEN gender = 'male' THEN 1 END) as male_count,
-                COUNT(CASE WHEN gender = 'female' THEN 1 END) as female_count,
+                COUNT(CASE WHEN is_verified THEN 1 END) as validated_patients,
+                COUNT(CASE WHEN gender_identity = 'male' THEN 1 END) as male_count,
+                COUNT(CASE WHEN gender_identity = 'female' THEN 1 END) as female_count,
                 ROUND(AVG(age), 1) as avg_age
             FROM vw_patient_demographics
         """
@@ -175,8 +174,8 @@ def generate_doctors_report(page, per_page, date_from, date_to, specialty, statu
             query += " AND specialty ILIKE :specialty"
             params['specialty'] = f'%{specialty}%'
         if status:
-            query += " AND professional_status = :status"
-            params['status'] = status
+            query += " AND professional_status ILIKE :status"
+            params['status'] = f'%{status}%'
         if region:
             query += " AND institution_name ILIKE :region"
             params['region'] = f'%{region}%'
@@ -270,7 +269,7 @@ def generate_institutions_report(page, per_page, date_from, date_to, status, reg
                 COUNT(*) as total_institutions,
                 COUNT(CASE WHEN is_active THEN 1 END) as active_institutions,
                 COUNT(CASE WHEN is_verified THEN 1 END) as verified_institutions,
-                COUNT(DISTINCT institution_type) as type_count
+                COUNT(DISTINCT institution_type_id) as type_count
             FROM medical_institutions
         """
         summary_result = db.session.execute(text(summary_query)).first()
@@ -481,14 +480,12 @@ def get_patients_data(date_from, date_to, validation_status, gender, region):
             last_name,
             email,
             age,
-            gender,
-            validation_status,
+            gender_identity,
+            CASE WHEN is_verified THEN 'verified' ELSE 'unverified' END as validation_status,
             doctor_first_name || ' ' || doctor_last_name as doctor_name,
             institution_name,
             blood_type,
-            CASE WHEN hypertension_diagnosis THEN 'Yes' ELSE 'No' END as hypertension,
-            CASE WHEN diabetes_diagnosis THEN 'Yes' ELSE 'No' END as diabetes,
-            CASE WHEN high_cholesterol_diagnosis THEN 'Yes' ELSE 'No' END as high_cholesterol,
+            diagnosed_conditions,
             TO_CHAR(created_at, 'YYYY-MM-DD') as registration_date
         FROM vw_patient_demographics
         WHERE 1=1
@@ -516,8 +513,7 @@ def get_patients_data(date_from, date_to, validation_status, gender, region):
     result = db.session.execute(text(query), params)
     data = [list(row) for row in result]
     headers = ['First Name', 'Last Name', 'Email', 'Age', 'Gender', 'Validation Status',
-               'Doctor', 'Institution', 'Blood Type', 'Hypertension', 'Diabetes',
-               'High Cholesterol', 'Registration Date']
+               'Doctor', 'Institution', 'Blood Type', 'Diagnosed Conditions', 'Registration Date']
 
     return data, headers
 
@@ -591,8 +587,8 @@ def get_institutions_data(date_from, date_to, status, region):
     for inst in institutions:
         data.append([
             inst.name,
-            inst.institution_type,
-            inst.contact_email,
+            inst.institution_type or 'Unknown',
+            inst.contact_email or '',
             inst.region_state or '',
             inst.phone or '',
             'Yes' if inst.is_active else 'No',
