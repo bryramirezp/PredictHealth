@@ -78,8 +78,7 @@ def root():
             "refresh_token": "/tokens/refresh",
             "revoke_token": "/tokens/revoke",
             "health": "/health",
-            "statistics": "/statistics",
-            "info": "/info"
+            "statistics": "/statistics"
         }
     }
 
@@ -96,28 +95,6 @@ def health_check():
         "timestamp": "2024-01-01T00:00:00Z"
     }
 
-@app.get("/info", status_code=status.HTTP_200_OK)
-def service_info():
-    """Información detallada del servicio"""
-    return {
-        "service": "auth-jwt-service",
-        "version": "1.0.0",
-        "description": "Unified authentication and JWT token management service",
-        "features": [
-            "JWT token creation",
-            "Token verification",
-            "Token refresh",
-            "Token revocation",
-            "Secure token storage",
-            "Token validation"
-        ],
-        "configuration": {
-            "token_expire_minutes": settings.ACCESS_TOKEN_EXPIRE_MINUTES,
-            "refresh_token_expire_days": settings.REFRESH_TOKEN_EXPIRE_DAYS,
-            "algorithm": settings.ALGORITHM,
-            "cors_origins": settings.cors_origins_list
-        }
-    }
 
 @app.get("/statistics", status_code=status.HTTP_200_OK)
 def get_statistics():

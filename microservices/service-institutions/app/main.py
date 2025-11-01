@@ -75,7 +75,7 @@ def root():
         "status": "active",
         "docs": "/docs",
         "endpoints": {
-            "institutions": "/api/v1/instituciones",
+            "institutions": "/api/v1/institutions",
             "health": "/health",
             "info": "/info"
         }
