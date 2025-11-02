@@ -117,7 +117,7 @@ def doctor_dashboard_page():
 @app.route('/doctor/mi-jornada')
 def doctor_mi_jornada_page():
     """Página de Mi Jornada del doctor."""
-    return render_template('doctor/mi-jornada.html')
+    return render_template('doctor/jornada.html')
 
 @app.route('/doctor/mis-pacientes')
 def doctor_mis_pacientes_page():

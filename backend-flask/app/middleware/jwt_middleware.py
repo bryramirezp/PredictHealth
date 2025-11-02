@@ -75,36 +75,51 @@ class SessionMiddleware:
 # Instancia global
 jwt_middleware = SessionMiddleware()
 
-def require_session(f):
-    """Decorador para requerir token_id válido en cookie"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token_id = request.cookies.get('predicthealth_session')
+def require_session(f=None, *, allowed_roles=None):
+    """Decorador para requerir token_id válido en cookie con roles opcionales"""
+    def decorator(func):
+        @wraps(func)
+        def decorated_function(*args, **kwargs):
+            token_id = request.cookies.get('predicthealth_session')
 
-        if not token_id:
-            logger.warning("⚠️ No session cookie provided")
-            return jsonify({
-                "error": "Sesión requerida",
-                "message": "Debe iniciar sesión"
-            }), 401
+            if not token_id:
+                logger.warning("⚠️ No session cookie provided")
+                return jsonify({
+                    "error": "Sesión requerida",
+                    "message": "Debe iniciar sesión"
+                }), 401
 
-        # Validar token_id y obtener datos de sesión
-        session_data = jwt_middleware.validate_session(token_id)
-        if not session_data:
-            logger.warning("⚠️ Invalid token_id")
-            return jsonify({
-                "error": "Token inválido",
-                "message": "El token ha expirado o es inválido"
-            }), 401
+            # Validar token_id y obtener datos de sesión
+            session_data = jwt_middleware.validate_session(token_id)
+            if not session_data:
+                logger.warning("⚠️ Invalid token_id")
+                return jsonify({
+                    "error": "Token inválido",
+                    "message": "El token ha expirado o es inválido"
+                }), 401
 
-        # Agregar datos de usuario al contexto
-        g.current_user = session_data
-        g.token_id = token_id
-        logger.info(f"✅ Token validated for user: {session_data.get('email')}")
+            # Verificar roles si se especifican
+            if allowed_roles:
+                user_roles = session_data.get('roles', [])
+                if not any(role in user_roles for role in allowed_roles):
+                    logger.warning(f"⚠️ Insufficient roles. Required: {allowed_roles}, User has: {user_roles}")
+                    return jsonify({
+                        "error": "Acceso denegado",
+                        "message": f"Se requieren roles: {', '.join(allowed_roles)}"
+                    }), 403
 
-        return f(*args, **kwargs)
+            # Agregar datos de usuario al contexto
+            g.current_user = session_data
+            g.token_id = token_id
+            logger.info(f"✅ Token validated for user: {session_data.get('email')}")
 
-    return decorated_function
+            return func(*args, **kwargs)
+        return decorated_function
+    
+    # Si se llama sin parámetros, es el decorador antiguo
+    if f is not None:
+        return decorator(f)
+    return decorator
 
 def optional_session(f):
     """Decorador opcional para token_id"""

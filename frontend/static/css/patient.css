@@ -1,5 +1,4 @@
-
-/* Patient Dashboard Styles - Consolidated */
+/* Patient Dashboard Styles - Refactored */
 
 /* Global Styles */
 * {
@@ -13,13 +12,18 @@
     --primary-dark: #047857;
     --secondary-color: #10b981;
     --text-primary: #1f2937;
-    --text-secondary: #6b7280;
+    /* --- A11Y: 'text-secondary' oscurecido para pasar contraste AA (de #6b7280 a #5a6472) --- */
+    --text-secondary: #5a6472; 
     --text-light: #718096;
+    --text-on-accent: #1f2937; /* --- A11Y: Color de texto para fondos claros/problemáticos --- */
     --bg-primary: #f7fafc;
     --bg-secondary: #edf2f7;
     --bg-card: rgba(255, 255, 255, 0.95);
     --border-radius: 16px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* --- REFAC: Transición acotada a propiedades específicas para mejor rendimiento --- */
+    --transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
     --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -29,13 +33,95 @@ body {
     font-family: var(--font-family);
     background: var(--bg-primary);
     color: var(--text-primary);
+    /* --- REFAC: Se mantiene 'overflow-x: hidden' pero se advierte. --- */
+    /* ADVERTENCIA: 'overflow-x: hidden' puede causar problemas de A11y. Es preferible arreglar el layout que causa el desbordamiento. */
     overflow-x: hidden;
     line-height: 1.6;
 }
 
+/* --- A11Y: Agregado estado de foco visible para navegación por teclado --- */
+*:focus-visible {
+    outline: 3px solid var(--primary-dark);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(5, 150, 105, 0.3);
+}
+
+/* --- A11Y: Media query para reducir movimiento para usuarios sensibles --- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Desactivar transformaciones en hover */
+    .mobile-menu-btn:hover,
+    .nav-item:hover a,
+    .nav-item.active a,
+    .action-btn:hover,
+    .logout-btn:hover,
+    .stat-card:hover,
+    .stat-icon:hover,
+    .image-container:hover,
+    .day-and-activity:hover,
+    .btn:hover,
+    .best-item:hover,
+    .user-info .nav-icon:hover,
+    .circle:hover,
+    .card:hover,
+    .fab:hover,
+    .card-base-interactive:hover {
+        transform: none;
+    }
+}
+
+
+/* --- REFAC: Principio DRY. Estilos de tarjeta base agrupados. --- */
+/* Estos selectores comparten estilos de "tarjeta" y "tarjeta interactiva". */
+/* En un proyecto real, esto se reemplazaría con una sola clase de utilidad, ej: .card-base */
+.top-bar,
+.welcome-section,
+.stat-card,
+.activities,
+.weekly-schedule,
+.personal-bests,
+.user-info,
+.active-calories,
+.friends-activity,
+.record-section,
+.sidebar-card,
+.page-header {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: var(--transition);
+}
+
+/* --- REFAC: Agrupados los hovers interactivos de las tarjetas --- */
+/* Nota: .top-bar y .page-header se excluyeron de este hover general. */
+.welcome-section:hover,
+.stat-card:hover,
+.activities:hover,
+.weekly-schedule:hover,
+.personal-bests:hover,
+.user-info:hover,
+.active-calories:hover,
+.friends-activity:hover,
+.record-section:hover,
+.sidebar-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+
 /* Mobile Menu Button */
 .mobile-menu-btn {
-    display: none;
+    display: none; /* Oculto por defecto en desktop */
     position: fixed;
     top: 20px;
     left: 20px;
@@ -74,12 +160,13 @@ body {
     border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.main-menu.show {
-    transform: translateX(0);
-}
-
+/* --- REFAC: Clases 'show' y 'hide' ahora controlan la visibilidad en móvil --- */
 .main-menu.hide {
     transform: translateX(-100%);
+}
+
+.main-menu.show {
+    transform: translateX(0);
 }
 
 .main-menu h1 {
@@ -209,9 +296,6 @@ body {
     background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
-.content.mobile-menu-open {
-    margin-left: 0;
-}
 
 /* Breadcrumb Navigation */
 .breadcrumb-nav {
@@ -240,13 +324,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: var(--border-radius);
     margin: 0 2rem 2rem;
-    box-shadow: var(--shadow-soft);
-    transition: var(--transition);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .top-bar:hover {
@@ -261,10 +340,11 @@ body {
     letter-spacing: -0.025em;
 }
 
-.patient-type {
-    color: var(--text-secondary) !important;
-    font-size: 0.875rem !important;
-    font-weight: 400 !important;
+/* --- REFAC: Eliminados '!important' aumentando la especificidad --- */
+.patient-info .patient-type {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 400;
     display: block;
     margin-top: 0.25rem;
 }
@@ -355,16 +435,11 @@ body {
 
 /* Welcome Section */
 .welcome-section {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2.5rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
     position: relative;
     overflow: hidden;
-    transition: var(--transition);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .welcome-section::before {
@@ -375,11 +450,6 @@ body {
     right: 0;
     height: 4px;
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.welcome-section:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
 }
 
 .welcome-title {
@@ -407,15 +477,10 @@ body {
 }
 
 .stat-card {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
     position: relative;
     overflow: hidden;
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .stat-card::before {
@@ -432,7 +497,6 @@ body {
 
 .stat-card:hover {
     transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card:hover::before {
@@ -464,9 +528,10 @@ body {
 }
 
 .stat-icon.appointments { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-.stat-icon.medications { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+/* --- A11Y: Corregido contraste de color. Se usa 'text-on-accent' en lugar de 'white' --- */
+.stat-icon.medications { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: var(--text-on-accent); }
 .stat-icon.alerts { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-.stat-icon.health { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+.stat-icon.health { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: var(--text-on-accent); }
 
 .stat-menu {
     color: var(--text-secondary);
@@ -528,18 +593,8 @@ body {
 
 /* Activities Section */
 .activities {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
-}
-
-.activities:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .activities h1 {
@@ -604,18 +659,8 @@ body {
 
 /* Weekly Schedule */
 .weekly-schedule {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
-}
-
-.weekly-schedule:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .weekly-schedule h1 {
@@ -718,18 +763,8 @@ body {
 
 /* Personal Bests */
 .personal-bests {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
-}
-
-.personal-bests:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .personal-bests h1 {
@@ -783,21 +818,11 @@ body {
 
 /* Right Content Sections */
 .user-info {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: var(--transition);
-}
-
-.user-info:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .user-info .icon-container {
@@ -837,18 +862,8 @@ body {
 
 /* Active Calories */
 .active-calories {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
-}
-
-.active-calories:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .active-calories h1 {
@@ -912,22 +927,15 @@ body {
 /* Mobile Personal Bests */
 .mobile-personal-bests {
     display: none;
+    /* --- REFAC: Esta clase necesita una media query para mostrarse. Ver sección @media. --- */
+    /* ADVERTENCIA: Duplicar contenido (personal-bests y mobile-personal-bests) es malo para A11y y SEO. */
+    /* Es mejor usar CSS Grid (grid-area) u 'order' de Flexbox para mover un *único* componente. */
 }
 
 /* Friends Activity */
 .friends-activity {
-    background: var(--bg-card);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition);
-}
-
-.friends-activity:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
 }
 
 .friends-activity h1 {
@@ -998,12 +1006,13 @@ body {
 
 .card.card-two {
     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    color: white;
+    /* --- A11Y: Corregido contraste. Se usa 'text-on-accent' en lugar de 'white' --- */
+    color: var(--text-on-accent); 
 }
 
 .card.card-two .card-user-info h2,
 .card.card-two p {
-    color: white;
+    color: var(--text-on-accent);
 }
 
 /* Floating Action Button */
@@ -1060,11 +1069,11 @@ body {
 
 /* Medical Record Styles */
 .page-header {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius);
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-soft);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
+    /* Sobrescribimos el fondo para esta instancia */
+    background: var(--bg-primary); 
 }
 
 .page-title {
@@ -1095,10 +1104,10 @@ body {
 }
 
 .record-section {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: var(--shadow-soft);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
+    /* Sobrescribimos el fondo para esta instancia */
+    background: var(--bg-primary);
 }
 
 .section-title {
@@ -1143,6 +1152,7 @@ body {
     gap: 0.75rem;
 }
 
+/* --- REFAC: Definición ÚNICA de condition-tag --- */
 .condition-tag {
     background: #fef2f2;
     color: #dc2626;
@@ -1165,12 +1175,14 @@ body {
     border-color: #bbf7d0;
 }
 
+/* --- REFAC: Definición ÚNICA de medications-list --- */
 .medications-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
+/* --- REFAC: Definición ÚNICA de medication-item --- */
 .medication-item {
     display: flex;
     justify-content: space-between;
@@ -1215,10 +1227,9 @@ body {
 }
 
 .sidebar-card {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius);
     padding: 1.5rem;
-    box-shadow: var(--shadow-soft);
+    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
+    background: var(--bg-primary);
 }
 
 .sidebar-title {
@@ -1237,6 +1248,8 @@ body {
     gap: 1rem;
 }
 
+/* --- REFAC: Definición ÚNICA de vital-item --- */
+/* Nota: Se estandarizó el fondo a --bg-secondary */
 .vital-item {
     display: flex;
     justify-content: space-between;
@@ -1245,6 +1258,8 @@ body {
     background: var(--bg-secondary);
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 0.875rem;
+    gap: 0.5rem;
 }
 
 .vital-label {
@@ -1305,7 +1320,11 @@ body {
     gap: 0.75rem;
 }
 
-/* Record Page Styles */
+/* Record Page Styles (Segunda página) */
+/* --- REFAC: Muchas clases aquí (.patient-header, .patient-vitals, etc.) --- */
+/* --- son duplicados o inconsistentes con la primera página. --- */
+/* --- Se requiere una auditoría de diseño para unificar. --- */
+
 .patient-header {
     background: white;
     border-bottom: 1px solid #e5e7eb;
@@ -1361,14 +1380,10 @@ body {
     gap: 1rem;
 }
 
-.vital-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* --- REFAC: .vital-item (variante 2). Inconsistente con .vital-item (variante 1) --- */
+.patient-vitals .vital-item {
     padding: 0.5rem 1rem;
     background: #f8fafc;
-    border-radius: 8px;
-    font-size: 0.875rem;
 }
 
 .vital-icon {
@@ -1396,7 +1411,7 @@ body {
     background: white;
     border-bottom: 1px solid #e5e7eb;
     position: sticky;
-    top: 120px;
+    top: 120px; /* Esto debe ser dinámico o basado en la altura del .patient-header */
     z-index: 999;
 }
 
@@ -1465,49 +1480,8 @@ body {
     gap: 0.75rem;
 }
 
-.condition-tag {
-    background: #fef2f2;
-    color: #dc2626;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border: 1px solid #fecaca;
-}
-
-.condition-tag.warning {
-    background: #fef3c7;
-    color: #d97706;
-    border-color: #fde68a;
-}
-
-.medications-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.medication-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background: white;
-}
-
-.medication-info h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.25rem;
-}
-
-.medication-details {
-    font-size: 0.875rem;
-    color: #6b7280;
-}
+/* --- REFAC: .condition-tag ya fue definido y consolidado. Se eliminó la duplicación. --- */
+/* --- REFAC: .medications-list y .medication-item ya fueron definidos. Se eliminó la duplicación. --- */
 
 .vital-signs-grid {
     display: grid;
@@ -1523,14 +1497,15 @@ body {
     text-align: center;
 }
 
-.vital-value {
+/* --- REFAC: .vital-value y .vital-label (variante 2). Inconsistente con variante 1 --- */
+.vital-sign-card .vital-value {
     font-size: 1.5rem;
     font-weight: 700;
     color: #7c3aed;
     margin-bottom: 0.25rem;
 }
 
-.vital-label {
+.vital-sign-card .vital-label {
     font-size: 0.875rem;
     color: #6b7280;
 }
@@ -1566,7 +1541,7 @@ body {
 .consultation-item::before {
     content: '';
     position: absolute;
-    left: -2rem;
+    left: -2rem; /* Esto debe ser -1rem - (12px/2) + (2px/2) = -1.3125rem. Está mal calculado. */
     top: 1rem;
     width: 12px;
     height: 12px;
@@ -1660,4 +1635,959 @@ body {
 
 .medication-full-item:last-child {
     margin-bottom: 0;
+}
+
+
+/* --- REFAC: Media Queries para Responsividad --- */
+/* Esta sección es nueva y crítica para la funcionalidad. */
+
+/* Breakpoint para tablets y layouts más pequeños */
+@media (max-width: 1024px) {
+    .mobile-menu-btn {
+        display: flex; /* Mostrar el botón de menú móvil */
+        align-items: center;
+        justify-content: center;
+    }
+
+    .main-menu {
+        transform: translateX(-100%); /* Ocultar menú por defecto */
+        /* 'main-menu.show' (manejado por JS) lo mostrará */
+    }
+
+    .content {
+        margin-left: 0; /* Contenido ocupa todo el ancho */
+    }
+
+    .main-menu.hide {
+        /* Asegurarse que 'hide' funcione en este breakpoint */
+        transform: translateX(-100%);
+    }
+
+    .patient-header {
+        position: static; /* Evitar sticky header que complique layouts móviles */
+    }
+    
+    .record-navigation {
+        position: static;
+    }
+}
+
+/* Breakpoint para layouts de contenido principal */
+@media (max-width: 900px) {
+    .main-content,
+    .record-grid,
+    .clinical-summary {
+        grid-template-columns: 1fr; /* Apilar columnas */
+    }
+
+    /* Lógica para intercambiar .personal-bests (ver advertencia en la definición de la clase) */
+    .personal-bests {
+        display: none; 
+    }
+    .mobile-personal-bests {
+        display: block; /* O 'flex' si es un contenedor */
+        /* Asumiendo que esta clase está en el .right-content, ahora aparecerá */
+    }
+
+    .patient-info-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .patient-vitals {
+        flex-wrap: wrap;
+    }
+}
+
+/* Breakpoint para móviles pequeños */
+@media (max-width: 640px) {
+    .page-content {
+        padding: 15px;
+    }
+
+    .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin: 0 1rem 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .action-btn, .logout-btn {
+        justify-content: center;
+    }
+    
+    .welcome-title {
+        font-size: 2rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr; /* Forzar una sola columna */
+    }
+
+    .day-and-activity {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn {
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .fab {
+        bottom: 1rem;
+        right: 1rem;
+    }
+}
+
+/* Additional styles for patient-specific components */
+
+/* Profile Page Styles */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.profile-section {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 2.5rem;
+    position: relative;
+}
+
+.avatar-upload {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.profile-info h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.profile-email {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.profile-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    font-size: 0.875rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-input, .form-select, .form-textarea {
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.health-profile {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.health-item {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.health-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.health-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.health-unit {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.preferences-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.preference-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.preference-toggle {
+    width: 50px;
+    height: 26px;
+    background: #e5e7eb;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.preference-toggle.active {
+    background: var(--primary-color);
+}
+
+.preference-toggle::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.preference-toggle.active::before {
+    transform: translateX(24px);
+}
+
+.security-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.security-item:last-child {
+    border-bottom: none;
+}
+
+.security-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.security-value {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.security-action {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.security-action:hover {
+    text-decoration: underline;
+}
+
+/* Lifestyle and Measurements Forms */
+.container.card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin: 2rem auto;
+    max-width: 800px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.container.card h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.container.card label {
+    display: block;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.container.card input,
+.container.card select,
+.container.card textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    margin-bottom: 1.5rem;
+}
+
+.container.card input:focus,
+.container.card select:focus,
+.container.card textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn.primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn.primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn.ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.btn.ghost:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Notifications Page */
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+/* Recommendations Page */
+.container.card section {
+    margin-bottom: 2rem;
+}
+
+.container.card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.container.card ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.container.card li {
+    padding: 0.75rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Floating Add Button */
+.floating-add-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-glow);
+    transition: var(--transition);
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-add-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px rgba(5, 150, 105, 0.6);
+}
+
+/* Patient Record Page Styles */
+.patient-header {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.patient-info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.patient-basic-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.patient-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.patient-details h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.patient-meta {
+    display: flex;
+    gap: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.patient-vitals {
+    display: flex;
+    gap: 1rem;
+}
+
+.patient-vitals .vital-item {
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+}
+
+.vital-icon {
+    color: #7c3aed;
+    margin-right: 0.5rem;
+}
+
+.critical-alerts {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-weight: 600;
+    position: relative;
+}
+
+.critical-alerts.warning {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.alert-icon {
+    margin-right: 0.5rem;
+}
+
+.record-navigation {
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 120px;
+    z-index: 999;
+}
+
+.nav-tabs {
+    padding: 0 2rem;
+    display: flex;
+    gap: 0;
+}
+
+.nav-tab {
+    padding: 1rem 1.5rem;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-tab.active {
+    color: #7c3aed;
+    border-bottom-color: #7c3aed;
+}
+
+.nav-tab:hover {
+    color: #7c3aed;
+    background: var(--bg-secondary);
+}
+
+.nav-tab i {
+    margin-right: 0.5rem;
+}
+
+.tab-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.clinical-summary {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.summary-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.active-conditions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.medications-section {
+    display: grid;
+    gap: 2rem;
+}
+
+.medications-current,
+.medications-history {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.medication-full-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.medication-full-item:last-child {
+    margin-bottom: 0;
+}
+
+.medication-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.medication-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.medication-dosage {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.medication-period {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.vital-signs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.vital-sign-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.vital-sign-card .vital-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #7c3aed;
+    margin-bottom: 0.25rem;
+}
+
+.vital-sign-card .vital-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.last-consultation {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #7c3aed;
+}
+
+.consultation-date {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.consultation-reason {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.consultation-notes {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.consultations-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.consultations-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.consultation-item {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 2rem;
+}
+
+.consultation-item::before {
+    content: '';
+    position: absolute;
+    left: -1.3125rem;
+    top: 1rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #7c3aed;
+}
+
+.consultation-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.consultation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.consultation-type {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.soap-structure {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.soap-section {
+    margin-bottom: 1rem;
+}
+
+.soap-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.soap-content {
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.health-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.allergies-list,
+.family-history {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.allergy-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.allergy-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.allergy-reaction {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.allergy-severity {
+    margin-left: 1rem;
+}
+
+.family-condition {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.family-condition:last-child {
+    border-bottom: none;
+}
+
+.family-relation {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.family-details {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.personal-data {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.data-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.data-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.field-value {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Responsive adjustments for patient pages */
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .patient-info-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .patient-vitals {
+        flex-wrap: wrap;
+    }
+    
+    .record-navigation {
+        position: static;
+    }
+    
+    .clinical-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .health-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -78,6 +78,11 @@ class SessionAuthManager {
         window.location.href = '/';
     }
 
+    // Alias para mantener compatibilidad con el código existente
+    async handleLogout() {
+        return await this.logout();
+    }
+
     setupHTTPInterceptors() {
         const originalFetch = window.fetch;
 

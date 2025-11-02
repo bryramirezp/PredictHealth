@@ -6,13 +6,11 @@
 
 {% block content %}
 
-        <!-- Welcome Section -->
         <div class="welcome-section">
-            <h1 class="welcome-title">¡Hola, Carlos!</h1>
+            <h1 class="welcome-title" id="dashboard-welcome-title">¡Hola, Paciente!</h1>
             <p class="welcome-subtitle">Tu próxima cita médica es el 15 de Noviembre a las 10:00 AM</p>
         </div>
 
-        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">
@@ -20,7 +18,7 @@
                         <i class="fas fa-calendar-check"></i>
                     </div>
                 </div>
-                <div class="stat-number" id="appointments-count">2</div>
+                <div class="stat-number" id="appointments-count">...</div>
                 <div class="stat-label">Citas Programadas</div>
             </div>
 
@@ -30,7 +28,7 @@
                         <i class="fas fa-pills"></i>
                     </div>
                 </div>
-                <div class="stat-number" id="medications-count">3</div>
+                <div class="stat-number" id="medications-count">...</div>
                 <div class="stat-label">Medicamentos de Hoy</div>
             </div>
 
@@ -40,7 +38,7 @@
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                 </div>
-                <div class="stat-number" id="alerts-count">1</div>
+                <div class="stat-number" id="alerts-count">...</div>
                 <div class="stat-label">Novedades</div>
             </div>
 
@@ -50,53 +48,50 @@
                         <i class="fas fa-heartbeat"></i>
                     </div>
                 </div>
-                <div class="stat-number" id="health-score">85</div>
+                <div class="stat-number" id="health-score">...</div>
                 <div class="stat-label">Puntuación de Salud</div>
             </div>
         </div>
 
-        <!-- Main Content Grid -->
         <div class="main-content">
-            <!-- Left Content -->
             <div class="left-content">
-                <!-- Popular Activities -->
                 <div class="activities">
                     <h1>
                         <i class="fas fa-star"></i>
                         Actividades Populares
                     </h1>
                     <div class="activity-container">
-                        <div class="image-container img-one">
+                        <div class="image-container img-one" data-url="{{ url_for('patient.patient_measurements_page') }}">
                             <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop" alt="Mediciones" />
                             <div class="overlay">
                                 <h3>Mediciones</h3>
                             </div>
                         </div>
-                        <div class="image-container img-two">
+                        <div class="image-container img-two" data-url="{{ url_for('patient.patient_lifestyle_page') }}">
                             <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop" alt="Estilo de Vida" />
                             <div class="overlay">
                                 <h3>Estilo de Vida</h3>
                             </div>
                         </div>
-                        <div class="image-container img-three">
+                        <div class="image-container img-three" data-url="{{ url_for('patient.patient_appointments_page') }}">
                             <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop" alt="Citas Médicas" />
                             <div class="overlay">
                                 <h3>Citas Médicas</h3>
                             </div>
                         </div>
-                        <div class="image-container img-four">
+                        <div class="image-container img-four" data-url="{{ url_for('patient.patient_recommendations_page') }}">
                             <img src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=300&fit=crop" alt="Recomendaciones" />
                             <div class="overlay">
                                 <h3>Recomendaciones</h3>
                             </div>
                         </div>
-                        <div class="image-container img-five">
+                        <div class="image-container img-five" data-url="{{ url_for('patient.patient_notifications_page') }}">
                             <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop" alt="Notificaciones" />
                             <div class="overlay">
                                 <h3>Notificaciones</h3>
                             </div>
                         </div>
-                        <div class="image-container img-six">
+                        <div class="image-container img-six" data-url="{{ url_for('patient.patient_profile_page') }}">
                             <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=300&fit=crop" alt="Perfil" />
                             <div class="overlay">
                                 <h3>Perfil</h3>
@@ -105,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- Weekly Schedule -->
                 <div class="weekly-schedule">
                     <h1>
                         <i class="fas fa-calendar-week"></i>
@@ -156,7 +150,6 @@
                     </div>
                 </div>
 
-                <!-- Personal Bests -->
                 <div class="personal-bests">
                     <h1>
                         <i class="fas fa-trophy"></i>
@@ -179,19 +172,16 @@
                 </div>
             </div>
 
-            <!-- Right Content -->
             <div class="right-content">
-                <!-- User Info -->
                 <div class="user-info">
                     <div class="icon-container">
                         <i class="fa fa-bell nav-icon"></i>
                         <i class="fa fa-message nav-icon"></i>
                     </div>
-                    <h4>Carlos Rodríguez</h4>
+                    <h4 id="dashboard-user-name">Paciente</h4>
                     <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face" alt="user" />
                 </div>
 
-                <!-- Active Calories -->
                 <div class="active-calories">
                     <h1>Actividad Física</h1>
                     <div class="active-calories-container">
@@ -208,7 +198,6 @@
                     </div>
                 </div>
 
-                <!-- Mobile Personal Bests -->
                 <div class="mobile-personal-bests">
                     <h1>Logros de Salud</h1>
                     <div class="personal-bests-container">
@@ -227,7 +216,6 @@
                     </div>
                 </div>
 
-                <!-- Friends Activity -->
                 <div class="friends-activity">
                     <h1>Actividad Reciente</h1>
                     <div class="card-container">
@@ -237,7 +225,7 @@
                                 <h2>Dr. García</h2>
                             </div>
                             <img class="card-img" src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&h=120&fit=crop" alt="" />
-                            <p>Resultados de laboratorio disponibles. ¡Todo en orden! 🩺✅</p>
+                            <p>Resultados de laboratorio disponibles. ¡Todo en orden! ✓</p>
                         </div>
 
                         <div class="card card-two">
@@ -246,7 +234,7 @@
                                 <h2>Sistema</h2>
                             </div>
                             <img class="card-img" src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=300&h=120&fit=crop" alt="" />
-                            <p>¡Felicitaciones! Has completado 7 días de mediciones consecutivas. 🎉</p>
+                            <p>¡Felicitaciones! Has completado 7 días de mediciones consecutivas.</p>
                         </div>
                     </div>
                 </div>
@@ -258,33 +246,16 @@
 <script>
     // Navigation functionality
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle activity clicks
-        const activities = document.querySelectorAll('.image-container');
-        activities.forEach(activity => {
+        
+        // --- MODIFICADO ---
+        // Handle activity clicks using data-url
+        document.querySelectorAll('.image-container').forEach(activity => {
             activity.addEventListener('click', function() {
-                const title = this.querySelector('.overlay h3').textContent;
-                console.log('Activity clicked:', title);
-
-                // Add navigation logic based on activity type
-                switch(title.toLowerCase()) {
-                    case 'mediciones':
-                        window.location.href = '/patient/patient_measurements.html';
-                        break;
-                    case 'estilo de vida':
-                        window.location.href = '/patient/patient_lifestyle.html';
-                        break;
-                    case 'citas médicas':
-                        window.location.href = '/patient/patient_appointments.html';
-                        break;
-                    case 'recomendaciones':
-                        window.location.href = '/patient/patient_recommendations.html';
-                        break;
-                    case 'notificaciones':
-                        window.location.href = '/patient/patient_notifications.html';
-                        break;
-                    case 'perfil':
-                        window.location.href = '/patient/patient_user_profile.html';
-                        break;
+                const url = this.dataset.url;
+                if (url) {
+                    window.location.href = url;
+                } else {
+                    console.warn('No data-url attribute found for this activity.');
                 }
             });
         });
@@ -301,7 +272,8 @@
                     // Open appointment details
                     alert('Abriendo detalles de la cita...');
                 } else if (activity.includes('Mediciones')) {
-                    window.location.href = '/patient/patient_measurements.html';
+                    // Reemplaza esto con tu ruta real de Flask
+                    window.location.href = "{{ url_for('patient.patient_measurements_page') }}";
                 } else if (activity.includes('Chequeo')) {
                     alert('Confirmando cita...');
                 }
@@ -330,11 +302,13 @@
                 window.location.href = '/patient_login.html';
             } else {
                 console.error('Error loading dashboard:', response.status);
-                // Keep default demo data
+                // --- AÑADIDO ---
+                showError('No se pudieron cargar los datos del dashboard.');
             }
         } catch (error) {
             console.error('Error:', error);
-            // Keep default demo data
+            // --- AÑADIDO ---
+            showError('Error de conexión. No se pudieron cargar los datos.');
         }
     }
 
@@ -348,32 +322,66 @@
         const alertsCount = document.getElementById('alerts-count');
         const healthScore = document.getElementById('health-score');
 
+        // Usamos || para mantener los datos de demo si la API no los trae
         if (appointmentsCount) appointmentsCount.textContent = data.statistics?.total_appointments || 2;
         if (medicationsCount) medicationsCount.textContent = data.statistics?.total_medications || 3;
         if (alertsCount) alertsCount.textContent = data.statistics?.total_alerts || 1;
         if (healthScore) healthScore.textContent = data.statistics?.health_score || 85;
 
-        // Update user name
+        // --- AÑADIDO / MODIFICADO ---
+        // Actualizar nombres de usuario
+        const patientName = data.patient?.name || 'Paciente';
+        const patientFullName = `${data.patient?.name || 'Carlos'} ${data.patient?.last_name || 'Rodríguez'}`;
+
+        // 1. Actualiza el saludo del dashboard
+        const welcomeTitle = document.getElementById('dashboard-welcome-title');
+        if (welcomeTitle) {
+            welcomeTitle.textContent = `¡Hola, ${patientName}!`;
+        }
+
+        // 2. Actualiza el nombre en la tarjeta de usuario
+        const userNameCard = document.getElementById('dashboard-user-name');
+        if (userNameCard) {
+            userNameCard.textContent = patientFullName;
+        }
+
+        // 3. Actualiza el nombre en el sidebar (de base_patient.html)
         const patientNameElement = document.getElementById('patientName');
-        if (patientNameElement && data.patient) {
-            patientNameElement.textContent = `Hola, ${data.patient.name || 'Carlos'}`;
+        if (patientNameElement) {
+            patientNameElement.textContent = patientFullName;
+        }
+        
+        // 4. Actualiza el saludo en el top-bar (de base_patient.html)
+        const patientGreetingElement = document.getElementById('patientGreeting');
+        if (patientGreetingElement) {
+            patientGreetingElement.textContent = `Hola, ${patientName}`;
         }
     }
 
     // Error display function
     function showError(message) {
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'error';
+        // Puedes darle estilos a esta clase '.dashboard-error' en tu CSS
+        errorDiv.className = 'dashboard-error'; 
+        errorDiv.style.cssText = 'background-color: #f8d7da; color: #721c24; padding: 1rem; border: 1px solid #f5c6cb; border-radius: 8px; margin-bottom: 1.5rem; display: flex; align-items: center;';
+        
         errorDiv.innerHTML = `
-            <i class="fas fa-exclamation-circle me-2"></i>
+            <i class="fas fa-exclamation-circle" style="margin-right: 10px;"></i>
             ${message}
         `;
 
-        const content = document.getElementById('content');
-        content.insertBefore(errorDiv, content.firstChild);
+        // Inserta el error después del 'breadcrumb-nav'
+        const breadcrumbNav = document.querySelector('.breadcrumb-nav');
+        if (breadcrumbNav) {
+            breadcrumbNav.insertAdjacentElement('afterend', errorDiv);
+        } else {
+            // Fallback si no encuentra el breadcrumb
+            const content = document.getElementById('content');
+            content.insertBefore(errorDiv, content.firstChild);
+        }
 
         setTimeout(() => {
-            errorDiv.remove();
+            if (errorDiv) errorDiv.remove();
         }, 5000);
     }
 </script>

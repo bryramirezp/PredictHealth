@@ -10,78 +10,9 @@
 {% block head_extra %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
-{% endblock %}
 
 {% block content %}
-    <!-- Sidebar Navigation -->
-    <nav class="main-menu" id="mainMenu">
-        <div class="logo-container">
-            <div class="logo-icon">
-                <i class="fas fa-hospital"></i>
-            </div>
-            <div class="logo-text">PredictHealth</div>
-            <div class="institution-badge">
-                <i class="fas fa-building me-1"></i>
-                <span id="institutionType">Institución</span>
-            </div>
-        </div>
-
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="institution_dashboard.html">
-                    <i class="fa fa-house nav-icon"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="institution_doctors.html">
-                    <i class="fa fa-user-md nav-icon"></i>
-                    <span class="nav-text">Doctores</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="institution_patients.html">
-                    <i class="fa fa-users nav-icon"></i>
-                    <span class="nav-text">Pacientes</span>
-                </a>
-            </li>
-
-            <li class="nav-item active">
-                <a href="institution_analytics.html">
-                    <i class="fa fa-chart-bar nav-icon"></i>
-                    <span class="nav-text">Analíticas</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="institution_settings.html">
-                    <i class="fa fa-cog nav-icon"></i>
-                    <span class="nav-text">Configuración</span>
-                </a>
-            </li>
-        </ul>
-
-        <div class="user-profile">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-details">
-                    <div class="user-name" id="userName">Institución</div>
-                    <div class="user-role">Administrador</div>
-                </div>
-            </div>
-            <button class="logout-btn" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt"></i>
-                Cerrar Sesión
-            </button>
-        </div>
-    </nav>
-
     <!-- Main Content -->
-    <section class="content" id="mainContent">
         <div class="content-header">
             <div class="page-info">
                 <h1>Analíticas</h1>

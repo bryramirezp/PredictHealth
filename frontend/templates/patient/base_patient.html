@@ -7,16 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
-    {% block head_extra %}{% endblock %}
+    {% block head_extra %}
+    {% endblock %}
 </head>
 <body>
-    <!-- Mobile Menu Button -->
     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu">
         <i class="fas fa-bars" aria-hidden="true"></i>
     </button>
 
-    <!-- Sidebar Navigation -->
-    <nav class="main-menu" id="mainMenu" role="navigation" aria-label="Main navigation">
+    <nav class="main-menu" id="mainMenu" aria-label="Main navigation">
         <h1>
             <i class="fas fa-heartbeat" aria-hidden="true"></i>
             PredictHealth
@@ -79,7 +78,6 @@
             </li>
         </ul>
 
-        <!-- User Profile Section -->
         <div class="user-profile-section">
             <div class="user-avatar" role="img" aria-label="User avatar">
                 <i class="fas fa-user" aria-hidden="true"></i>
@@ -91,17 +89,16 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <section class="content" id="content">
-        <!-- Breadcrumb Navigation -->
+    <main class="content" id="content">
         <nav aria-label="breadcrumb" class="breadcrumb-nav mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item active" id="currentPage">{% block breadcrumb %}Inicio{% endblock %}</li>
+                <li class="breadcrumb-item active" id="currentPage" aria-current="page">
+                    {% block breadcrumb %}Inicio{% endblock %}
+                </li>
             </ol>
         </nav>
 
-        <!-- Top Bar -->
-        <div class="top-bar">
+        <header class="top-bar">
             <div class="patient-info">
                 <span class="patient-name" id="patientGreeting">Hola, Paciente</span>
                 <span class="patient-type">Portal del Paciente</span>
@@ -116,20 +113,18 @@
                     Cerrar Sesión
                 </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="loading-state" style="display: none;">
+        <div id="loadingState" class="loading-state" style="display: none;" role="status" aria-live="polite">
             <div class="spinner-container">
                 <div class="spinner"></div>
                 <p>Cargando datos médicos...</p>
             </div>
         </div>
 
-        <!-- Error State -->
-        <div id="errorState" class="error-state" style="display: none;">
+        <div id="errorState" class="error-state" style="display: none;" role="alert" aria-live="assertive">
             <div class="error-content">
-                <i class="fas fa-exclamation-triangle"></i>
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                 <h3>Error de carga</h3>
                 <p>No se pudieron cargar los datos médicos. Inténtalo de nuevo.</p>
                 <button onclick="loadData()" class="btn btn-primary">Reintentar</button>
@@ -137,11 +132,10 @@
         </div>
 
         {% block content %}{% endblock %}
-    </section>
+    </main>
 
-    <!-- Floating Action Button -->
-    <button class="fab" onclick="addMeasurement()" id="fabButton">
-        <i class="fas fa-plus"></i>
+    <button class="fab" onclick="addMeasurement()" id="fabButton" aria-label="Agregar medida">
+        <i class="fas fa-plus" aria-hidden="true"></i>
     </button>
 
     <script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
@@ -278,7 +272,9 @@
         function showLoadingState() {
             const loading = document.getElementById('loadingState');
             const error = document.getElementById('errorState');
-            const contentBlock = document.querySelector('.page-content'); // Assuming content is within .page-content
+            // El JS busca .page-content, que será provisto por la plantilla hija (ej. dashboard.html)
+            // dentro del {% block content %}. Esto es correcto.
+            const contentBlock = document.querySelector('.page-content'); 
 
             if (loading) loading.style.display = 'block';
             if (error) error.style.display = 'none';
@@ -303,13 +299,15 @@
             if (contentBlock) contentBlock.style.display = 'none';
         }
 
+        // La lógica de JS para .toggle('show') y .toggle('mobile-menu-open')
+        // se alinea perfectamente con las clases definidas en patient.css.
         function toggleMobileMenu() {
             const menu = document.getElementById('mainMenu');
             const content = document.getElementById('content');
 
             if (menu && content) {
-                menu.classList.toggle('show');
-                content.classList.toggle('mobile-menu-open');
+                menu.classList.toggle('show'); // Alineado con .main-menu.show
+                content.classList.toggle('mobile-menu-open'); // Alineado con .content.mobile-menu-open
             }
         }
 
@@ -381,6 +379,7 @@
             return statusMap[status] || status;
         }
     </script>
-    {% block scripts_extra %}{% endblock %}
+    {% block scripts_extra %}
+    {% endblock %}
 </body>
 </html>
