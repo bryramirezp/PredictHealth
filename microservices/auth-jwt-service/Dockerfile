@@ -19,7 +19,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copiar código de la aplicación
+COPY microservices/shared/ ./shared/
 COPY microservices/auth-jwt-service/app/ ./app/
+
+# Añadir shared al PYTHONPATH
+ENV PYTHONPATH "${PYTHONPATH}:/app/shared"
 
 # Crear usuario no root y ajustar permisos
 RUN useradd -u 1000 -m appuser && chown -R appuser:appuser /app

@@ -20,7 +20,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copiar código mínimo necesario para producción
+COPY microservices/shared/ ./shared/
 COPY microservices/service-patients/app/ ./app/
+
+# Añadir shared al PYTHONPATH
+ENV PYTHONPATH "${PYTHONPATH}:/app/shared"
 
 # Crear directorio para logs y usuario no root
 RUN mkdir -p /app/logs && \
