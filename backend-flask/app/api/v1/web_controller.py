@@ -198,6 +198,21 @@ def validate_session():
         return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
 
 
+@web_bp.route('/auth/logout', methods=['POST'])
+def generic_logout():
+    """Endpoint genérico para cerrar sesión."""
+    try:
+        from flask import make_response
+        resp = make_response(web_controller._handle_success({}, "Logout exitoso"))
+        # Instruye al navegador para que elimine la cookie
+        resp.set_cookie('predicthealth_session', '', expires=0, httponly=True, samesite='Strict')
+        logger.info("✅ Logout successful, session cookie cleared")
+        return resp
+    except Exception as e:
+        logger.error(f"Error en generic_logout: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+
+
 @web_bp.route('/auth/patient/login', methods=['POST'])
 def patient_login():
     """Login endpoint for patients"""

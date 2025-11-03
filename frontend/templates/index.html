@@ -1016,11 +1016,11 @@
                     setTimeout(() => {
                         const userType = result.data.user_type;
                         const redirectUrls = {
-                            'patient': '/patient_dashboard.html',
-                            'doctor': '/doctor_dashboard.html',
-                            'institution': '/institution_dashboard.html',
-                            'admin': '/admin_dashboard.html'
+                            'patient': '/patient/dashboard',
+                            'doctor': '/doctor/dashboard',
+                            'institution': '/institution/dashboard'
                         };
+                        // Redirige al dashboard correspondiente o a la raíz si el rol no es conocido
                         window.location.href = redirectUrls[userType] || '/';
                     }, 1000);
 
