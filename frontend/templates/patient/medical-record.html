@@ -1,0 +1,100 @@
+<!-- /frontend/templates/patient/medical-record.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Expediente Médico - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Mi Expediente Médico</h1>
+    <p>Aquí puedes consultar y gestionar la información de tu historial médico.</p>
+
+    <!-- Pestañas de Navegación -->
+    <ul class="nav nav-tabs" id="medicalRecordTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="health-profile-tab" data-bs-toggle="tab" data-bs-target="#health-profile" type="button" role="tab" aria-controls="health-profile" aria-selected="true">
+                <i class="fas fa-heartbeat me-2"></i>Perfil de Salud
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conditions-tab" data-bs-toggle="tab" data-bs-target="#conditions" type="button" role="tab" aria-controls="conditions" aria-selected="false">
+                <i class="fas fa-notes-medical me-2"></i>Condiciones
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications" type="button" role="tab" aria-controls="medications" aria-selected="false">
+                <i class="fas fa-pills me-2"></i>Medicamentos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="allergies-tab" data-bs-toggle="tab" data-bs-target="#allergies" type="button" role="tab" aria-controls="allergies" aria-selected="false">
+                <i class="fas fa-exclamation-triangle me-2"></i>Alergias
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="family-history-tab" data-bs-toggle="tab" data-bs-target="#family-history" type="button" role="tab" aria-controls="family-history" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Historial Familiar
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido de las Pestañas -->
+    <div class="tab-content" id="medicalRecordTabContent">
+        <!-- Perfil de Salud -->
+        <div class="tab-pane fade show active" id="health-profile" role="tabpanel" aria-labelledby="health-profile-tab">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Perfil de Salud</h5>
+                    <p>Información general sobre tu salud. <strong>Puedes actualizar esta sección.</strong></p>
+                    <!-- Aquí irá el formulario para actualizar el perfil de salud -->
+                    <p class="text-muted">Formulario de actualización de Perfil de Salud (Próximamente).</p>
+                    <button class="btn btn-primary">Actualizar Perfil de Salud</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Condiciones -->
+        <div class="tab-pane fade" id="conditions" role="tabpanel" aria-labelledby="conditions-tab">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Condiciones Médicas</h5>
+                    <p>Listado de tus condiciones médicas diagnosticadas por un profesional.</p>
+                     <p class="text-muted">Listado de condiciones (Próximamente).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medicamentos -->
+        <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Medicamentos Recetados</h5>
+                    <p>Medicamentos que te han sido recetados.</p>
+                     <p class="text-muted">Listado de medicamentos (Próximamente).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alergias -->
+        <div class="tab-pane fade" id="allergies" role="tabpanel" aria-labelledby="allergies-tab">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Alergias Conocidas</h5>
+                    <p>Listado de alergias que tienes documentadas.</p>
+                     <p class="text-muted">Listado de alergias (Próximamente).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial Familiar -->
+        <div class="tab-pane fade" id="family-history" role="tabpanel" aria-labelledby="family-history-tab">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Historial Médico Familiar</h5>
+                    <p>Condiciones médicas relevantes de tus familiares directos.</p>
+                     <p class="text-muted">Listado de historial familiar (Próximamente).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

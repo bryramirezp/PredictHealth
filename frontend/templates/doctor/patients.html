@@ -1,0 +1,56 @@
+<!-- /frontend/templates/doctor/patients.html -->
+{% extends "base.html" %}
+
+{% block title %}Mis Pacientes - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Pacientes</h1>
+        <button class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Registrar Nuevo Paciente
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Listado de Pacientes Asignados</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Fecha de Nacimiento</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fila de ejemplo. Se llenará dinámicamente. -->
+                        <tr>
+                            <td>Nombre Paciente 1 (Próximamente)</td>
+                            <td>paciente1@example.com (Próximamente)</td>
+                            <td>1985-05-15 (Próximamente)</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye me-1"></i>Ver Expediente
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Nombre Paciente 2 (Próximamente)</td>
+                            <td>paciente2@example.com (Próximamente)</td>
+                            <td>1992-11-20 (Próximamente)</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye me-1"></i>Ver Expediente
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

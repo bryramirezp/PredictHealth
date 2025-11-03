@@ -1,0 +1,56 @@
+<!-- /frontend/templates/institution/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Perfil de la Institución - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestionar Perfil de la Institución</h1>
+
+    <!-- Sección de Información Pública -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-hospital-alt me-2"></i>Información Pública</h5>
+        </div>
+        <div class="card-body">
+            <p>Actualiza la información que se muestra públicamente sobre tu institución.</p>
+            <!-- Formulario de Información Pública (Próximamente) -->
+            <form>
+                <div class="mb-3">
+                    <label for="institutionName" class="form-label">Nombre de la Institución</label>
+                    <input type="text" class="form-control" id="institutionName" value="Nombre Institución (Próximamente)">
+                </div>
+                 <div class="mb-3">
+                    <label for="institutionType" class="form-label">Tipo de Institución</label>
+                    <input type="text" class="form-control" id="institutionType" value="Hospital General (Próximamente)">
+                </div>
+                <button type="submit" class="btn btn-primary">Actualizar Información</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sección de Contacto -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-address-book me-2"></i>Información de Contacto</h5>
+        </div>
+        <div class="card-body">
+            <p>Gestiona los datos de contacto de la institución.</p>
+            <p class="text-muted">CRUD de Emails, Teléfonos y Direcciones (Próximamente).</p>
+            <button class="btn btn-success">Añadir Contacto</button>
+        </div>
+    </div>
+
+    <!-- Sección de Seguridad -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-shield-alt me-2"></i>Seguridad</h5>
+        </div>
+        <div class="card-body">
+            <p>Cambia la contraseña de la cuenta principal de la institución.</p>
+            <p class="text-muted">Formulario de Cambio de Contraseña (Próximamente).</p>
+            <button class="btn btn-danger">Cambiar Contraseña</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

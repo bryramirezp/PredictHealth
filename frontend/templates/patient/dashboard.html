@@ -1,0 +1,53 @@
+<!-- /frontend/templates/patient/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard del Paciente - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Bienvenido, {{ user.email }}</h1>
+            <p class="lead">Este es tu panel de control. Desde aquí podrás acceder a tu información de salud.</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Tarjeta de Expediente Médico -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-medical-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Mi Expediente Médico</h5>
+                    <p class="card-text">Consulta tu historial de condiciones, medicamentos y alergias.</p>
+                    <a href="#" class="btn btn-primary">Ver Expediente</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Equipo Médico -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-md fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Mi Equipo Médico</h5>
+                    <p class="card-text">Conoce al doctor y la institución que cuidan de tu salud.</p>
+                    <a href="#" class="btn btn-success">Ver Equipo</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Perfil -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-cog fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Gestionar Perfil</h5>
+                    <p class="card-text">Actualiza tu información de contacto y seguridad.</p>
+                    <a href="#" class="btn btn-info">Ir a Mi Perfil</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

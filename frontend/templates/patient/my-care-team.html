@@ -1,0 +1,45 @@
+<!-- /frontend/templates/patient/my-care-team.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Equipo Médico - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Mi Equipo Médico</h1>
+    <p>Aquí puedes ver la información del profesional y la institución a cargo de tu cuidado.</p>
+
+    <div class="row">
+        <!-- Tarjeta del Doctor Asignado -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-white bg-primary">
+                    <h5 class="mb-0"><i class="fas fa-user-md me-2"></i>Tu Doctor Asignado</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Contenido dinámico del doctor irá aquí -->
+                    <h4 class="card-title">Dr. Nombre Apellido (Próximamente)</h4>
+                    <p class="card-text"><strong>Especialidad:</strong> Cardiología (Próximamente)</p>
+                    <p class="card-text"><strong>Años de Experiencia:</strong> 15 (Próximamente)</p>
+                    <p class="card-text"><strong>Email de Contacto:</strong> doctor.email@example.com (Próximamente)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de la Institución Médica -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-white bg-success">
+                    <h5 class="mb-0"><i class="fas fa-hospital me-2"></i>Tu Institución Médicia</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Contenido dinámico de la institución irá aquí -->
+                    <h4 class="card-title">Nombre de la Institución (Próximamente)</h4>
+                    <p class="card-text"><strong>Tipo:</strong> Hospital General (Próximamente)</p>
+                    <p class="card-text"><strong>Dirección:</strong> Calle Falsa 123, Ciudad (Próximamente)</p>
+                    <p class="card-text"><strong>Teléfono:</strong> +123 456 7890 (Próximamente)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

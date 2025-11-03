@@ -1,0 +1,101 @@
+<!-- /frontend/templates/patient/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestionar Mi Perfil</h1>
+
+    <!-- Sección de Información Personal -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-user-edit me-2"></i>Información Personal</h5>
+        </div>
+        <div class="card-body">
+            <p>Aquí puedes actualizar tus datos personales básicos.</p>
+            <!-- Formulario de Información Personal (Próximamente) -->
+            <form>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="firstName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="firstName" value="Nombre (Próximamente)" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lastName" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="lastName" value="Apellido (Próximamente)" readonly>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Actualizar Información</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sección de Contacto (Emails, Teléfonos, Direcciones) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-address-book me-2"></i>Información de Contacto</h5>
+        </div>
+        <div class="card-body">
+            <!-- Pestañas para Emails, Teléfonos y Direcciones -->
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-emails-tab" data-bs-toggle="pill" data-bs-target="#pills-emails" type="button" role="tab"><i class="fas fa-envelope me-2"></i>Emails</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-phones-tab" data-bs-toggle="pill" data-bs-target="#pills-phones" type="button" role="tab"><i class="fas fa-phone me-2"></i>Teléfonos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-addresses-tab" data-bs-toggle="pill" data-bs-target="#pills-addresses" type="button" role="tab"><i class="fas fa-map-marker-alt me-2"></i>Direcciones</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-emails" role="tabpanel">
+                    <p>Gestiona tus direcciones de correo electrónico.</p>
+                    <!-- Tabla de Emails (Próximamente) -->
+                    <p class="text-muted">CRUD de Emails (Próximamente).</p>
+                    <button class="btn btn-success">Añadir Nuevo Email</button>
+                </div>
+                <div class="tab-pane fade" id="pills-phones" role="tabpanel">
+                    <p>Gestiona tus números de teléfono.</p>
+                    <!-- Tabla de Teléfonos (Próximamente) -->
+                    <p class="text-muted">CRUD de Teléfonos (Próximamente).</p>
+                    <button class="btn btn-success">Añadir Nuevo Teléfono</button>
+                </div>
+                <div class="tab-pane fade" id="pills-addresses" role="tabpanel">
+                    <p>Gestiona tus direcciones postales.</p>
+                    <!-- Tabla de Direcciones (Próximamente) -->
+                    <p class="text-muted">CRUD de Direcciones (Próximamente).</p>
+                    <button class="btn btn-success">Añadir Nueva Dirección</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Seguridad -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-shield-alt me-2"></i>Seguridad</h5>
+        </div>
+        <div class="card-body">
+            <p>Cambia tu contraseña para mantener tu cuenta segura.</p>
+            <!-- Formulario de Cambio de Contraseña (Próximamente) -->
+            <form>
+                <div class="mb-3">
+                    <label for="currentPassword" class="form-label">Contraseña Actual</label>
+                    <input type="password" class="form-control" id="currentPassword">
+                </div>
+                <div class="mb-3">
+                    <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="newPassword">
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña</label>
+                    <input type="password" class="form-control" id="confirmPassword">
+                </div>
+                <button type="submit" class="btn btn-danger">Cambiar Contraseña</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
