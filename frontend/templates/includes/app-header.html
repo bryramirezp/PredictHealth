@@ -1,0 +1,66 @@
+<!-- /frontend/templates/includes/app-header.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-heartbeat me-2"></i>PredictHealth
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                {% if user.user_type == 'patient' %}
+                    <!-- Menú del Paciente -->
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('frontend.patient_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Mi Expediente</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Mi Equipo Médico</a>
+                    </li>
+                {% elif user.user_type == 'doctor' %}
+                    <!-- Menú del Doctor -->
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('frontend.doctor_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Mis Pacientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Mi Institución</a>
+                    </li>
+                {% elif user.user_type == 'institution' %}
+                    <!-- Menú de la Institución -->
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('frontend.institution_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Doctores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Pacientes</a>
+                    </li>
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ user.email }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); AuthManager.logout();">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
