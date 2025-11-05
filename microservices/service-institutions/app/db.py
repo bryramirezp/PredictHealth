@@ -1,4 +1,4 @@
-# /backend-flask/app/db.py
+# /microservices/service-institutions/app/db.py
 # Módulo de conexión a la base de datos para PredictHealth
 
 import os
@@ -59,16 +59,16 @@ def init_connection_pool():
 def get_db_connection():
     """
     Obtiene una conexión a la base de datos PostgreSQL
-    
+
     Returns:
         psycopg2.extensions.connection: Conexión a la base de datos
     """
     global connection_pool
-    
+
     try:
         if connection_pool is None:
             init_connection_pool()
-        
+
         # Usar el pool si está disponible
         if connection_pool:
             conn = connection_pool.getconn()
@@ -90,7 +90,7 @@ def get_db_connection():
                     **DB_CONFIG
                 )
             return conn
-            
+
     except Exception as e:
         logger.error(f"❌ Error conectando a la base de datos: {str(e)}")
         logger.error(f"🔍 Configuración usada: {DB_CONFIG}")
@@ -99,12 +99,12 @@ def get_db_connection():
 def release_connection(conn):
     """
     Libera una conexión al pool
-    
+
     Args:
         conn: Conexión a liberar
     """
     global connection_pool
-    
+
     try:
         if connection_pool and conn:
             connection_pool.putconn(conn)
@@ -116,7 +116,7 @@ def release_connection(conn):
 def close_all_connections():
     """Cierra todas las conexiones del pool"""
     global connection_pool
-    
+
     try:
         if connection_pool:
             connection_pool.closeall()
@@ -127,11 +127,11 @@ def close_all_connections():
 # Context manager para manejo automático de conexiones
 class DatabaseConnection:
     """Context manager para manejo de conexiones a la base de datos"""
-    
+
     def __init__(self):
         self.conn = None
         self.cursor = None
-    
+
     def __enter__(self):
         try:
             self.conn = get_db_connection()
@@ -140,7 +140,7 @@ class DatabaseConnection:
         except Exception as e:
             logger.error(f"❌ Error en DatabaseConnection.__enter__: {str(e)}")
             raise e
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             if self.cursor:
@@ -158,27 +158,27 @@ class DatabaseConnection:
 def execute_query(query, params=None, fetch_one=False, fetch_all=True):
     """
     Ejecuta una query con manejo automático de conexión
-    
+
     Args:
         query (str): Query SQL a ejecutar
         params (tuple): Parámetros de la query
         fetch_one (bool): Si debe retornar solo un resultado
         fetch_all (bool): Si debe retornar todos los resultados
-        
+
     Returns:
         Resultados de la query o None si hay error
     """
     try:
         with DatabaseConnection() as (conn, cursor):
             cursor.execute(query, params or ())
-            
+
             if fetch_one:
                 return cursor.fetchone()
             elif fetch_all:
                 return cursor.fetchall()
             else:
                 return None
-                
+
     except Exception as e:
         logger.error(f"❌ Error ejecutando query: {str(e)}")
         logger.error(f"Query: {query}")

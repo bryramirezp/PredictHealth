@@ -1,0 +1,57 @@
+<!-- /frontend/templates/institution/patients.html -->
+{% extends "base.html" %}
+
+{% block title %}Gestionar Pacientes - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Gestionar Pacientes</h1>
+        <button class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Registrar Nuevo Paciente
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Listado de Pacientes de la Institución</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Doctor Asignado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fila de ejemplo 1 -->
+                        <tr>
+                            <td>Nombre Paciente 1 (Próximamente)</td>
+                            <td>paciente1@example.com (Próximamente)</td>
+                            <td>Dr. Apellido 1 (Próximamente)</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-warning">
+                                    <i class="fas fa-exchange-alt me-1"></i>Reasignar Doctor
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- Fila de ejemplo 2 -->
+                        <tr>
+                            <td>Nombre Paciente 2 (Próximamente)</td>
+                            <td>paciente2@example.com (Próximamente)</td>
+                            <td>Dr. Apellido 2 (Próximamente)</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning">
+                                    <i class="fas fa-exchange-alt me-1"></i>Reasignar Doctor
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

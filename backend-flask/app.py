@@ -54,12 +54,14 @@ logger.info("🚀 Flask app inicializada con nueva arquitectura de microservicio
 @app.route('/index.html')
 def index():
     """Página de aterrizaje (landing page)."""
-    return render_template('index.html')
+    show_login = request.args.get('show_login', 'false').lower() == 'true'
+    return render_template('index.html', show_login=show_login)
 
 @app.route('/login')
 def login_page():
     """Página de login - redirige a la página principal con el modal de login."""
-    return render_template('index.html')
+    # Redirigir a la página principal con parámetro para mostrar modal
+    return redirect(url_for('index', show_login='true'))
 
 # Las rutas de la aplicación (dashboards, perfiles, etc.) ahora son manejadas
 # por el blueprint 'frontend' en app/controllers/frontend_controller.py

@@ -25,29 +25,28 @@ class SessionMiddleware:
             self.redis_client = None
 
     def validate_session(self, jwt_token: str) -> dict:
-        """Validate JWT token by checking if it exists in Redis with JWT in key name"""
-        if not self.redis_client:
-            return None
-
+        """Validate JWT token by checking Redis first, then decoding if necessary"""
         try:
-            # Check if the JWT token exists as a key in Redis
-            key = f"access_token:{jwt_token}"
-            exists = self.redis_client.exists(key)
-
-            if not exists:
-                logger.warning(f"⚠️ Access token not found in Redis: {key[:50]}...")
+            # First, check if Redis is available
+            if not self.redis_client:
+                logger.error("❌ Redis client not available")
                 return None
 
-            # Decode the JWT token to extract session data
+            # Check if the token exists in Redis with the correct key format
+            redis_key = f"access_token:{jwt_token}"
+            stored_token = self.redis_client.get(redis_key)
+
+            if not stored_token:
+                logger.warning(f"⚠️ Access token not found in Redis: {redis_key}")
+                return None
+
+            # If token exists in Redis, decode it to get session data
             payload = jwt.decode(jwt_token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
 
-            # Verify it's an access token
-            if payload.get("type") != "access":
+            # Verify it's an access token (if type is specified)
+            if payload.get("type") and payload.get("type") != "access":
                 logger.warning("⚠️ Token is not an access token")
                 return None
-
-            # Update last activity (extend expiration)
-            self.redis_client.expire(key, 15*60)  # 15 minutes
 
             # Return session data (extract from payload)
             session_data = {
@@ -64,6 +63,12 @@ class SessionMiddleware:
 
         except jwt.ExpiredSignatureError:
             logger.warning("⚠️ Token expired")
+            # Remove expired token from Redis
+            if self.redis_client:
+                try:
+                    self.redis_client.delete(redis_key)
+                except Exception as redis_error:
+                    logger.error(f"❌ Error removing expired token from Redis: {redis_error}")
             return None
         except jwt.InvalidTokenError as e:
             logger.error(f"❌ Invalid token: {e}")
@@ -74,6 +79,22 @@ class SessionMiddleware:
 
 # Instancia global
 jwt_middleware = SessionMiddleware()
+
+def store_jwt_token(jwt_token: str, expiration_seconds: int = 900) -> bool:
+    """Store JWT token in Redis with expiration"""
+    try:
+        if not jwt_middleware.redis_client:
+            logger.error("❌ Redis client not available for storing token")
+            return False
+
+        redis_key = f"access_token:{jwt_token}"
+        # Store the token with expiration (default 15 minutes)
+        jwt_middleware.redis_client.setex(redis_key, expiration_seconds, jwt_token)
+        logger.info(f"✅ JWT token stored in Redis: {redis_key}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Error storing JWT token in Redis: {e}")
+        return False
 
 def require_session(f=None, *, allowed_roles=None):
     """Decorador para requerir token_id válido en cookie con roles opcionales"""

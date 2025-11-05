@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 # URL del servicio JWT (debe coincidir con la configuración del middleware)
 JWT_SERVICE_URL = os.getenv('JWT_SERVICE_URL', 'http://servicio-auth-jwt:8003')
 
-# Importar el middleware JWT
+# Importar el middleware JWT y el servicio de autenticación
 from app.middleware.jwt_middleware import jwt_middleware, require_session
+from app.services.auth_service import AuthService
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -50,67 +51,50 @@ def login():
     try:
         logger.info(f"🔄 Login request for user: {email}")
 
-        # Llamar al JWT service para autenticación
-        response = requests.post(
-            f"{JWT_SERVICE_URL}/auth/login",
-            json={
-                'email': email,
-                'password': password,
-                'user_type': user_type
-            },
-            timeout=15
-        )
-
-        if response.status_code == 200:
-            auth_data = response.json()
-
-            # Usar el access_token para la cookie de sesión
-            access_token = auth_data.get("access_token")
-            if not access_token:
-                logger.error("❌ Auth-JWT Service did not provide access_token")
-                return jsonify({"error": "Token creation failed"}), 503
-
-            # Responder con cookie HTTP-only usando el access_token del Auth-JWT Service
+        # Usar el servicio de autenticación centralizado
+        auth_service = AuthService()
+        result = auth_service.authenticate_user(email, password, user_type)
+        
+        if result['success']:
+            # Logging detallado para depurar
+            logger.info(f"🔍 AuthService response: {result}")
+            
+            # Crear respuesta con cookie HTTP-only
             resp = jsonify({
                 "success": True,
                 "user": {
-                    "user_id": auth_data["user_id"],
-                    "user_type": auth_data["user_type"],
-                    "email": auth_data["email"]
+                    "user_id": result['user_id'],
+                    "user_type": result['user_type'],
+                    "email": result['email']
+                },
+                "token_info": {
+                    "expires_in": result.get('expires_in'),
+                    "token_type": "bearer"
                 }
             })
 
-            # Cookie segura con access_token del Auth-JWT Service
+            # Cookie segura con el access_token del servicio de autenticación
             resp.set_cookie(
                 'predicthealth_session',
-                access_token,
+                result['access_token'],
                 httponly=True,
                 secure=False,  # True en producción con HTTPS
                 samesite='Strict',
                 max_age=15*60  # 15 minutos (expiración del token)
             )
 
-            logger.info(f"✅ Login successful for {email}, token from Auth-JWT Service")
+            logger.info(f"✅ Login successful for {email}, user_type: {user_type}")
             return resp
-
         else:
-            # Propagar errores de autenticación
-            error_data = response.json() if response.content else {}
-            error_message = error_data.get("detail", "Error de autenticación")
-            logger.warning(f"⚠️ Login failed for {email}: {error_message}")
+            # Propagar error de autenticación
+            logger.warning(f"⚠️ Login failed for {email}: {result['error']}")
             return jsonify({
                 "error": "Autenticación fallida",
-                "message": error_message
-            }), response.status_code
+                "message": result['error']
+            }), 401
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"❌ Communication error with JWT Service: {str(e)}")
-        return jsonify({
-            'error': 'Error de servicio',
-            'message': 'No se pudo comunicar con el servicio de autenticación'
-        }), 503
     except Exception as e:
-        logger.error(f"❌ Unexpected error during login: {str(e)}")
+        logger.error(f"❌ Unexpected error during login for {email}: {str(e)}")
         return jsonify({
             'error': 'Error interno',
             'message': 'Ocurrió un error inesperado al procesar el login'

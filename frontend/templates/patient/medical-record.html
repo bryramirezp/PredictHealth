@@ -1,0 +1,426 @@
+<!-- /frontend/templates/patient/medical-record.html -->
+{% extends "base.html" %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/patient/patient-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/patient/medical-record.js') }}"></script>
+{% endblock %}
+{% block title %}Mi Expediente Médico - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Mi Expediente Médico</h1>
+    <p>Aquí puedes consultar y gestionar la información de tu historial médico.</p>
+
+    <!-- Pestañas de Navegación -->
+    <ul class="nav nav-tabs" id="medicalRecordTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="health-profile-tab" data-bs-toggle="tab" data-bs-target="#health-profile" type="button" role="tab" aria-controls="health-profile" aria-selected="true">
+                <i class="fas fa-heartbeat me-2"></i>Perfil de Salud
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conditions-tab" data-bs-toggle="tab" data-bs-target="#conditions" type="button" role="tab" aria-controls="conditions" aria-selected="false">
+                <i class="fas fa-notes-medical me-2"></i>Condiciones
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="medications-tab" data-bs-toggle="tab" data-bs-target="#medications" type="button" role="tab" aria-controls="medications" aria-selected="false">
+                <i class="fas fa-pills me-2"></i>Medicamentos
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="allergies-tab" data-bs-toggle="tab" data-bs-target="#allergies" type="button" role="tab" aria-controls="allergies" aria-selected="false">
+                <i class="fas fa-exclamation-triangle me-2"></i>Alergias
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="family-history-tab" data-bs-toggle="tab" data-bs-target="#family-history" type="button" role="tab" aria-controls="family-history" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Historial Familiar
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido de las Pestañas -->
+    <div class="tab-content" id="medicalRecordTabContent">
+        <!-- Perfil de Salud -->
+        <div class="tab-pane fade show active" id="health-profile" role="tabpanel" aria-labelledby="health-profile-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Perfil de Salud</h5>
+                    <button class="btn btn-primary btn-sm" id="edit-health-profile-btn" data-bs-toggle="modal" data-bs-target="#healthProfileModal">
+                        <i class="fas fa-edit me-1"></i>Editar Perfil
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="health-profile-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando perfil de salud...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Condiciones -->
+        <div class="tab-pane fade" id="conditions" role="tabpanel" aria-labelledby="conditions-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-notes-medical me-2"></i>Condiciones Médicas</h5>
+                    <button class="btn btn-success btn-sm" id="add-condition-btn" data-bs-toggle="modal" data-bs-target="#conditionModal">
+                        <i class="fas fa-plus me-1"></i>Agregar Condición
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Listado de tus condiciones médicas diagnosticadas por un profesional.</p>
+                    <div id="conditions-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando condiciones médicas...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medicamentos -->
+        <div class="tab-pane fade" id="medications" role="tabpanel" aria-labelledby="medications-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-pills me-2"></i>Medicamentos Recetados</h5>
+                    <button class="btn btn-success btn-sm" id="add-medication-btn" data-bs-toggle="modal" data-bs-target="#medicationModal">
+                        <i class="fas fa-plus me-1"></i>Agregar Medicamento
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Medicamentos que te han sido recetados por tu médico.</p>
+                    <div id="medications-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando medicamentos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alergias -->
+        <div class="tab-pane fade" id="allergies" role="tabpanel" aria-labelledby="allergies-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Alergias Conocidas</h5>
+                    <button class="btn btn-success btn-sm" id="add-allergy-btn" data-bs-toggle="modal" data-bs-target="#allergyModal">
+                        <i class="fas fa-plus me-1"></i>Agregar Alergia
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Listado de alergias que tienes documentadas en tu expediente médico.</p>
+                    <div id="allergies-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando alergias...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial Familiar -->
+        <div class="tab-pane fade" id="family-history" role="tabpanel" aria-labelledby="family-history-tab">
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Historial Médico Familiar</h5>
+                    <button class="btn btn-success btn-sm" id="add-family-history-btn" data-bs-toggle="modal" data-bs-target="#familyHistoryModal">
+                        <i class="fas fa-plus me-1"></i>Agregar Historial
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Condiciones médicas relevantes de tus familiares directos.</p>
+                    <div id="family-history-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando historial familiar...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals para formularios dinámicos -->
+
+    <!-- Modal para editar Perfil de Salud -->
+    <div class="modal fade" id="healthProfileModal" tabindex="-1" aria-labelledby="healthProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="healthProfileModalLabel">
+                        <i class="fas fa-heartbeat me-2"></i>Editar Perfil de Salud
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="health-profile-form">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="height_cm" class="form-label">Altura (cm)</label>
+                                <input type="number" class="form-control" id="height_cm" name="height_cm" min="50" max="250" step="0.1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="weight_kg" class="form-label">Peso (kg)</label>
+                                <input type="number" class="form-control" id="weight_kg" name="weight_kg" min="20" max="300" step="0.1">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="blood_type" class="form-label">Tipo de Sangre</label>
+                                <select class="form-select" id="blood_type" name="blood_type">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="physical_activity" class="form-label">Actividad Física Semanal (min)</label>
+                                <input type="number" class="form-control" id="physical_activity" name="physical_activity_minutes_weekly" min="0" max="10080">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_smoker" name="is_smoker">
+                                    <label class="form-check-label" for="is_smoker">
+                                        Fumador
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="smoking_years" class="form-label">Años fumando</label>
+                                <input type="number" class="form-control" id="smoking_years" name="smoking_years" min="0" max="100">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="consumes_alcohol" name="consumes_alcohol">
+                                    <label class="form-check-label" for="consumes_alcohol">
+                                        Consume alcohol
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="alcohol_frequency" class="form-label">Frecuencia de alcohol</label>
+                                <select class="form-select" id="alcohol_frequency" name="alcohol_frequency">
+                                    <option value="never">Nunca</option>
+                                    <option value="rarely">Rara vez</option>
+                                    <option value="occasionally">Ocasionalmente</option>
+                                    <option value="regularly">Regularmente</option>
+                                    <option value="daily">Diariamente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notas adicionales</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Información adicional sobre tu salud..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar Condición -->
+    <div class="modal fade" id="conditionModal" tabindex="-1" aria-labelledby="conditionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="conditionModalLabel">
+                        <i class="fas fa-notes-medical me-2"></i>Agregar Condición Médica
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="condition-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="condition_name" class="form-label">Condición Médica *</label>
+                            <input type="text" class="form-control" id="condition_name" name="condition_name" required
+                                   placeholder="Ej: Hipertensión, Diabetes, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="diagnosis_date" class="form-label">Fecha de diagnóstico</label>
+                            <input type="date" class="form-control" id="diagnosis_date" name="diagnosis_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="condition_notes" class="form-label">Notas adicionales</label>
+                            <textarea class="form-control" id="condition_notes" name="notes" rows="3"
+                                      placeholder="Información adicional sobre la condición..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Agregar Condición
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar Medicamento -->
+    <div class="modal fade" id="medicationModal" tabindex="-1" aria-labelledby="medicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="medicationModalLabel">
+                        <i class="fas fa-pills me-2"></i>Agregar Medicamento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="medication-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="medication_name" class="form-label">Nombre del medicamento *</label>
+                            <input type="text" class="form-control" id="medication_name" name="medication_name" required
+                                   placeholder="Ej: Lisinopril, Metformina, etc.">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dosage" class="form-label">Dosis</label>
+                                <input type="text" class="form-control" id="dosage" name="dosage"
+                                       placeholder="Ej: 10mg, 500mg, etc.">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="frequency" class="form-label">Frecuencia</label>
+                                <input type="text" class="form-control" id="frequency" name="frequency"
+                                       placeholder="Ej: diario, 2 veces al día, etc.">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Fecha de inicio</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Agregar Medicamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar Alergia -->
+    <div class="modal fade" id="allergyModal" tabindex="-1" aria-labelledby="allergyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="allergyModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Agregar Alergia
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="allergy-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="allergy_name" class="form-label">Tipo de alergia *</label>
+                            <input type="text" class="form-control" id="allergy_name" name="allergy_name" required
+                                   placeholder="Ej: Penicilina, Mariscos, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="severity" class="form-label">Severidad</label>
+                            <select class="form-select" id="severity" name="severity">
+                                <option value="mild">Leve</option>
+                                <option value="moderate">Moderada</option>
+                                <option value="severe">Severa</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reaction_description" class="form-label">Descripción de reacción</label>
+                            <textarea class="form-control" id="reaction_description" name="reaction_description" rows="3"
+                                      placeholder="Describe cómo reacciona tu cuerpo..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Agregar Alergia
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar Historial Familiar -->
+    <div class="modal fade" id="familyHistoryModal" tabindex="-1" aria-labelledby="familyHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="familyHistoryModalLabel">
+                        <i class="fas fa-users me-2"></i>Agregar Historial Familiar
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="family-history-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="family_condition_name" class="form-label">Condición médica *</label>
+                            <input type="text" class="form-control" id="family_condition_name" name="condition_name" required
+                                   placeholder="Ej: Diabetes, Cáncer, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="relative_type" class="form-label">Parentesco</label>
+                            <select class="form-select" id="relative_type" name="relative_type">
+                                <option value="Padre">Padre</option>
+                                <option value="Madre">Madre</option>
+                                <option value="Hermano/a">Hermano/a</option>
+                                <option value="Abuelo/a">Abuelo/a</option>
+                                <option value="Tío/a">Tío/a</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="family_notes" class="form-label">Notas adicionales</label>
+                            <textarea class="form-control" id="family_notes" name="notes" rows="3"
+                                      placeholder="Información adicional sobre la condición familiar..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Agregar Historial
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

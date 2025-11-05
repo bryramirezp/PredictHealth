@@ -1,4 +1,4 @@
-# Requirements for backend-flask service
+# Requirements for backend-flask service (API Gateway)
 
 # --- Producción ---
 Flask==2.3.3
@@ -8,7 +8,6 @@ python-dotenv==1.0.0
 pydantic[email]==2.5.0
 PyJWT==2.8.0          # Para validación de tokens en el gateway
 bcrypt==4.2.0               # Usar bcrypt
-psycopg2-binary==2.9.9      # PostgreSQL driver
 redis==5.0.1          # Para verificación de sesiones en el gateway
 
 # --- Desarrollo ---

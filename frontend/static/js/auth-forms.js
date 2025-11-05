@@ -200,6 +200,38 @@ class AuthFormsHandler {
     async checkAuthStatus() {
         /** Verificar estado de autenticación al cargar la página */
         try {
+            // Solo verificar si estamos en la página de login (index.html) o /login
+            const isLoginPage = window.location.pathname === '/' ||
+                               window.location.pathname === '/index.html' ||
+                               window.location.pathname === '/login';
+
+            if (isLoginPage) {
+                // En la página de login, solo verificar si hay cookie y redirigir si está logueado
+                const sessionCookie = this.authManager.getCookie('predicthealth_session');
+                if (sessionCookie) {
+                    // Verificar sesión solo si hay cookie
+                    if (await this.authManager.isLoggedIn()) {
+                        const user = await this.authManager.getUserInfo();
+                        // Si está logueado en la página de login, redirigir al dashboard correspondiente
+                        const userType = user?.user_type;
+                        const redirectUrls = {
+                            'patient': '/patient/dashboard',
+                            'doctor': '/doctor/dashboard',
+                            'institution': '/institution/dashboard'
+                        };
+                        if (redirectUrls[userType]) {
+                            console.log('🔄 Usuario ya autenticado, redirigiendo a dashboard');
+                            window.location.href = redirectUrls[userType];
+                            return;
+                        }
+                    }
+                }
+                // Si no hay cookie o no está logueado, no hacer nada más en login page
+                console.log('📄 Página de login cargada, usuario no autenticado');
+                return;
+            }
+
+            // Para otras páginas, actualizar UI normalmente
             if (await this.authManager.isLoggedIn()) {
                 const user = await this.authManager.getUserInfo();
                 this.updateUIAfterLogin(user, true);

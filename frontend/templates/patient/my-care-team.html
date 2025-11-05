@@ -1,0 +1,74 @@
+<!-- /frontend/templates/patient/my-care-team.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Equipo Médico - PredictHealth{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/patient/patient-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/patient/care-team.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Mi Equipo Médico</h1>
+    <p>Aquí puedes ver la información del profesional y la institución a cargo de tu cuidado.</p>
+
+    <div class="row">
+        <!-- Tarjeta del Doctor Asignado -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header text-white bg-primary d-flex align-items-center">
+                    <i class="fas fa-user-md me-2"></i>
+                    <h5 class="mb-0">Tu Doctor Asignado</h5>
+                </div>
+                <div class="card-body" id="primary-doctor">
+                    <!-- Contenido dinámico del doctor irá aquí -->
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted">Cargando información del doctor...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de la Institución Médica -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header text-white bg-success d-flex align-items-center">
+                    <i class="fas fa-hospital me-2"></i>
+                    <h5 class="mb-0">Tu Institución Médica</h5>
+                </div>
+                <div class="card-body" id="medical-institution">
+                    <!-- Contenido dinámico de la institución irá aquí -->
+                    <div class="text-center">
+                        <div class="spinner-border text-success mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted">Cargando información de la institución...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información de Contacto</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>¿Necesitas contactar a tu equipo médico?</strong><br>
+                        Utiliza la información de contacto proporcionada arriba. Para emergencias, contacta directamente a tu institución médica.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

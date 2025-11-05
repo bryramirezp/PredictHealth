@@ -1,0 +1,345 @@
+<!-- /frontend/templates/patient/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - PredictHealth{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/patient/patient-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/patient/profile.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestionar Mi Perfil</h1>
+
+    <!-- Sección de Información Personal -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Información Personal</h5>
+            <button class="btn btn-primary btn-sm" id="edit-personal-info-btn" data-bs-toggle="modal" data-bs-target="#personalInfoModal">
+                <i class="fas fa-edit me-1"></i>Editar Información
+            </button>
+        </div>
+        <div class="card-body" id="personal-info-content">
+            <!-- Contenido dinámico irá aquí -->
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando información personal...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Contacto (Emails, Teléfonos, Direcciones) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-address-book me-2"></i>Información de Contacto</h5>
+        </div>
+        <div class="card-body">
+            <!-- Pestañas para Emails, Teléfonos y Direcciones -->
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-emails-tab" data-bs-toggle="pill" data-bs-target="#pills-emails" type="button" role="tab"><i class="fas fa-envelope me-2"></i>Emails</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-phones-tab" data-bs-toggle="pill" data-bs-target="#pills-phones" type="button" role="tab"><i class="fas fa-phone me-2"></i>Teléfonos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-addresses-tab" data-bs-toggle="pill" data-bs-target="#pills-addresses" type="button" role="tab"><i class="fas fa-map-marker-alt me-2"></i>Direcciones</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-emails" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0">Gestiona tus direcciones de correo electrónico.</p>
+                        <button class="btn btn-success btn-sm" id="add-email-btn" data-bs-toggle="modal" data-bs-target="#emailModal">
+                            <i class="fas fa-plus me-1"></i>Añadir Email
+                        </button>
+                    </div>
+                    <div id="emails-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando emails...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-phones" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0">Gestiona tus números de teléfono.</p>
+                        <button class="btn btn-success btn-sm" id="add-phone-btn" data-bs-toggle="modal" data-bs-target="#phoneModal">
+                            <i class="fas fa-plus me-1"></i>Añadir Teléfono
+                        </button>
+                    </div>
+                    <div id="phones-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando teléfonos...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pills-addresses" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="mb-0">Gestiona tus direcciones postales.</p>
+                        <button class="btn btn-success btn-sm" id="add-address-btn" data-bs-toggle="modal" data-bs-target="#addressModal">
+                            <i class="fas fa-plus me-1"></i>Añadir Dirección
+                        </button>
+                    </div>
+                    <div id="addresses-content">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando direcciones...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Seguridad -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-shield-alt me-2"></i>Seguridad</h5>
+        </div>
+        <div class="card-body">
+            <p>Cambia tu contraseña para mantener tu cuenta segura.</p>
+
+            <!-- Alert de información -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Recomendaciones de seguridad:</strong><br>
+                Usa una contraseña de al menos 8 caracteres con letras, números y símbolos.
+            </div>
+
+            <form id="password-change-form">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="currentPassword" class="form-label">Contraseña Actual *</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="newPassword" class="form-label">Nueva Contraseña *</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="8">
+                        <div class="form-text">Mínimo 8 caracteres</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña *</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="8">
+                    <div id="password-match-feedback" class="form-text"></div>
+                </div>
+                <button type="submit" class="btn btn-danger" id="change-password-btn">
+                    <i class="fas fa-key me-1"></i>Cambiar Contraseña
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modals para CRUD de contactos -->
+
+<!-- Modal para editar Información Personal -->
+<div class="modal fade" id="personalInfoModal" tabindex="-1" aria-labelledby="personalInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="personalInfoModalLabel">
+                    <i class="fas fa-user-edit me-2"></i>Editar Información Personal
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="personal-info-form">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label">Apellido *</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateOfBirth" class="form-label">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar Email -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">
+                    <i class="fas fa-envelope me-2"></i>Agregar Email
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="email-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="emailAddress" class="form-label">Dirección de Email *</label>
+                        <input type="email" class="form-control" id="emailAddress" name="emailAddress" required
+                               placeholder="ejemplo@email.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="emailType" class="form-label">Tipo de Email</label>
+                        <select class="form-select" id="emailType" name="emailType">
+                            <option value="primary">Principal</option>
+                            <option value="secondary">Secundario</option>
+                            <option value="work">Trabajo</option>
+                            <option value="personal">Personal</option>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isPrimaryEmail" name="isPrimary">
+                        <label class="form-check-label" for="isPrimaryEmail">
+                            Establecer como email principal
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Agregar Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar Teléfono -->
+<div class="modal fade" id="phoneModal" tabindex="-1" aria-labelledby="phoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="phoneModalLabel">
+                    <i class="fas fa-phone me-2"></i>Agregar Teléfono
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="phone-form">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">Número de Teléfono *</label>
+                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" required
+                               placeholder="10 dígitos sin espacios">
+                        <div class="form-text">Ejemplo: 5512345678</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phoneType" class="form-label">Tipo de Teléfono</label>
+                        <select class="form-select" id="phoneType" name="phoneType">
+                            <option value="primary">Principal</option>
+                            <option value="secondary">Secundario</option>
+                            <option value="home">Casa</option>
+                            <option value="work">Trabajo</option>
+                            <option value="emergency">Emergencia</option>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isPrimaryPhone" name="isPrimary">
+                        <label class="form-check-label" for="isPrimaryPhone">
+                            Establecer como teléfono principal
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Agregar Teléfono
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar Dirección -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">
+                    <i class="fas fa-map-marker-alt me-2"></i>Agregar Dirección
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="address-form">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="streetAddress" class="form-label">Dirección *</label>
+                            <input type="text" class="form-control" id="streetAddress" name="streetAddress" required
+                                   placeholder="Calle, número, colonia">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="postalCode" class="form-label">Código Postal</label>
+                            <input type="text" class="form-control" id="postalCode" name="postalCode"
+                                   placeholder="12345">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label">Ciudad *</label>
+                            <input type="text" class="form-control" id="city" name="city" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="region" class="form-label">Estado/Región</label>
+                            <input type="text" class="form-control" id="region" name="region"
+                                   placeholder="Ej: Ciudad de México, Jalisco">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">País</label>
+                        <select class="form-select" id="country" name="country">
+                            <option value="MX">México</option>
+                            <option value="US">Estados Unidos</option>
+                            <option value="CA">Canadá</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addressType" class="form-label">Tipo de Dirección</label>
+                        <select class="form-select" id="addressType" name="addressType">
+                            <option value="primary">Principal</option>
+                            <option value="secondary">Secundaria</option>
+                            <option value="work">Trabajo</option>
+                            <option value="home">Casa</option>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isPrimaryAddress" name="isPrimary">
+                        <label class="form-check-label" for="isPrimaryAddress">
+                            Establecer como dirección principal
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Agregar Dirección
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

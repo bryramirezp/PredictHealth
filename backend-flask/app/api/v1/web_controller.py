@@ -7,14 +7,11 @@ import logging
 import requests
 import json
 import re
-import psycopg2
-import psycopg2.extras
 from datetime import datetime, timedelta
 
 from app.services.proxy_service import ProxyService
 from app.middleware import require_auth, get_current_user, is_authenticated
-from app.middleware.jwt_middleware import jwt_middleware
-from app.db import get_db_connection
+from app.middleware.jwt_middleware import jwt_middleware, store_jwt_token
 
 logger = logging.getLogger(__name__)
 
@@ -127,15 +124,20 @@ def generic_login():
             "POST", "/auth/login", auth_data
         )
 
-        # Obtener access_token y access_token_id del servicio JWT
+        # Obtener access_token del servicio JWT
         access_token = auth_response['data'].get("access_token")
-        access_token_id = auth_response['data'].get("access_token_id")
 
         if auth_response.get('status_code') == 200:
-            # Verificar que tenemos tanto el token como su ID
-            if not access_token or not access_token_id:
-                logger.error("❌ Auth-JWT Service did not provide access_token or access_token_id")
+            # Verificar que tenemos el token
+            if not access_token:
+                logger.error("❌ Auth-JWT Service did not provide access_token")
                 return web_controller._handle_auth_error("Token creation failed", 503)
+
+            # Store JWT token in Redis before setting cookie
+            expires_in = auth_response['data'].get('expires_in', 900)  # Default 15 minutes
+            if not store_jwt_token(access_token, expires_in):
+                logger.error("❌ Failed to store JWT token in Redis")
+                return web_controller._handle_auth_error("Session storage failed", 503)
 
             # Responder con cookie HTTP-only usando solo el token_id (UUID)
             from flask import make_response
@@ -143,7 +145,7 @@ def generic_login():
                 "user_id": auth_response['data']['user_id'],
                 "user_type": auth_response['data']['user_type'],  # El servicio JWT determina esto
                 "access_token": access_token,
-                "expires_in": auth_response['data']['expires_in']
+                "expires_in": expires_in
             }, "Login exitoso"))
 
             # Cookie segura con el JWT completo
@@ -153,10 +155,10 @@ def generic_login():
                 httponly=True,
                 secure=False,  # True en producción con HTTPS
                 samesite='Strict',
-                max_age=15*60  # 15 minutos (expiración del token)
+                max_age=expires_in  # Usar expires_in del servicio JWT
             )
 
-            logger.info(f"✅ Login successful, session cookie set")
+            logger.info(f"✅ Login successful, session cookie set and token stored in Redis")
             return resp
         else:
             return web_controller._handle_auth_error(
@@ -202,11 +204,23 @@ def validate_session():
 def generic_logout():
     """Endpoint genérico para cerrar sesión."""
     try:
+        # Get token from cookie before clearing it
+        token = request.cookies.get('predicthealth_session')
+
+        # Remove token from Redis if it exists
+        if token and jwt_middleware.redis_client:
+            try:
+                redis_key = f"access_token:{token}"
+                jwt_middleware.redis_client.delete(redis_key)
+                logger.info(f"✅ Token removed from Redis: {redis_key}")
+            except Exception as redis_error:
+                logger.error(f"❌ Error removing token from Redis: {redis_error}")
+
         from flask import make_response
         resp = make_response(web_controller._handle_success({}, "Logout exitoso"))
         # Instruye al navegador para que elimine la cookie
         resp.set_cookie('predicthealth_session', '', expires=0, httponly=True, samesite='Strict')
-        logger.info("✅ Logout successful, session cookie cleared")
+        logger.info("✅ Logout successful, session cookie cleared and token removed from Redis")
         return resp
     except Exception as e:
         logger.error(f"Error en generic_logout: {str(e)}")
@@ -359,56 +373,156 @@ def institution_login():
 # ============================================================================
 
 @web_bp.route('/patient/dashboard', methods=['GET'])
+@require_auth(required_user_type='patient')
 def patient_dashboard():
-    """Dashboard para pacientes"""
+    """Dashboard completo para pacientes - Obtiene datos del microservicio service-patients"""
     try:
-        # Obtener usuario actual (comentado para testing)
-        # current_user = get_current_user()
-        # user_id = current_user['user_id']
-        user_id = "test-user-id"  # Mock para testing
-        
-        # Obtener datos del paciente por email
-        patient_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/api/v1/patients/", headers={"Authorization": f"Bearer {request.headers.get('Authorization', '').split(' ')[1]}"}
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        patient_id = current_user['user_id']
+
+        logger.info(f"📊 Solicitando dashboard para paciente: {patient_id}")
+
+        # Llamar al microservicio service-patients para obtener datos del dashboard
+        dashboard_response = web_controller.proxy_service.call_patients_service(
+            "GET", f"/patients/{patient_id}/dashboard",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
         )
-        
-        # Filtrar por email del usuario actual (mock para testing)
-        patient_data = None
-        if patient_response.get('status_code') == 200:
-            patients = patient_response['data'].get('patients', [])
-            user_email = "test@example.com"  # Mock email para testing
-            patient_data = next((patient for patient in patients if patient.get('email') == user_email), None)
-        
-        if patient_data:
-            # Preparar datos para respuesta
-            dashboard_data = {
-                "patient": patient_data,
-                "appointments": [],
-                "medications": [],
-                "alerts": [],
-                "statistics": {
-                    "total_appointments": 0,
-                    "total_medications": 0,
-                    "total_alerts": 0,
-                    "health_score": 85
-                }
-            }
-            
-            # Devolver JSON
+
+        if dashboard_response.get('status_code') == 200:
+            # Devolver respuesta del microservicio directamente
+            logger.info("✅ Dashboard del paciente obtenido exitosamente")
             return jsonify({
                 "status": "success",
                 "message": "Dashboard del paciente",
-                "data": dashboard_data
+                "data": dashboard_response['data']
             }), 200
         else:
+            logger.error(f"❌ Error del microservicio service-patients: {dashboard_response}")
             return web_controller._handle_auth_error(
-                "Paciente no encontrado para el usuario actual",
-                404
+                dashboard_response.get('data', {}).get('detail', 'Error obteniendo dashboard'),
+                dashboard_response.get('status_code', 500)
             )
-            
+
     except Exception as e:
-        logger.error(f"Error en patient_dashboard: {str(e)}")
-        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+        logger.error(f"❌ Error en patient_dashboard: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+
+@web_bp.route('/patient/medical-record', methods=['GET'])
+@require_auth(required_user_type='patient')
+def patient_medical_record():
+    """Expediente médico completo del paciente"""
+    try:
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        patient_id = current_user['user_id']
+
+        logger.info(f"📋 Solicitando expediente médico para paciente: {patient_id}")
+
+        # Llamar al microservicio service-patients
+        medical_record_response = web_controller.proxy_service.call_patients_service(
+            "GET", f"/patients/{patient_id}/medical-record",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+        )
+
+        if medical_record_response.get('status_code') == 200:
+            logger.info("✅ Expediente médico obtenido exitosamente")
+            return jsonify({
+                "status": "success",
+                "message": "Expediente médico del paciente",
+                "data": medical_record_response['data']
+            }), 200
+        else:
+            logger.error(f"❌ Error del microservicio service-patients: {medical_record_response}")
+            return web_controller._handle_auth_error(
+                medical_record_response.get('data', {}).get('detail', 'Error obteniendo expediente médico'),
+                medical_record_response.get('status_code', 500)
+            )
+
+    except Exception as e:
+        logger.error(f"❌ Error en patient_medical_record: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+
+@web_bp.route('/patient/care-team', methods=['GET'])
+@require_auth(required_user_type='patient')
+def patient_care_team():
+    """Equipo médico del paciente (doctor e institución)"""
+    try:
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        patient_id = current_user['user_id']
+
+        logger.info(f"👨‍⚕️ Solicitando equipo médico para paciente: {patient_id}")
+
+        # Llamar al microservicio service-patients
+        care_team_response = web_controller.proxy_service.call_patients_service(
+            "GET", f"/patients/{patient_id}/care-team",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+        )
+
+        if care_team_response.get('status_code') == 200:
+            logger.info("✅ Equipo médico obtenido exitosamente")
+            return jsonify({
+                "status": "success",
+                "message": "Equipo médico del paciente",
+                "data": care_team_response['data']
+            }), 200
+        else:
+            logger.error(f"❌ Error del microservicio service-patients: {care_team_response}")
+            return web_controller._handle_auth_error(
+                care_team_response.get('data', {}).get('detail', 'Error obteniendo equipo médico'),
+                care_team_response.get('status_code', 500)
+            )
+
+    except Exception as e:
+        logger.error(f"❌ Error en patient_care_team: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+
+@web_bp.route('/patient/profile', methods=['GET'])
+@require_auth(required_user_type='patient')
+def patient_profile():
+    """Perfil completo del paciente (información personal, contacto, etc.)"""
+    try:
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        patient_id = current_user['user_id']
+
+        logger.info(f"👤 Solicitando perfil para paciente: {patient_id}")
+
+        # Obtener información básica del paciente
+        basic_info_response = web_controller.proxy_service.call_patients_service(
+            "GET", f"/patients/{patient_id}/basic-info",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+        )
+
+        if basic_info_response.get('status_code') != 200:
+            logger.error(f"❌ Error obteniendo información básica: {basic_info_response}")
+            return web_controller._handle_auth_error(
+                basic_info_response.get('data', {}).get('detail', 'Error obteniendo perfil'),
+                basic_info_response.get('status_code', 500)
+            )
+
+        # Aquí podríamos agregar más llamadas para obtener emails, teléfonos, direcciones
+        # Por ahora devolvemos la información básica
+        profile_data = {
+            "basic_info": basic_info_response['data'],
+            "contact_info": {
+                "emails": [],  # TODO: Implementar cuando tengamos tabla de emails normalizada
+                "phones": [],  # TODO: Implementar cuando tengamos tabla de phones normalizada
+                "addresses": []  # TODO: Implementar cuando tengamos tabla de addresses normalizada
+            }
+        }
+
+        logger.info("✅ Perfil del paciente obtenido exitosamente")
+        return jsonify({
+            "status": "success",
+            "message": "Perfil del paciente",
+            "data": profile_data
+        }), 200
+
+    except Exception as e:
+        logger.error(f"❌ Error en patient_profile: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
 
 @web_bp.route('/doctor/dashboard', methods=['GET'])
 def doctor_dashboard():
@@ -465,7 +579,7 @@ def doctor_dashboard():
 @web_bp.route('/institution/dashboard', methods=['GET'])
 @require_auth(required_user_type='institution')
 def institution_dashboard():
-    """Dashboard para instituciones"""
+    """Dashboard para instituciones - Ahora usa proxy a service-institutions"""
     try:
         # Obtener usuario actual
         current_user = get_current_user()
@@ -476,71 +590,21 @@ def institution_dashboard():
         content_type = request.headers.get('Content-Type', '')
         logger.info(f"🔍 Dashboard request - Accept: '{accept_header}', Content-Type: '{content_type}'")
 
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                # Obtener datos de la institución
-                cur.execute("""
-                    SELECT mi.*, it.name as institution_type_name
-                    FROM medical_institutions mi
-                    JOIN institution_types it ON mi.institution_type_id = it.id
-                    WHERE mi.id = %s AND mi.is_active = TRUE
-                """, (user_id,))
-                institution_data = cur.fetchone()
+        # Usar proxy service para llamar al microservicio de instituciones
+        dashboard_response = web_controller.proxy_service.call_institutions_service(
+            "GET", f"/api/v1/institutions/dashboard",
+            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+        )
 
-                if not institution_data:
-                    return web_controller._handle_auth_error(
-                        "Institución no encontrada para el usuario actual",
-                        404
-                    )
-
-                # Obtener doctores de la institución
-                cur.execute("""
-                    SELECT id, first_name, last_name, email, specialty, years_experience, consultation_fee
-                    FROM doctors
-                    WHERE institution_id = %s AND is_active = TRUE
-                """, (user_id,))
-                doctors = [dict(row) for row in cur.fetchall()]
-
-                # Obtener pacientes de la institución
-                cur.execute("""
-                    SELECT id, first_name, last_name, email, doctor_id, created_at
-                    FROM patients
-                    WHERE institution_id = %s AND is_active = TRUE
-                """, (user_id,))
-                patients = [dict(row) for row in cur.fetchall()]
-
-                # Enriquecer pacientes con nombres de doctores
-                for patient in patients:
-                    if patient['doctor_id']:
-                        cur.execute("""
-                            SELECT first_name, last_name
-                            FROM doctors
-                            WHERE id = %s
-                        """, (patient['doctor_id'],))
-                        doctor = cur.fetchone()
-                        if doctor:
-                            patient['doctor_name'] = f"Dr. {doctor['first_name']} {doctor['last_name']}"
-
-                # Preparar datos para respuesta
-                dashboard_data = {
-                    "institution": dict(institution_data),
-                    "doctors": doctors,
-                    "patients": patients,
-                    "statistics": {
-                        "total_doctors": len(doctors),
-                        "total_patients": len(patients),
-                        "active_appointments": 0,
-                        "pending_reviews": 0
-                    }
-                }
-
-                # Devolver JSON
-                logger.info("📤 Devolviendo respuesta JSON")
-                return jsonify({
-                    "status": "success",
-                    "message": "Dashboard de la institución",
-                    "data": dashboard_data
-                }), 200
+        if dashboard_response.get('status_code') == 200:
+            # Devolver respuesta del microservicio
+            logger.info("📤 Devolviendo respuesta del microservicio institutions")
+            return jsonify(dashboard_response['data']), 200
+        else:
+            return web_controller._handle_auth_error(
+                dashboard_response.get('data', {}).get('error', 'Error en microservicio'),
+                dashboard_response.get('status_code', 500)
+            )
 
     except Exception as e:
         logger.error(f"Error en institution_dashboard: {str(e)}")
@@ -558,42 +622,25 @@ def institution_dashboard():
 @web_bp.route('/institution/doctors', methods=['GET'])
 @require_auth(required_user_type='institution')
 def institution_get_doctors():
-    """Obtiene los doctores de la institución - Respuesta JSON"""
+    """Obtiene los doctores de la institución - Ahora usa proxy"""
     try:
         # Obtener usuario actual autenticado
         current_user = get_current_user()
         user_id = current_user['user_id']
 
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                # Obtener doctores de la institución
-                cur.execute("""
-                    SELECT id, first_name, last_name, email, specialty, years_experience,
-                           consultation_fee, is_active, created_at
-                    FROM doctors
-                    WHERE institution_id = %s
-                    ORDER BY last_name, first_name
-                """, (user_id,))
-                doctors = [dict(row) for row in cur.fetchall()]
+        # Usar proxy service para llamar al microservicio de instituciones
+        doctors_response = web_controller.proxy_service.call_institutions_service(
+            "GET", f"/api/v1/institutions/doctors",
+            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+        )
 
-                # Calcular estadísticas
-                total_doctors = len(doctors)
-                active_doctors = len([d for d in doctors if d['is_active']])
-                inactive_doctors = total_doctors - active_doctors
-
-                stats = {
-                    "total_doctors": total_doctors,
-                    "active_doctors": active_doctors,
-                    "inactive_doctors": inactive_doctors
-                }
-
-                # Preparar respuesta JSON
-                return jsonify({
-                    "status": "success",
-                    "message": "Doctores obtenidos exitosamente",
-                    "doctors": doctors,
-                    "stats": stats
-                }), 200
+        if doctors_response.get('status_code') == 200:
+            return jsonify(doctors_response['data']), 200
+        else:
+            return web_controller._handle_auth_error(
+                doctors_response.get('data', {}).get('error', 'Error en microservicio'),
+                doctors_response.get('status_code', 500)
+            )
 
     except Exception as e:
         logger.error(f"Error en institution_get_doctors: {str(e)}")
@@ -602,9 +649,7 @@ def institution_get_doctors():
 @web_bp.route('/institution/doctors', methods=['POST'])
 @require_auth(required_user_type='institution')
 def institution_create_doctor():
-    """
-    Crea un nuevo doctor con cuenta completa para la institución - Input JSON
-    """
+    """Crea un nuevo doctor - Ahora usa proxy"""
     try:
         # Obtener usuario actual autenticado
         current_user = get_current_user()
@@ -631,69 +676,20 @@ def institution_create_doctor():
         if not password_valid:
             return web_controller._handle_auth_error(password_error, 400)
 
-        with get_db_connection() as conn:
-            with conn.cursor() as cur:
-                try:
-                    # Paso 1: Crear el doctor en la base de datos
-                    cur.execute("""
-                        INSERT INTO doctors (first_name, last_name, email, medical_license,
-                                         institution_id, specialty, years_experience, consultation_fee)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        RETURNING id
-                    """, (
-                        doctor_data['nombre'],
-                        doctor_data['apellido'],
-                        doctor_data['email'],
-                        doctor_data['licencia_medica'],
-                        user_id,
-                        doctor_data.get('especialidad'),
-                        doctor_data.get('years_experience', 0),
-                        doctor_data.get('consultation_fee', 0)
-                    ))
-                    doctor_id = cur.fetchone()[0]
+        # Usar proxy service para llamar al microservicio de instituciones
+        create_response = web_controller.proxy_service.call_institutions_service(
+            "POST", f"/api/v1/institutions/doctors",
+            data=doctor_data,
+            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+        )
 
-                    # Paso 2: Crear usuario para autenticación
-                    cur.execute("""
-                        INSERT INTO users (email, password_hash, user_type, reference_id)
-                        VALUES (%s, %s, 'doctor', %s)
-                    """, (
-                        doctor_data['email'],
-                        doctor_data['password'],  # En producción, esto debería estar hasheado
-                        doctor_id
-                    ))
-
-                    # Paso 3: Crear email primario
-                    cur.execute("""
-                        INSERT INTO emails (entity_type, entity_id, email_address, is_primary, email_type_id)
-                        VALUES ('doctor', %s, %s, TRUE, (SELECT id FROM email_types WHERE name = 'primary'))
-                    """, (doctor_id, doctor_data['email']))
-
-                    conn.commit()
-                    logger.info(f"✅ Doctor creado exitosamente: {doctor_data['email']} (ID: {doctor_id})")
-
-                    # Respuesta exitosa
-                    response_data = {
-                        "status": "success",
-                        "message": "Doctor creado exitosamente",
-                        "doctor": {
-                            "id": doctor_id,
-                            "nombre": doctor_data['nombre'],
-                            "apellido": doctor_data['apellido'],
-                            "email": doctor_data['email'],
-                            "licencia_medica": doctor_data['licencia_medica'],
-                            "especialidad": doctor_data.get('especialidad'),
-                            "activo": True
-                        }
-                    }
-                    return jsonify(response_data), 201
-
-                except psycopg2.errors.UniqueViolation:
-                    conn.rollback()
-                    return web_controller._handle_auth_error("El email o licencia médica ya existe", 409)
-                except Exception as db_error:
-                    conn.rollback()
-                    logger.error(f"❌ Error en base de datos creando doctor: {str(db_error)}")
-                    return web_controller._handle_auth_error("Error al crear doctor en base de datos", 500)
+        if create_response.get('status_code') == 201:
+            return jsonify(create_response['data']), 201
+        else:
+            return web_controller._handle_auth_error(
+                create_response.get('data', {}).get('error', 'Error creando doctor'),
+                create_response.get('status_code', 500)
+            )
 
     except Exception as e:
         logger.error(f"❌ Error en institution_create_doctor: {str(e)}")
@@ -742,65 +738,25 @@ def institution_delete_doctor(doctor_id):
 @web_bp.route('/institution/patients', methods=['GET'])
 @require_auth(required_user_type='institution')
 def institution_get_patients():
-    """Obtiene los pacientes de la institución"""
+    """Obtiene los pacientes de la institución - Ahora usa proxy"""
     try:
         current_user = get_current_user()
         user_id = current_user['user_id']
-        
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                # Obtener pacientes de la institución con información del doctor
-                cur.execute("""
-                    SELECT p.id, p.first_name, p.last_name, p.email, p.doctor_id,
-                           p.created_at, p.is_active,
-                           d.first_name as doctor_first_name, d.last_name as doctor_last_name,
-                           EXTRACT(YEAR FROM AGE(CURRENT_DATE, p.date_of_birth)) as age
-                    FROM patients p
-                    LEFT JOIN doctors d ON p.doctor_id = d.id
-                    WHERE p.institution_id = %s
-                    ORDER BY p.last_name, p.first_name
-                """, (user_id,))
-                patients = [dict(row) for row in cur.fetchall()]
-                
-                # Enriquecer datos con nombres completos de doctores
-                enriched_patients = []
-                for patient in patients:
-                    patient_dict = dict(patient)
-                    if patient['doctor_first_name'] and patient['doctor_last_name']:
-                        patient_dict['doctor_name'] = f"Dr. {patient['doctor_first_name']} {patient['doctor_last_name']}"
-                    else:
-                        patient_dict['doctor_name'] = 'Sin asignar'
-                    
-                    # Agregar campos adicionales para el frontend
-                    patient_dict['ultima_visita'] = patient['created_at']  # Mock para testing
-                    patient_dict['risk_score'] = 50  # Mock para testing
-                    patient_dict['estado_validacion'] = 'full_access' if patient['is_active'] else 'pending'
-                    
-                    enriched_patients.append(patient_dict)
-                
-                # Calcular estadísticas
-                total_patients = len(enriched_patients)
-                active_patients = len([p for p in enriched_patients if p['estado_validacion'] == 'full_access'])
-                high_risk = len([p for p in enriched_patients if p.get('risk_score', 0) >= 70])
-                
-                # Calcular nuevos este mes
-                month_ago = datetime.now() - timedelta(days=30)
-                new_this_month = len([p for p in enriched_patients if p['created_at'] >= month_ago])
-                
-                stats = {
-                    "total_patients": total_patients,
-                    "active_patients": active_patients,
-                    "high_risk": high_risk,
-                    "new_this_month": new_this_month
-                }
-                
-                return jsonify({
-                    "status": "success",
-                    "message": "Pacientes obtenidos exitosamente",
-                    "patients": enriched_patients,
-                    "stats": stats
-                }), 200
-           
+
+        # Usar proxy service para llamar al microservicio de instituciones
+        patients_response = web_controller.proxy_service.call_institutions_service(
+            "GET", f"/api/v1/institutions/patients",
+            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+        )
+
+        if patients_response.get('status_code') == 200:
+            return jsonify(patients_response['data']), 200
+        else:
+            return jsonify({
+                "status": "error",
+                "message": patients_response.get('data', {}).get('error', 'Error en microservicio')
+            }), patients_response.get('status_code', 500)
+
     except Exception as e:
         logger.error(f"Error en institution_get_patients: {str(e)}")
         return jsonify({

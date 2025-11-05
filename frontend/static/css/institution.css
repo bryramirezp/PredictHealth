@@ -1,1666 +1,249 @@
-/* PredictHealth Institution Dashboard - Refactored Styles */
+/* ==========================================================================
+   PredictHealth Institution - Refactored Styles
+   ========================================================================== */
 
-/* Global Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
+/* --------------------------------------------------------------------------
+   1. Global Styles & Variables
+   -------------------------------------------------------------------------- */
 :root {
     /* Primary Colors */
     --primary-color: #7c3aed;
     --primary-dark: #6d28d9;
-    --secondary-color: #a855f7;
-    
+    --success-color: #16a34a; /* Bootstrap's Green */
+    --info-color: #0ea5e9;    /* Bootstrap's Sky */
+    --warning-color: #f59e0b; /* Bootstrap's Amber */
+    --danger-color: #dc2626;  /* Bootstrap's Red */
+
     /* Text */
     --text-primary: #1f2937;
-    /* --- A11Y: 'text-secondary' oscurecido para pasar contraste AA (de #6b7280 a #5a6472) --- */
     --text-secondary: #5a6472;
-    --text-on-primary: #ffffff; /* Texto sobre fondos de --primary-color */
-    --text-on-accent: #1f2937; /* Texto para fondos de acento claros (amarillo, verde) */
+    --text-on-primary-bg: #ffffff; /* Texto sobre fondos de color */
 
     /* Backgrounds */
     --bg-primary: #ffffff;
     --bg-secondary: #f9fafc;
-    --bg-glass: rgba(255, 255, 255, 0.1);
     --border-color: #e5e7eb;
-    
-    /* Status Colors (Unified) */
-    --success-fg: #166534;
-    --success-bg: #dcfce7;
-    --warning-fg: #92400e;
-    --warning-bg: #fef3c7;
-    --danger-fg: #dc2626;
-    --danger-bg: #fef2f2;
-    --info-fg: #1e40af;
-    --info-bg: #e0f2fe;
+
+    /* Status Colors (for Badges) */
+    --status-success-fg: #166534;
+    --status-success-bg: #dcfce7;
+    --status-inactive-fg: #374151;
+    --status-inactive-bg: #f3f4f6;
 
     /* Design System */
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.07);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
     --border-radius-lg: 16px;
     --border-radius-md: 12px;
     --border-radius-sm: 8px;
-    --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     
-    /* --- REFAC: Transición de alto rendimiento --- */
-    --transition-props: transform 0.3s ease, box-shadow 0.3s ease, 
-                        background-color 0.3s ease, border-color 0.3s ease,
-                        opacity 0.3s ease;
+    /* Transitions */
+    --transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
-    background: var(--bg-secondary);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     line-height: 1.6;
 }
 
-/* --- A11Y: Agregado estado de foco visible para navegación por teclado --- */
+h1 {
+    font-weight: 700;
+}
+
+/* --- A11Y: Estado de foco visible --- */
 *:focus-visible {
     outline: 3px solid var(--primary-dark);
     outline-offset: 2px;
     box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.3);
 }
 
-/* --- A11Y: Media query para reducir movimiento para usuarios sensibles --- */
+/* --- A11Y: Reducir movimiento --- */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-
-    .mobile-menu-btn:hover,
-    .nav-item:hover a,
-    .nav-item.active a,
-    .welcome-section:hover,
-    .stat-card:hover,
-    .quick-actions:hover,
-    .action-card:hover,
-    .activity-item:hover,
-    .fab:hover,
-    .chart-card:hover,
-    .doctor-card:hover,
-    .btn:hover {
-        transform: none;
-    }
 }
 
+/* --------------------------------------------------------------------------
+   2. Component Overrides (Bootstrap)
+   -------------------------------------------------------------------------- */
 
-/* --- REFAC: Principio DRY. Estilos de tarjeta base agrupados. --- */
-/* En un proyecto real, esto se reemplazaría con clases de utilidad (ej: .card-shadow, .card-panel) */
-
-/* TIPO 1: Tarjeta "Sombra Suave" (principal) */
-.welcome-section,
-.stat-card,
-.quick-actions {
-    background: var(--bg-primary);
+/* --- Card --- */
+.card {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    transition: var(--transition-props);
-    position: relative;
-    overflow: hidden;
+    transition: var(--transition);
 }
 
-.welcome-section:hover,
-.stat-card:hover,
-.quick-actions:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-}
-
-/* TIPO 2: Tarjeta "Panel Blanco" (contenido) */
-.form-container,
-.chart-card,
-.export-section,
-.doctor-card,
-.patients-table,
-.settings-section,
-.sidebar-card {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius-md);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--border-color);
-    transition: var(--transition-props);
-}
-
-.chart-card:hover,
-.doctor-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-}
-
-/* TIPO 3: Tarjeta "Vidrio Esmerilado" (widgets) */
-.recent-activity,
-.institution-health,
-.weather-widget,
-.notifications-widget,
-.quick-stats,
-.scheduler-preview {
-    background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    border-radius: var(--border-radius-lg);
-    padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    /* --- A11Y CRÍTICO: Estas tarjetas están sobre fondo claro. TODO el texto debe ser oscuro. --- */
-    color: var(--text-primary);
-}
-
-
-/* Navigation Styles */
-.main-menu {
-    background: var(--gradient-primary);
-    width: 280px;
-    height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    transition: width 0.3s ease, transform 0.3s ease;
-    overflow-y: auto;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 0;
-    transform: translateX(0); /* Visible por defecto en desktop */
-}
-
-.main-menu.collapsed {
-    width: 80px;
-}
-
-/* --- REFAC: .show/.hide es para móvil (ver @media), .collapsed es para desktop. --- */
-.main-menu.show {
-    transform: translateX(0);
-}
-
-.logo-container {
-    padding: 2rem 1.5rem;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.logo-icon {
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--text-on-primary);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 0 auto 1rem;
-}
-
-.logo-text {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-on-primary);
-    letter-spacing: -0.5px;
-    margin-bottom: 0.5rem;
-}
-
-.institution-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.nav-menu {
-    padding: 1rem 0;
-    list-style: none;
-    width: 100%;
-}
-
-.nav-item {
-    position: relative;
-    width: 100%;
-    margin-bottom: 0.5rem;
-    border-radius: 10px;
-    overflow: hidden;
-    transition: var(--transition-props);
-}
-
-.nav-item.active {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.nav-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-item b {
-    /* ... (Este elemento decorativo es peculiar pero se mantiene) ... */
-    position: absolute;
-    left: -20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 10px solid var(--bg-primary);
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.nav-item.active b {
-    opacity: 1;
-}
-
-.nav-item a {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    color: var(--text-on-primary);
-    text-decoration: none;
-    font-weight: 500;
-    border-radius: 10px;
-    transition: var(--transition-props);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.nav-item a::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(20px);
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: inherit;
-}
-
-.nav-item a:hover::before,
-.nav-item.active a::before {
-    left: 0;
-}
-
-.nav-item:hover a,
-.nav-item.active a {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateX(8px) scale(1.02);
-    box-shadow: var(--shadow-glow);
-}
-
-.nav-icon {
-    font-size: 1.2rem;
-    width: 20px;
-    text-align: center;
-}
-
-.nav-text {
-    font-size: 1rem;
-    transition: opacity 0.3s ease;
-}
-
-.main-menu.collapsed .nav-text {
-    opacity: 0;
-}
-
-/* User Profile Section */
-.user-profile {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-on-primary);
-    font-weight: 600;
-}
-
-.user-details {
-    flex: 1;
-    min-width: 0;
-}
-
-.user-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-on-primary);
-    margin-bottom: 0.25rem;
-}
-
-.user-role {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.logout-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-on-primary);
-    border-radius: 6px;
-    padding: 0.375rem;
-    cursor: pointer;
-    transition: var(--transition-props);
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.logout-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Mobile Menu Button */
-.mobile-menu-btn {
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 1001;
-    background: var(--gradient-primary);
-    color: var(--text-on-primary);
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: none; /* Se muestra en @media */
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow-lg);
-    transition: var(--transition-props);
-}
-
-.mobile-menu-btn:hover {
-    transform: scale(1.1);
-}
-
-/* Content Styles */
-.content {
-    margin-left: 280px;
-    padding: 2rem;
-    min-height: 100vh;
-    transition: margin-left 0.3s ease;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-}
-
-.content.collapsed {
-    margin-left: 80px; /* Para el modo colapsado en desktop */
-}
-
-/* Content Header */
-.content-header {
-    background: var(--bg-primary);
-    padding: 1.5rem 2rem;
+.card-header {
+    background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
+    padding: 1.25rem 1.5rem;
 }
 
-.page-info {
-    margin-bottom: 1rem;
-}
-
-.page-info h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.page-info p {
-    color: var(--text-secondary);
-    font-size: 1rem;
-}
-
-.header-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-.menu-toggle {
-    background: none;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    padding: 0.5rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: var(--transition-props);
-}
-
-.menu-toggle:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-/* Loading and Error States */
-.loading-state, .error-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    padding: 40px;
-    text-align: center;
-}
-
-.spinner-container {
-    margin-bottom: 20px;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--border-color);
-    border-top: 4px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.error-content h3 {
-    margin-bottom: 10px;
-    color: var(--danger-fg);
-}
-
-.error-content p {
-    margin-bottom: 20px;
-    color: var(--text-secondary);
-}
-
-/* Dashboard Content */
-.page-content {
-    padding: 30px;
-}
-
-/* Welcome Section */
-.welcome-section {
-    padding: 2.5rem;
-    margin-bottom: 2rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.welcome-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--gradient-primary);
-}
-
-.welcome-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.05em;
-    line-height: 1.2;
-}
-
-.welcome-subtitle {
-    color: var(--text-secondary);
-    font-size: 1.125rem;
-    font-weight: 400;
-    line-height: 1.6;
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    padding: 2rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--gradient-primary);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.stat-card:hover::before {
-    opacity: 1;
-}
-
-.stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 15px;
-}
-
-.stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--border-radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: var(--shadow-glow);
-    transition: var(--transition-props);
-}
-
-.stat-icon:hover {
-    transform: scale(1.1);
-}
-
-.stat-icon.doctors { background: var(--gradient-primary); color: var(--text-on-primary); }
-/* --- A11Y: Corregido contraste de color. Se usa 'text-on-accent' --- */
-.stat-icon.patients { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: var(--text-on-accent); }
-.stat-icon.appointments { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: var(--text-on-accent); }
-.stat-icon.revenue { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: var(--text-on-primary); }
-
-.stat-menu {
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 18px;
-    opacity: 0.6;
-    transition: var(--transition-props);
-}
-
-.stat-menu:hover {
-    opacity: 1;
-}
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.025em;
-    line-height: 1.2;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 500;
-}
-
-.stat-trend {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 500;
-}
-/* --- REFAC: Usando variables de estado --- */
-.stat-trend.positive { color: var(--success-fg); }
-.stat-trend.warning { color: var(--warning-fg); }
-.stat-trend.negative { color: var(--danger-fg); }
-
-.stat-trend i {
-    margin-right: 5px;
-}
-
-/* Main Content Grid */
-.main-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-}
-
-.left-content, .right-content {
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
-/* --- REFAC: .section-title consolidado --- */
-.section-title {
-    font-size: 1.25rem;
+.card-header h5 {
+    margin-bottom: 0;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
 }
 
-.section-title i {
-    color: var(--primary-color);
-}
-
-/* Quick Actions */
-.quick-actions {
-    padding: 2rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.action-card {
-    display: flex;
-    align-items: center;
+.card-body {
     padding: 1.5rem;
-    border-radius: var(--border-radius-lg);
-    background: var(--bg-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(5px);
-    text-decoration: none;
-    color: inherit;
-    transition: var(--transition-props);
 }
 
-.action-card:hover {
-    background: var(--bg-primary);
-    border-color: var(--primary-color);
-    transform: translateY(-4px) scale(1.02);
+/* --- Buttons --- */
+.btn {
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-primary { background-color: var(--primary-color); }
+.btn-primary:hover { background-color: var(--primary-dark); }
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+}
+
+.btn-sm:hover {
+    transform: scale(1.05);
     box-shadow: var(--shadow-soft);
 }
 
-.action-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: var(--border-radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    margin-right: 15px;
-}
-/* --- REFAC: Usando variables de estado --- */
-.action-icon.add-doctor { background-color: var(--success-bg); color: var(--success-fg); }
-.action-icon.view-reports { background-color: var(--info-bg); color: var(--info-fg); }
-.action-icon.analytics { background-color: var(--warning-bg); color: var(--warning-fg); }
-.action-icon.alert { background-color: var(--danger-bg); color: var(--danger-fg); }
-
-.action-content h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: var(--text-primary);
-}
-
-.action-content p {
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.activity-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.05); /* Esto es relativo al --bg-glass */
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: var(--transition-props);
-}
-
-.activity-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(8px);
-}
-
-.activity-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: var(--text-on-primary);
-    flex-shrink: 0;
-}
-/* ... gradientes mantenidos ... */
-.activity-icon.doctor-added { background: linear-gradient(135deg, #10b981, #059669); }
-.activity-icon.patient-care { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-.activity-icon.appointment { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.activity-icon.report { background: linear-gradient(135deg, #ef4444, #dc2626); }
-
-
-.activity-content {
-    flex: 1;
-    min-width: 0;
-}
-
-/* --- A11Y: Corregido color de texto para legibilidad sobre fondo claro --- */
-.activity-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    font-size: 1rem;
-}
-
-.activity-meta {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-}
-
-.activity-time {
-    color: var(--text-secondary);
-    opacity: 0.8;
-    font-size: 0.75rem;
-}
-
-
-.health-metrics {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.health-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--border-radius-sm);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* --- A11Y: Corregido color de texto --- */
-.health-label {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-}
-
-.health-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-/* --- REFAC: Usando variables de estado --- */
-.health-status.healthy { color: var(--success-fg); }
-.health-status.warning { color: var(--warning-fg); }
-.health-status.error { color: var(--danger-fg); }
-
-.health-status .status-text {
-    font-size: 0.8rem;
-}
-
-/* ... (Resto de widgets de "vidrio" siguen el mismo patrón de corrección A11y) ... */
-
-.notifications-widget .notification-title,
-.notifications-widget .notification-message,
-.notifications-widget .notification-time,
-.weather-widget .weather-info,
-.weather-widget .detail-item,
-.quick-stats .mini-stat-number,
-.quick-stats .mini-stat-label,
-.scheduler-preview .time,
-.scheduler-preview .appointment-info h4,
-.scheduler-preview .appointment-info p {
-    /* --- A11Y: Nuke de color para widgets de vidrio --- */
-    color: var(--text-primary) !important;
-    opacity: 1;
-}
-
-.notifications-widget .notification-message,
-.notifications-widget .notification-time,
-.weather-widget .detail-item,
-.quick-stats .mini-stat-label,
-.scheduler-preview .appointment-info p {
-    color: var(--text-secondary) !important;
-}
-
-
-/* Floating Action Button */
-.fab {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 60px;
-    height: 60px;
-    background: var(--gradient-primary);
-    color: var(--text-on-primary);
-    border: none;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: var(--shadow-glow);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: var(--transition-props);
-    z-index: 1030;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.fab:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
-}
-
-/* --- REFAC: Sistema de Botones Unificado --- */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.5rem; /* Estandarizado */
-    border-radius: var(--border-radius-sm);
-    font-weight: 500;
-    font-size: 0.9rem; /* Estandarizado */
-    cursor: pointer;
-    transition: var(--transition-props);
-    border: 1px solid transparent;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: var(--text-on-primary);
-    border-color: var(--primary-color);
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-}
-
-.btn-secondary,
-.btn-outline-secondary {
-    background: var(--bg-primary);
-    color: var(--text-secondary);
-    border-color: var(--border-color);
-}
-
-.btn-secondary:hover,
-.btn-outline-secondary:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-}
-
-.btn-outline-danger {
-    color: var(--danger-fg);
-    border-color: var(--danger-fg);
-    background: var(--bg-primary);
-}
-
-.btn-outline-danger:hover {
-    background: var(--danger-fg);
-    color: var(--text-on-primary);
-}
-
-.btn-outline-primary {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-    background: var(--bg-primary);
-}
-
-.btn-outline-primary:hover {
-    background: var(--primary-color);
-    color: var(--text-on-primary);
-}
-
-/* --- REFAC: Sistema de Formularios Unificado --- */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
+/* --- Forms --- */
 .form-label {
     font-weight: 500;
     color: var(--text-primary);
-    margin-bottom: 0.25rem; /* Ajustado */
-    font-size: 0.9rem;
 }
 
-.form-input, 
-.form-select, 
-.form-textarea {
-    padding: 0.875rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-sm); /* Estandarizado */
-    font-size: 1rem;
-    transition: var(--transition-props);
-    background: var(--bg-primary);
-}
-
-.form-input:focus, 
-.form-select:focus, 
-.form-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-}
-
-.form-input:invalid {
-    border-color: var(--danger-fg);
-}
-
-.form-textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-/* ... Fin de la consolidación de formularios ... */
-
-
-/* Create Doctor Styles */
-.create-doctor-content {
-    padding: 2rem;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.form-container {
-    padding: 2rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.form-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
-
-.instructions {
-    background: var(--info-bg);
-    padding: 1.5rem;
+.form-control {
     border-radius: var(--border-radius-sm);
-    margin-bottom: 2rem;
-    border-left: 4px solid var(--info-fg);
-    color: var(--info-fg);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
 }
 
-.instructions h4 {
-    color: var(--info-fg);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.instructions ol {
-    margin: 0;
-    padding-left: 1.5rem;
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.full-width {
-    grid-column: 1 / -1;
-}
-
-.alert {
-    padding: 1rem 1.5rem;
-    border-radius: var(--border-radius-sm);
-    margin-bottom: 1.5rem;
-    display: none;
-    font-weight: 500;
-}
-.alert-success {
-    background: var(--success-bg);
-    color: var(--success-fg);
-    border: 1px solid var(--success-fg);
-}
-.alert-error {
-    background: var(--danger-bg);
-    color: var(--danger-fg);
-    border: 1px solid var(--danger-fg);
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 2rem;
-}
-
-/* Analytics Styles */
-.privacy-notice {
-    background: var(--warning-bg);
-    border: 1px solid var(--warning-fg);
-    border-radius: var(--border-radius-md);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    color: var(--warning-fg);
-}
-
-.privacy-icon {
-    color: var(--warning-fg);
-    font-size: 1.5rem;
-    margin-top: 0.25rem;
-}
-
-.privacy-content h4 {
-    color: var(--warning-fg);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.chart-card {
-    padding: 2rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.chart-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-}
-/* ... */
-
-/* --- REFAC: Sistema de Badges Unificado --- */
-.badge,
-.risk-badge,
-.status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    display: inline-block;
-}
-
-.badge.urgent,
-.risk-high,
-.doctor-status.inactive {
-    background: var(--danger-bg);
-    color: var(--danger-fg);
-}
-
-.risk-medium {
-    background: var(--warning-bg);
-    color: var(--warning-fg);
-}
-
-.risk-low,
-.doctor-status.active,
-.status-active {
-    background: var(--success-bg);
-    color: var(--success-fg);
-}
-
-.status-inactive {
-    background: #f3f4f6;
-    color: var(--text-secondary);
-}
-/* ... */
-
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .main-menu {
-        transform: translateX(-100%); /* Oculto por defecto en móvil */
-        z-index: 1050; /* Asegurar que esté sobre el contenido */
-    }
-
-    .main-menu.show {
-        transform: translateX(0); /* Mostrar con JS */
-    }
-
-    .mobile-menu-btn {
-        display: flex;
-    }
-
-    .content {
-        margin-left: 0;
-        padding: 1rem;
-    }
-    
-    /* La clase .collapsed no debe tener efecto en móvil */
-    .content.collapsed {
-        margin-left: 0;
-    }
-
-    .main-content,
-    .settings-grid,
-    .form-grid,
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    }
-    
-    /* ... (resto de reglas responsivas mantenidas) ... */
-}
-
-@media (max-width: 480px) {
-    /* ... (resto de reglas responsivas mantenidas) ... */
-
-    .stat-card {
-        padding: 1.5rem;
-    }
-
-    .stat-number {
-        font-size: 2rem;
-    }
-}
-
-/* Estilos adicionales para componentes específicos */
-
-/* Estilos para Analytics */
-.analytics-content {
-    padding: 2rem;
-}
-
-.export-section {
-    margin-top: 2rem;
-}
-
-.export-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.export-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.export-option {
-    padding: 1.5rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: var(--transition-props);
-    text-align: center;
-}
-
-.export-option:hover {
+.form-control:focus {
     border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
 }
 
-.export-option.selected {
-    border-color: var(--primary-color);
-    background: rgba(124, 58, 237, 0.05);
-}
-
-.export-icon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}
-
-.export-option h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-.export-option p {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.export-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-/* Estilos para Doctors */
-.doctors-content {
-    padding: 2rem;
-}
-
-.doctors-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.doctors-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.doctors-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.doctor-card {
-    padding: 1.5rem;
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-}
-
-.doctor-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.doctor-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--gradient-primary);
-    color: var(--text-on-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1.2rem;
-}
-
-.doctor-info h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.doctor-info p {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.doctor-specialty {
-    font-size: 0.875rem;
-    color: var(--primary-color);
-    font-weight: 500;
-    margin-bottom: 1rem;
-}
-
-.doctor-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    margin-bottom: 1rem;
-}
-
-.doctor-status.active {
-    color: var(--success-fg);
-}
-
-.doctor-status.inactive {
-    color: var(--danger-fg);
-}
-
-.doctor-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-}
-
-.empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
-}
-
-.empty-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-.empty-description {
-    margin-bottom: 1.5rem;
-}
-
-/* Estilos para Patients */
-.patients-content {
-    padding: 2rem;
-}
-
-.patients-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.patients-table {
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-    overflow: hidden;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
+/* --- Tables --- */
 .table {
-    width: 100%;
-    border-collapse: collapse;
+    border-color: var(--border-color);
 }
 
 .table th {
-    background: var(--bg-secondary);
-    padding: 1rem;
-    text-align: left;
     font-weight: 600;
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
-}
-
-.table td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.table-hover tbody tr:hover {
-    background: var(--bg-secondary);
-}
-
-.patient-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.patient-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--gradient-primary);
-    color: var(--text-on-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-}
-
-.patient-name {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.patient-email {
-    font-size: 0.875rem;
     color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
 }
 
-/* Estilos para Settings */
-.settings-content {
-    padding: 2rem;
-}
-
-.settings-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-}
-
-.main-settings {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.settings-section {
-    /* --- REFAC: Estilos de tarjeta movidos a agrupación --- */
-    padding: 2rem;
-}
-
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.preferences-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-}
-
-.preference-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius-sm);
-}
-
-.preference-label {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.preference-toggle {
-    width: 50px;
-    height: 26px;
-    background: var(--border-color);
-    border-radius: 13px;
-    position: relative;
+.table-hover > tbody > tr:hover {
+    --bs-table-accent-bg: var(--bg-secondary);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-hover);
     cursor: pointer;
-    transition: var(--transition-props);
 }
 
-.preference-toggle.active {
-    background: var(--primary-color);
+.table-light {
+    --bs-table-bg: var(--bg-secondary);
+    --bs-table-border-color: var(--border-color);
 }
 
-.preference-toggle::before {
-    content: '';
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: white;
-    top: 2px;
-    left: 2px;
-    transition: var(--transition-props);
-}
-
-.preference-toggle.active::before {
-    left: 26px;
-}
-
-.settings-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.sidebar-title {
-    font-size: 1.1rem;
+/* --- Badges --- */
+.badge {
+    padding: 0.4em 0.8em;
+    border-radius: 50px; /* pill shape */
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    font-size: 0.75rem;
 }
 
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
+.badge.bg-success {
+    background-color: var(--status-success-bg) !important;
+    color: var(--status-success-fg) !important;
 }
 
-.status-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-    display: inline-block;
+.badge.bg-secondary {
+    background-color: var(--status-inactive-bg) !important;
+    color: var(--status-inactive-fg) !important;
 }
 
-.status-indicator.healthy {
-    background: var(--success-fg);
+/* --------------------------------------------------------------------------
+   3. Page-Specific Styles
+   -------------------------------------------------------------------------- */
+
+/* --- institution/dashboard.html --- */
+.card.bg-primary { background-color: var(--primary-color) !important; }
+.card.bg-success { background-color: var(--success-color) !important; }
+.card.bg-info { background-color: var(--info-color) !important; }
+
+.dashboard-stat-card {
+    transition: var(--transition);
 }
 
-.status-indicator.warning {
-    background: var(--warning-fg);
+.dashboard-stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
 }
 
-.status-indicator.error {
-    background: var(--danger-fg);
+.dashboard-stat-card .card-footer {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.status-label {
-    font-size: 0.9rem;
-    color: var(--text-primary);
+.dashboard-stat-card a {
+    text-decoration: none;
 }
 
-.status-value {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
+.dashboard-stat-card a:hover {
+    text-decoration: underline;
 }
 
-.quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.dashboard-stat-card .text-white-75 {
+    color: rgba(255, 255, 255, 0.75) !important;
 }
 
-/* Estilos para botones pequeños */
-.btn-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+.dashboard-stat-card .text-lg {
+    font-size: 1.75rem;
 }
 
-/* Correcciones para responsive */
+/* --- institution/doctors.html & patients.html --- */
+.actions-cell button {
+    margin-right: 0.25rem;
+}
+
+.actions-cell button:last-child {
+    margin-right: 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Utility & Responsive Styles
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 768px) {
-    .settings-grid {
-        grid-template-columns: 1fr;
+    h1 {
+        font-size: 1.75rem;
     }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .doctors-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .export-options {
-        grid-template-columns: 1fr;
-    }
-    
-    .export-actions {
-        flex-direction: column;
-    }
-    
-    .doctors-header {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
+
+    .container, .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }

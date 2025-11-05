@@ -1,0 +1,86 @@
+<!-- /frontend/templates/patient/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard del Paciente - PredictHealth{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/api-client.js') }}"></script>
+<script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+<script src="{{ url_for('static', filename='js/patient/patient-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/patient/dashboard.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4" id="welcome-title">Cargando...</h1>
+            <p class="lead">Este es tu panel de control. Desde aquí podrás acceder a tu información de salud.</p>
+        </div>
+    </div>
+
+    <!-- Dashboard Widgets -->
+    <div class="row mt-4" id="dashboard-widgets">
+        <!-- Health Score Widget -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-heartbeat fa-3x text-danger mb-3"></i>
+                    <h2 id="health-score">--</h2>
+                    <p class="card-text">Puntuación de Salud</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medications Widget -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-pills fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Medicamentos Activos</h5>
+                    <div id="active-medications">
+                        <p class="text-muted">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Widget -->
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 dashboard-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Acciones Rápidas</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='/patient/medical-record'">
+                            <i class="fas fa-file-medical"></i> Ver Expediente
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="window.location.href='/patient/my-care-team'">
+                            <i class="fas fa-user-md"></i> Mi Equipo
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="window.location.href='/patient/profile'">
+                            <i class="fas fa-user-cog"></i> Mi Perfil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Alerts Section -->
+    <div class="row mt-4">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Alertas de Salud</h5>
+                </div>
+                <div class="card-body">
+                    <div id="health-alerts">
+                        <p class="text-muted">No hay alertas activas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

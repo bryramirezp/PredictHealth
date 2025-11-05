@@ -3,7 +3,7 @@
 
 import os
 import requests
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, g
 from functools import wraps
 
 # Crear un blueprint para las rutas del gateway

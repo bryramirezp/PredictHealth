@@ -1,0 +1,170 @@
+<!-- /frontend/templates/doctor/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard del Doctor - PredictHealth{% endblock %}
+
+{% block head %}
+<script src="/static/js/api-client.js"></script>
+<script src="/static/js/auth-manager.js"></script>
+<script src="/static/js/doctor.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4" id="welcome-title">Cargando...</h1>
+            <p class="lead">Este es su panel de control profesional.</p>
+        </div>
+    </div>
+
+    <!-- Doctor Statistics -->
+    <div class="row mt-4" id="doctor-stats">
+        <!-- Total Patients -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-primary dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Total de Pacientes</div>
+                            <div class="text-lg fw-bold" id="total-patients">--</div>
+                        </div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/doctor/patients">Ver Mis Pacientes</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-success dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Citas Hoy</div>
+                            <div class="text-lg fw-bold" id="today-appointments">--</div>
+                        </div>
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/doctor/appointments">Ver Agenda</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reviews -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-warning dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Revisiones Pendientes</div>
+                            <div class="text-lg fw-bold" id="pending-reviews">--</div>
+                        </div>
+                        <i class="fas fa-clipboard-list fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/doctor/reviews">Ver Revisiones</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Hours -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-info dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Horas Disponibles</div>
+                            <div class="text-lg fw-bold" id="available-hours">--</div>
+                        </div>
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/doctor/schedule">Gestionar Horarios</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="row mt-4">
+        <!-- Upcoming Appointments -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Próximas Citas</h5>
+                </div>
+                <div class="card-body">
+                    <div id="upcoming-appointments">
+                        <p class="text-muted">Cargando citas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Patients -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Pacientes Recientes</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recent-patients">
+                        <p class="text-muted">Cargando pacientes recientes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" onclick="window.location.href='/doctor/patients'">
+                                <i class="fas fa-users"></i><br>
+                                <small>Gestionar Pacientes</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-success w-100" onclick="window.location.href='/doctor/my-institution'">
+                                <i class="fas fa-hospital"></i><br>
+                                <small>Mi Institución</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-info w-100" onclick="window.location.href='/doctor/profile'">
+                                <i class="fas fa-user-md"></i><br>
+                                <small>Mi Perfil</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-secondary w-100" id="refresh-dashboard">
+                                <i class="fas fa-sync-alt"></i><br>
+                                <small>Actualizar</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

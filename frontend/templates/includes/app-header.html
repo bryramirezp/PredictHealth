@@ -15,10 +15,10 @@
                         <a class="nav-link active" href="{{ url_for('frontend.patient_dashboard') }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Mi Expediente</a>
+                        <a class="nav-link" href="{{ url_for('frontend.patient_medical_record') }}">Mi Expediente</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Mi Equipo Médico</a>
+                        <a class="nav-link" href="{{ url_for('frontend.patient_my_care_team') }}">Mi Equipo Médico</a>
                     </li>
                 {% elif user.user_type == 'doctor' %}
                     <!-- Menú del Doctor -->
@@ -51,7 +51,13 @@
                         {{ user.email }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
+                        {% if user.user_type == 'patient' %}
+                        <li><a class="dropdown-item" href="{{ url_for('frontend.patient_profile') }}">Mi Perfil</a></li>
+                        {% elif user.user_type == 'doctor' %}
+                        <li><a class="dropdown-item" href="{{ url_for('frontend.doctor_profile') }}">Mi Perfil</a></li>
+                        {% elif user.user_type == 'institution' %}
+                        <li><a class="dropdown-item" href="{{ url_for('frontend.institution_profile') }}">Mi Perfil</a></li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="event.preventDefault(); AuthManager.logout();">

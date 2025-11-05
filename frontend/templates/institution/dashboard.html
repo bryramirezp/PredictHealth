@@ -1,0 +1,202 @@
+<!-- /frontend/templates/institution/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard de la Institución - PredictHealth{% endblock %}
+
+{% block head %}
+<script src="/static/js/api-client.js"></script>
+<script src="/static/js/auth-manager.js"></script>
+<script src="/static/js/institution.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4" id="welcome-title">Cargando...</h1>
+            <p class="lead">Panel de administración de la institución.</p>
+        </div>
+    </div>
+
+    <!-- Institution Statistics -->
+    <div class="row mt-4" id="institution-stats">
+        <!-- Total Doctors -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-primary dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Total de Doctores</div>
+                            <div class="text-lg fw-bold" id="total-doctors">--</div>
+                        </div>
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/institution/doctors">Gestionar Doctores</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Patients -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-success dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Total de Pacientes</div>
+                            <div class="text-lg fw-bold" id="total-patients">--</div>
+                        </div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/institution/patients">Ver Pacientes</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Patients This Month -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-warning dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Nuevos Pacientes (Mes)</div>
+                            <div class="text-lg fw-bold" id="new-patients-month">--</div>
+                        </div>
+                        <i class="fas fa-user-plus fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/institution/reports">Ver Reportes</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Rating -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 text-white bg-info dashboard-stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="me-3">
+                            <div class="text-white-75 small">Calificación Promedio</div>
+                            <div class="text-lg fw-bold" id="average-rating">--</div>
+                        </div>
+                        <i class="fas fa-star fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between small">
+                    <a class="text-white stretched-link" href="/institution/reviews">Ver Reseñas</a>
+                    <div class="text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="row mt-4">
+        <!-- Top Doctors -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-trophy"></i> Doctores Destacados</h5>
+                </div>
+                <div class="card-body">
+                    <div id="top-doctors">
+                        <p class="text-muted">Cargando doctores destacados...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Alertas Recientes</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recent-alerts">
+                        <p class="text-muted">No hay alertas recientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Chart -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Crecimiento Mensual</h5>
+                </div>
+                <div class="card-body">
+                    <div id="growth-chart">
+                        <p class="text-muted">Cargando gráfico de crecimiento...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-primary w-100" id="add-doctor">
+                                <i class="fas fa-user-plus"></i><br>
+                                <small>Agregar Doctor</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-success w-100" onclick="window.location.href='/institution/doctors'">
+                                <i class="fas fa-user-md"></i><br>
+                                <small>Gestionar Doctores</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-info w-100" onclick="window.location.href='/institution/patients'">
+                                <i class="fas fa-users"></i><br>
+                                <small>Ver Pacientes</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <button class="btn btn-outline-secondary w-100" id="refresh-dashboard">
+                                <i class="fas fa-sync-alt"></i><br>
+                                <small>Actualizar</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Statistics Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Estadísticas de Pacientes</h5>
+                </div>
+                <div class="card-body">
+                    <div id="patient-statistics">
+                        <p class="text-muted">Cargando estadísticas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

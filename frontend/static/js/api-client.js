@@ -185,19 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const userSession = await PredictHealthAPI.auth.getCurrentUser();
             console.log('Sesión activa para:', userSession);
 
-            // 2. Cargar la UI y los datos según el rol del usuario
-            switch (userSession.user_type) {
+            // 2. Extraer datos del usuario de la respuesta
+            const userData = userSession.data.user;
+            console.log('Datos del usuario:', userData);
+
+            // 3. Cargar la UI y los datos según el rol del usuario
+            switch (userData.user_type) {
                 case 'patient':
-                    loadPatientDashboard(userSession.reference_id);
+                    loadPatientDashboard(userData.user_id);
                     break;
                 case 'doctor':
-                    loadDoctorDashboard(userSession.reference_id);
+                    loadDoctorDashboard(userData.user_id);
                     break;
                 case 'institution':
-                    loadInstitutionDashboard(userSession.reference_id);
+                    loadInstitutionDashboard(userData.user_id);
                     break;
                 default:
-                    console.error('Tipo de usuario desconocido:', userSession.user_type);
+                    console.error('Tipo de usuario desconocido:', userData.user_type);
                     // Mostrar una vista de error o redirigir al login
             }
 

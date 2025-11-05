@@ -1,182 +1,359 @@
-// /frontend\static\js\landing.js
-// Landing Page JavaScript - User Type Selection Modal
+// /static/js/landing.js
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Get modal and buttons
-  const userTypeModal = document.getElementById('userTypeModal');
-  const loginBtn = document.getElementById('loginBtn');
-  const mainLoginBtn = document.getElementById('mainLoginBtn');
-  // Support both legacy '.user-type-option' and current '.user-type-card' anchors
-  const userTypeCards = document.querySelectorAll('.user-type-card, .user-type-option');
+// Espera a que el DOM esté cargado
+document.addEventListener('DOMContentLoaded', () => {
 
-  // Single login modal for all user types
-  const loginUrls = {
-    patient: '#',
-    doctor: '#',
-    institution: '#'
-  };
-
-  // Show modal when login buttons are clicked
-  function showUserTypeModal() {
-    if (userTypeModal) {
-      userTypeModal.style.display = 'flex';
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
-  }
-
-  // Hide modal function
-  function hideUserTypeModal() {
-    if (userTypeModal) {
-      userTypeModal.style.display = 'none';
-      document.body.style.overflow = ''; // Restore scrolling
-    }
-  }
-  
-  // Add event listeners to login buttons
-  if (loginBtn) {
-    loginBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      showUserTypeModal();
-    });
-  }
-  
-  if (mainLoginBtn) {
-    mainLoginBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      showUserTypeModal();
-    });
-  }
-  
-  // Handle user type selection (anchors or cards)
-  userTypeCards.forEach(option => {
-    option.addEventListener('click', function(e) {
-      e.preventDefault();
-      // Derive target either from data-type or href
-      const userType = this.getAttribute('data-type');
-
-      // Optional visual selection for legacy tiles
-      try {
-        userTypeCards.forEach(opt => opt.classList?.remove('selected'));
-        this.classList?.add('selected');
-      } catch {}
-
-      // For all user types, show the generic login modal
-      // Close the user type modal and show the login modal
-      hideUserTypeModal();
-      setTimeout(() => {
-        // Trigger the login button to show the login modal
-        const loginBtn = document.getElementById('loginBtn');
-        if (loginBtn) {
-          loginBtn.click();
-        }
-      }, 200);
-    });
-  });
-  
-  // Add hover effects to user type options
-  userTypeOptions.forEach(option => {
-    option.addEventListener('mouseenter', function() {
-      if (!this.classList.contains('selected')) {
-        this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)';
-      }
-    });
-
-    option.addEventListener('mouseleave', function() {
-      if (!this.classList.contains('selected')) {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = 'none';
-      }
-    });
-  });
-
-  // Close modal when clicking outside
-  if (userTypeModal) {
-    userTypeModal.addEventListener('click', function(e) {
-      if (e.target === this) {
-        hideUserTypeModal();
-      }
-    });
-  }
-  
-  // Handle footer login links - all show the generic login modal
-  const patientLoginLink = document.getElementById('patientLoginLink');
-  const doctorLoginLink = document.getElementById('doctorLoginLink');
-  const institutionLoginLink = document.getElementById('institutionLoginLink');
-
-  function showLoginModal(e) {
-    e.preventDefault();
+    // --- Variables Globales ---
+    const modal = document.getElementById('modal');
+    const modalTitleEl = document.querySelector('.modal-title');
+    const learnMoreBtn = document.getElementById('learnMoreBtn');
     const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) {
-      loginBtn.click();
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    // Guardar contenido original del modal
+    const originalModalTitle = modalTitleEl ? modalTitleEl.innerHTML : '';
+    const originalModalContent = document.querySelector('.modal-content') ? document.querySelector('.modal-content').innerHTML : '';
+
+    // Parámetros de URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const showLoginOnLoad = urlParams.get('show_login') === 'true';
+
+    // --- Funciones Principales ---
+
+    /** Muestra el formulario de login */
+    function showLoginModal() {
+        if (!modal) return;
+
+        // Restaurar contenido original por si estaba el de "Contacto"
+        const modalContentDiv = document.querySelector('.modal-content');
+        if (modalContentDiv.innerHTML !== originalModalContent) {
+             modalContentDiv.innerHTML = originalModalContent;
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Bloquear scroll
+        clearLoginForm();
+
+        // Reactivar listeners del formulario restaurado
+        const toggleBtn = document.getElementById('toggleLoginPassword');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', toggleLoginPasswordVisibility);
+        }
+        const submitBtn = document.querySelector('#loginForm .form-submit');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', handleLogin);
+        }
+
+        // El botón de cerrar se re-asigna en los listeners globales
     }
-  }
 
-  if (patientLoginLink) {
-    patientLoginLink.addEventListener('click', showLoginModal);
-  }
+    /** Muestra el formulario de contacto (placeholder) */
+    function showContactForm() {
+        if (!modal) return;
 
-  if (doctorLoginLink) {
-    doctorLoginLink.addEventListener('click', showLoginModal);
-  }
+        const modalContentDiv = document.querySelector('.modal-content');
+        const modalTitle = document.querySelector('.modal-title');
 
-  if (institutionLoginLink) {
-    institutionLoginLink.addEventListener('click', showLoginModal);
-  }
-  
-  // Smooth scrolling for navigation links
-  const navLinks = document.querySelectorAll('a[href^="#"]');
-  navLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const targetId = this.getAttribute('href').substring(1);
-      const targetElement = document.getElementById(targetId);
-      
-      if (targetElement) {
-        targetElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
+        if (modalTitle) modalTitle.style.display = 'none';
+
+        // Formulario de contacto simplificado
+        modalContentDiv.innerHTML = `
+            <h2 class="modal-title" style="display: none;">${originalModalTitle}</h2>
+            <div class="contact-form" style="text-align: center; padding: 2rem;">
+                <h3 style="color: #2d3748; margin-bottom: 1rem;">¡Gracias por tu interés!</h3>
+                <p style="color: #718096; margin-bottom: 2rem; line-height: 1.6;">
+                    Estamos trabajando en mejorar PredictHealth. Pronto podrás contactarnos directamente desde aquí.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="mailto:contact@predicthealth.com" class="btn btn-primary" style="text-decoration: none;">
+                        <i class="fas fa-envelope"></i> Email
+                    </a>
+                    <a href="tel:+1234567890" class="btn btn-secondary" style="text-decoration: none;">
+                        <i class="fas fa-phone"></i> Teléfono
+                    </a>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Bloquear scroll
+    }
+
+    /** Cierra el modal (Login o Contacto) */
+    function closeModal() {
+        if (!modal) return;
+        modal.style.display = 'none';
+        document.body.style.overflow = ''; // Restaurar scroll
+    }
+
+    /** Limpia el formulario de login */
+    function clearLoginForm() {
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        const messageDiv = document.getElementById('loginMessage');
+
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        if (messageDiv) messageDiv.style.display = 'none';
+    }
+
+    /** Muestra/oculta la contraseña */
+    function toggleLoginPasswordVisibility() {
+        const passwordInput = document.getElementById('loginPassword');
+        const toggleIcon = document.getElementById('toggleLoginPassword').querySelector('i');
+
+        if (!passwordInput || !toggleIcon) return;
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        }
+    }
+
+    /** Muestra un mensaje en el formulario de login */
+    function showLoginMessage(message, type = 'info') {
+        const messageDiv = document.getElementById('loginMessage');
+        if (!messageDiv) return;
+
+        messageDiv.textContent = message;
+        messageDiv.className = `login-message ${type}`;
+        messageDiv.style.display = 'block';
+
+        if (type === 'success') {
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    /** Maneja el envío del formulario de login */
+    async function handleLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const submitBtn = document.querySelector('#loginForm .form-submit');
+
+        if (!email || !password) {
+            showLoginMessage('Por favor, completa todos los campos.', 'error');
+            return;
+        }
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Iniciando sesión...';
+        }
+
+        try {
+            const response = await fetch('/api/web/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                showLoginMessage('Login exitoso. Redirigiendo...', 'success');
+                setTimeout(() => {
+                    const userType = result.data.user_type;
+                    const redirectUrls = {
+                        'patient': '/patient/dashboard',
+                        'doctor': '/doctor/dashboard',
+                        'institution': '/institution/dashboard'
+                    };
+                    window.location.href = redirectUrls[userType] || '/';
+                }, 1000);
+            } else {
+                throw new Error(result.message || 'Error en la autenticación');
+            }
+
+        } catch (error) {
+            console.error('Error en login:', error);
+            showLoginMessage(error.message || 'Error al iniciar sesión. Inténtalo de nuevo.', 'error');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Iniciar Sesión';
+            }
+        }
+    }
+
+    // --- WebGL Background Shader ---
+    const canvas = document.getElementById("iridescence-canvas");
+    if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const gl = canvas.getContext("webgl");
+
+        if (!gl) {
+            console.error("WebGL no soportado");
+        } else {
+            const vertexShaderSrc = `
+                attribute vec2 position;
+                attribute vec2 uv;
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position, 0, 1);
+                }
+            `;
+            const fragmentShaderSrc = `
+                precision highp float;
+                uniform float uTime;
+                uniform vec3 uColor;
+                uniform vec3 uResolution;
+                uniform vec2 uMouse;
+                uniform float uAmplitude;
+                uniform float uSpeed;
+                varying vec2 vUv;
+                void main() {
+                    float mr = min(uResolution.x, uResolution.y);
+                    vec2 uv = (vUv.xy * 2.0 - 1.0) * uResolution.xy / mr;
+                    uv += (uMouse - vec2(0.5)) * uAmplitude;
+                    float d = -uTime * 0.5 * uSpeed;
+                    float a = 0.0;
+                    for (float i = 0.0; i < 8.0; ++i) {
+                        a += cos(i - d - a * uv.x);
+                        d += sin(uv.y * i + a);
+                    }
+                    d += uTime * 0.5 * uSpeed;
+                    vec3 col = vec3(cos(uv * vec2(d, a)) * 0.6 + 0.4, cos(a + d) * 0.5 + 0.5);
+                    col = cos(col * cos(vec3(d, a, 2.5)) * 0.5 + 0.5) * uColor;
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            const createShader = (gl, type, source) => {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            };
+
+            const createProgram = (gl, vertexShader, fragmentShader) => {
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    console.error(gl.getProgramInfoLog(program));
+                    return null;
+                }
+                return program;
+            };
+
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
+            const program = createProgram(gl, vertexShader, fragmentShader);
+
+            const positions = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+            const uvs = new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]);
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+            const uvBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.STATIC_DRAW);
+
+            const positionAttributeLocation = gl.getAttribLocation(program, "position");
+            const uvAttributeLocation = gl.getAttribLocation(program, "uv");
+            const timeUniformLocation = gl.getUniformLocation(program, "uTime");
+            const colorUniformLocation = gl.getUniformLocation(program, "uColor");
+            const resolutionUniformLocation = gl.getUniformLocation(program, "uResolution");
+            const mouseUniformLocation = gl.getUniformLocation(program, "uMouse");
+            const amplitudeUniformLocation = gl.getUniformLocation(program, "uAmplitude");
+            const speedUniformLocation = gl.getUniformLocation(program, "uSpeed");
+
+            let mouseX = 0.5, mouseY = 0.5;
+            const mouseReact = false;
+
+            if (mouseReact) {
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    mouseX = (e.clientX - rect.left) / rect.width;
+                    mouseY = 1.0 - (e.clientY - rect.top) / rect.height;
+                });
+            }
+
+            const render = (time) => {
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.useProgram(program);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+                gl.enableVertexAttribArray(uvAttributeLocation);
+                gl.vertexAttribPointer(uvAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+                gl.uniform1f(timeUniformLocation, time * 0.001);
+                gl.uniform3f(colorUniformLocation, 0.3, 0.3, 1.0); // Color azul
+                gl.uniform3f(resolutionUniformLocation, canvas.width, canvas.height, canvas.width / canvas.height);
+                gl.uniform2f(mouseUniformLocation, mouseX, mouseY);
+                gl.uniform1f(amplitudeUniformLocation, 0.1);
+                gl.uniform1f(speedUniformLocation, 1.0);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+    }
+
+    // --- Event Listeners ---
+    if (learnMoreBtn) {
+        learnMoreBtn.addEventListener('click', showContactForm);
+    }
+    if (loginBtn) {
+        loginBtn.addEventListener('click', showLoginModal);
+    }
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
         });
-      }
-    });
-  });
-  
-  // Add animation to hero elements
-  const heroElements = document.querySelectorAll('.hero-content, .hero-visual');
-  heroElements.forEach((element, index) => {
-    element.style.opacity = '0';
-    element.style.transform = 'translateY(30px)';
-    
-    setTimeout(() => {
-      element.style.transition = 'all 0.8s ease-out';
-      element.style.opacity = '1';
-      element.style.transform = 'translateY(0)';
-    }, index * 200);
-  });
-  
-  // Add scroll effect to header/navbar
-  let lastScrollTop = 0;
-  const navbar = document.querySelector('.header');
+    }
 
-  if (navbar) {
-    window.addEventListener('scroll', function() {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-      if (scrollTop > lastScrollTop && scrollTop > 100) {
-        // Scrolling down
-        navbar.style.transform = 'translateY(-100%)';
-      } else {
-        // Scrolling up
-        navbar.style.transform = 'translateY(0)';
-      }
-
-      lastScrollTop = scrollTop;
+    // Teclado
+    document.addEventListener('keydown', (e) => {
+        if (modal && modal.style.display === 'flex') {
+            if (e.key === 'Enter') {
+                // Solo si el formulario de login es visible
+                if (document.getElementById('loginForm')) {
+                    handleLogin();
+                }
+            } else if (e.key === 'Escape') {
+                closeModal();
+            }
+        }
     });
 
-    // Add navbar transition
-    navbar.style.transition = 'transform 0.3s ease-in-out';
-  }
-  
-
-  console.log('PredictHealth Landing Page loaded successfully');
+    // Mostrar modal si la URL lo indica
+    if (showLoginOnLoad) {
+        setTimeout(() => {
+            showLoginModal();
+        }, 500);
+    }
 });

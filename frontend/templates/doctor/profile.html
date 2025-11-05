@@ -1,0 +1,62 @@
+<!-- /frontend/templates/doctor/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil Profesional - PredictHealth{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestionar Mi Perfil Profesional</h1>
+
+    <!-- Sección de Información Profesional -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-user-md me-2"></i>Perfil Profesional</h5>
+        </div>
+        <div class="card-body">
+            <p>Actualiza tu información profesional que será visible para la institución.</p>
+            <!-- Formulario de Información Profesional (Próximamente) -->
+            <form>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="specialty" class="form-label">Especialidad</label>
+                        <input type="text" class="form-control" id="specialty" value="Cardiología (Próximamente)">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="experience" class="form-label">Años de Experiencia</label>
+                        <input type="number" class="form-control" id="experience" value="15 (Próximamente)">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="consultationFee" class="form-label">Tarifa de Consulta (USD)</label>
+                        <input type="number" class="form-control" id="consultationFee" value="150 (Próximamente)">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Actualizar Perfil Profesional</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sección de Contacto (Emails, Teléfonos, Direcciones) -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-address-book me-2"></i>Información de Contacto</h5>
+        </div>
+        <div class="card-body">
+            <p>Gestiona tus métodos de contacto personal y profesional.</p>
+            <p class="text-muted">CRUD de Emails, Teléfonos y Direcciones (Próximamente).</p>
+            <button class="btn btn-success">Añadir Nuevo Contacto</button>
+        </div>
+    </div>
+
+    <!-- Sección de Seguridad -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-shield-alt me-2"></i>Seguridad</h5>
+        </div>
+        <div class="card-body">
+            <p>Cambia tu contraseña para mantener tu cuenta segura.</p>
+            <p class="text-muted">Formulario de Cambio de Contraseña (Próximamente).</p>
+            <button class="btn btn-danger">Cambiar Contraseña</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
