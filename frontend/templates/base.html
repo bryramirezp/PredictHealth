@@ -49,5 +49,21 @@
 
     <!-- Script específico de la página -->
     {% block scripts %}{% endblock %}
+
+    <!-- Exponer datos del usuario del template al JavaScript global -->
+    {% if user %}
+    <script>
+        // Datos del usuario disponibles para JavaScript
+        window.PatientUserData = {
+            user_id: "{{ user.user_id if user.user_id else user.id if user.id else '' }}",
+            reference_id: "{{ user.user_id if user.user_id else user.id if user.id else '' }}",
+            user_type: "{{ user.user_type if user.user_type else '' }}",
+            email: "{{ user.email if user.email else '' }}",
+            first_name: "{{ user.first_name if user.first_name else '' }}",
+            last_name: "{{ user.last_name if user.last_name else '' }}"
+        };
+        console.log('📝 Datos del usuario expuestos al JavaScript:', window.PatientUserData);
+    </script>
+    {% endif %}
 </body>
 </html>

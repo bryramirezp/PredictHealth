@@ -101,7 +101,7 @@ def require_session(f=None, *, allowed_roles=None):
     def decorator(func):
         @wraps(func)
         def decorated_function(*args, **kwargs):
-            token_id = request.cookies.get('predicthealth_session')
+            token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
 
             if not token_id:
                 logger.warning("⚠️ No session cookie provided")
@@ -146,7 +146,7 @@ def optional_session(f):
     """Decorador opcional para token_id"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token_id = request.cookies.get('predicthealth_session')
+        token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
 
         if token_id:
             session_data = jwt_middleware.validate_session(token_id)
@@ -163,7 +163,7 @@ def require_auth(required_user_type=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            token_id = request.cookies.get('predicthealth_session')
+            token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
 
             if not token_id:
                 return jsonify({

@@ -6,6 +6,10 @@ import logging
 import psycopg2
 import psycopg2.extras
 from psycopg2.pool import SimpleConnectionPool
+import uuid
+
+# Registrar adaptador UUID para psycopg2 (debe hacerse una sola vez al inicializar)
+psycopg2.extras.register_uuid()
 
 logger = logging.getLogger(__name__)
 
@@ -166,23 +170,20 @@ def execute_query(query, params=None, fetch_one=False, fetch_all=True):
         fetch_all (bool): Si debe retornar todos los resultados
 
     Returns:
-        Resultados de la query o None si hay error
+        Resultados de la query
+
+    Raises:
+        Exception: Propaga cualquier error de base de datos
     """
-    try:
-        with DatabaseConnection() as (conn, cursor):
-            cursor.execute(query, params or ())
+    with DatabaseConnection() as (conn, cursor):
+        cursor.execute(query, params or ())
 
-            if fetch_one:
-                return cursor.fetchone()
-            elif fetch_all:
-                return cursor.fetchall()
-            else:
-                return None
-
-    except Exception as e:
-        logger.error(f"❌ Error ejecutando query: {str(e)}")
-        logger.error(f"Query: {query}")
-        return None
+        if fetch_one:
+            return cursor.fetchone()
+        elif fetch_all:
+            return cursor.fetchall()
+        else:
+            return None
 
 # Inicializar el pool al importar el módulo
 if connection_pool is None:

@@ -1,33 +1,37 @@
-// /frontend/static/js/patient-core.js (VERSIÓN FINAL COMPLETA Y REFACTORIZADA)
+// /frontend/static/js/doctor-core.js
 
 /**
- * PredictHealth Patient Core Utilities
- * Funciones, constantes y helpers compartidos para todos los módulos de pacientes.
- * Este módulo debe ser cargado ANTES que cualquier otro script de paciente (dashboard.js, profile.js, etc.).
+ * PredictHealth Doctor Core Utilities
+ * Funciones, constantes y helpers compartidos para todos los módulos de doctores.
+ * Análogo a patient-core.js pero para la lógica del doctor.
  */
 
-const PatientCore = {
-    // === CONSTANTES DE ENDPOINTS ===
+const DoctorCore = {
+    // === CONSTANTES DE ENDPOINTS (para service-doctors) ===
     ENDPOINTS: {
-        DASHBOARD: (patientId) => `/api/v1/patients/${patientId}/dashboard`,
-        MEDICAL_RECORD: (patientId) => `/api/v1/patients/${patientId}/medical-record`,
-        CARE_TEAM: (patientId) => `/api/v1/patients/${patientId}/care-team`,
-        PROFILE: (patientId) => `/api/v1/patients/${patientId}/profile`,
+        DASHBOARD: () => `/api/v1/doctors/me/dashboard`,
+        MY_PROFILE: () => `/api/v1/doctors/me/profile`,
+        MY_INSTITUTION: () => `/api/v1/doctors/me/institution`,
+        MY_PATIENTS: () => `/api/v1/doctors/me/patients`,
+        PATIENT_MEDICAL_RECORD: (patientId) => `/api/v1/doctors/me/patients/${patientId}/medical-record`,
+        // Endpoints de Admin (si fueran necesarios)
+        // LIST_ALL_DOCTORS: () => `/api/v1/doctors`,
+        // GET_DOCTOR_BY_ID: (doctorId) => `/api/v1/doctors/${doctorId}`,
     },
 
     // === UTILIDADES DE AUTENTICACIÓN ===
     /**
-     * Verifica si el usuario está autenticado como paciente.
+     * Verifica si el usuario está autenticado como doctor.
      * Si no, redirige al login. Si sí, devuelve la información del usuario.
      * @returns {Promise<object|null>} La información del usuario o null si no está autenticado.
      */
     async checkAuth() {
         try {
-            // Usar AuthManager.getUserInfo() que ya es Promise-based
+            // Reutiliza AuthManager, que ya está cargado globalmente
             const userInfo = await window.AuthManager.getUserInfo();
-            if (!userInfo || userInfo.user_type !== 'patient') {
-                console.warn('Acceso denegado: usuario no es paciente. Redirigiendo...');
-                window.location.href = '/';
+            if (!userInfo || userInfo.user_type !== 'doctor') {
+                console.warn('Acceso denegado: usuario no es doctor. Redirigiendo...');
+                window.location.href = '/'; // Redirigir al login principal
                 return null;
             }
             return userInfo;
@@ -39,8 +43,7 @@ const PatientCore = {
     },
 
     /**
-     * Obtiene la información actual del usuario autenticado.
-     * Wrapper async para AuthManager.getUserInfo().
+     * Obtiene la información actual del usuario autenticado (doctor).
      * @returns {Promise<object|null>} La información del usuario o null.
      */
     async getCurrentUserInfo() {
@@ -53,60 +56,45 @@ const PatientCore = {
     },
 
     /**
-     * Obtiene el ID del usuario de manera unificada desde diferentes campos posibles.
-     * @param {object} userInfo - La información del usuario.
-     * @returns {string|null} El ID del usuario o null si no se encuentra.
+     * Obtiene el ID del doctor del payload del token.
+     * @param {object} userInfo - La información del usuario (del token).
+     * @returns {string|null} El ID del doctor (reference_id) o null.
      */
-    getUserId(userInfo) {
+    getDoctorId(userInfo) {
         if (!userInfo) return null;
         
-        // Intentar primero user_id (usado por dashboard.js)
-        if (userInfo.user_id) {
-            console.log('Using user_id:', userInfo.user_id);
-            return userInfo.user_id;
-        }
-        
-        // Si no existe, intentar reference_id (usado por otros scripts)
+        // En nuestra arquitectura, el ID de la entidad está en reference_id
         if (userInfo.reference_id) {
-            console.log('Using reference_id:', userInfo.reference_id);
+            console.log('Using reference_id (Doctor ID):', userInfo.reference_id);
             return userInfo.reference_id;
         }
         
-        // Como fallback, intentar id
-        if (userInfo.id) {
-            console.log('Using id:', userInfo.id);
-            return userInfo.id;
+        // Fallback por si acaso
+        if (userInfo.user_id) {
+            console.log('Using user_id (Doctor ID):', userInfo.user_id);
+            return userInfo.user_id;
         }
-        
-        console.warn('No user ID found in userInfo:', userInfo);
+
+        console.warn('No Doctor ID (reference_id) found in userInfo:', userInfo);
         return null;
     },
 
     // === UTILIDADES DE API ===
     /**
-     * Helper centralizado para todas las llamadas API de la sección de pacientes.
-     * Automáticamente incluye la cookie de sesión (credentials: 'include') 
-     * y maneja errores reales de API.
-     * @param {string} url - La URL del endpoint a llamar.
-     * @param {object} options - Opciones adicionales para fetch (method, body, etc.).
-     * @returns {Promise<any>} Los datos de la respuesta en formato JSON.
+     * Helper centralizado para todas las llamadas API de la sección de doctores.
+     * Usa 'credentials: 'include'' para la autenticación por cookies.
      */
     async apiRequest(url, options = {}) {
-
         const finalOptions = {
             method: options.method || 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 ...(options.headers || {})
-                // ¡NO se necesita 'Authorization'!
             },
-            // ¡ESTA ES LA LÍNEA CLAVE!
-            // Le dice al navegador que envíe las cookies (ej. predicthealth_jwt)
             credentials: 'include' 
         };
 
-        // Asegurarse de que el body sea JSON si existe
         if (options.body && typeof options.body !== 'string') {
             finalOptions.body = JSON.stringify(options.body);
         }
@@ -114,48 +102,34 @@ const PatientCore = {
         try {
             const response = await fetch(url, finalOptions);
 
-            // Manejar error de autenticación
             if (response.status === 401) {
-                // La cookie es inválida, expiró o no se envió.
-                // Redirigir a la página de login.
                 console.error('No autorizado (401). Redirigiendo al login.');
-                window.location.href = '/'; // O la ruta de tu login
+                window.location.href = '/';
                 throw new Error('No autorizado (401)');
             }
 
-            // Manejar otros errores de servidor (lanzar error en lugar de mock)
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})); // Intenta leer el JSON de error
+                const errorData = await response.json().catch(() => ({}));
                 const errorMessage = errorData.detail || errorData.message || `Error de API: ${response.status} ${response.statusText}`;
-                // Lanzar un error para que el 'catch' lo maneje
                 throw new Error(errorMessage); 
             }
 
-            // Manejar respuestas sin contenido (ej. DELETE 204 No Content)
             if (response.status === 204) {
                 return null;
             }
 
-            // Todo OK
             return response.json();
 
         } catch (error) {
-            // Capturar errores (de red o los que lanzamos arriba)
             console.error(`Fallo en apiRequest para: ${url}`, error);
-            
-            // Mostrar error al usuario
             this.showErrorMessage(error.message || 'Error de conexión con el servidor'); 
-
-            // Relanzar el error para que el código que llamó (e.g., initDashboardPage) pueda detenerse
             throw error; 
         }
     },
 
     // === UTILIDADES DE UI ===
     /**
-     * Muestra un indicador de carga visualmente atractivo en un elemento del DOM.
-     * @param {string} elementId - El ID del elemento.
-     * @param {string} message - El mensaje a mostrar.
+     * Muestra un indicador de carga en un elemento del DOM.
      */
     showLoading(elementId, message = 'Cargando...') {
         const element = document.getElementById(elementId);
@@ -171,17 +145,14 @@ const PatientCore = {
 
     /**
      * Muestra una notificación de error global.
-     * @param {string} message - El mensaje de error.
      */
     showErrorMessage(message) {
         console.error('UI Error:', message);
-        // Ya no hay modo demo, mostrar siempre el error real.
         this._showNotification(message, 'danger', 'fa-exclamation-triangle');
     },
 
     /**
      * Muestra una notificación de éxito global.
-     * @param {string} message - El mensaje de éxito.
      */
     showSuccessMessage(message) {
         console.log('UI Success:', message);
@@ -214,13 +185,11 @@ const PatientCore = {
     // === UTILIDADES DE FORMATEO ===
     /**
      * Formatea una cadena de fecha (ej. "2025-11-05") a un formato legible.
-     * @param {string} dateString - La fecha en formato YYYY-MM-DD.
-     * @returns {string} La fecha formateada o un texto por defecto.
      */
     formatDate(dateString) {
         if (!dateString) return 'Fecha no disponible';
         try {
-            const date = new Date(dateString + 'T00:00:00'); // Asegurar que se interprete como local
+            const date = new Date(dateString + 'T00:00:00');
             return date.toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
@@ -229,11 +198,8 @@ const PatientCore = {
         } catch (e) {
             return 'Fecha inválida';
         }
-    },
-
-    // === DATOS MOCK PARA DEMO ===
-    // ...Sección de Mocks eliminada...
+    }
 };
 
-// Exponer el objeto PatientCore globalmente para que otros scripts puedan usarlo
-window.PatientCore = PatientCore;
+// Exponer el objeto DoctorCore globalmente
+window.DoctorCore = DoctorCore;

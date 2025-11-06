@@ -3,72 +3,30 @@
 // Maneja CRUD completo de información personal, emails, teléfonos y direcciones
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const Auth = window.AuthManager;
-    const API = window.PredictHealthAPI;
-
-    // Verificar autenticación
-    const userInfo = await Auth.getUserInfo();
-    if (!userInfo || userInfo.user_type !== 'patient') {
-        console.warn('Acceso denegado: usuario no es paciente');
-        return window.location.href = '/';
-    }
-
-    // Solo inicializar si estamos en la página de perfil
+    // Verificar si estamos en la página de perfil antes de ejecutar
     if (window.location.pathname.includes('/patient/profile')) {
-        initProfilePage(userInfo, API);
+        // PatientCore se encargará de la autenticación y proporcionará las utilidades
+        if (!window.PatientCore) {
+            console.error("Error: patient-core.js no está cargado. El perfil no puede funcionar.");
+            return;
+        }
+        
+        const userInfo = await PatientCore.checkAuth();
+        if (userInfo) {
+            initProfilePage(userInfo);
+        }
     }
 });
 
 // Función principal de inicialización
-async function initProfilePage(userInfo, API) {
+async function initProfilePage(userInfo) {
     console.log("Inicializando perfil del paciente con CRUD completo...");
 
     try {
-        // Cargar datos del perfil
-        await loadProfileData(API);
-
-        // Configurar event listeners para formularios
-        setupProfileFormListeners(API);
-
-        console.log('Perfil del paciente inicializado correctamente');
-    } catch (error) {
-        console.error('Error inicializando perfil:', error);
-        showErrorMessage('Error al cargar la información del perfil. Por favor, intenta recargar la página.');
-    }
-}
-
-// Cargar datos del perfil
-async function loadProfileData(API) {
-    try {
-        // Obtener el token JWT y patient_id del usuario autenticado
-        const token = await Auth.getToken();
-        const patientId = userInfo.reference_id;
-
-        if (!token || !patientId) {
-            throw new Error('No se pudo obtener la información de autenticación del paciente');
-        }
-
-        const response = await fetch(`/api/web/patients/${patientId}/profile`, {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error en la respuesta del servidor');
-        }
-
-        const profileData = result.data;
+        // Cargar datos del perfil usando PatientCore
+        const profileData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
+        );
 
         // Renderizar cada sección
         renderPersonalInfo(profileData.personal_info);
@@ -76,11 +34,17 @@ async function loadProfileData(API) {
         renderPhones(profileData.phones);
         renderAddresses(profileData.addresses);
 
+        // Configurar event listeners para formularios
+        setupProfileFormListeners();
+
+        console.log('Perfil del paciente inicializado correctamente');
     } catch (error) {
-        console.error('Error cargando datos del perfil:', error);
-        throw error;
+        console.error('Error inicializando perfil:', error);
+        PatientCore.showErrorMessage('Error al cargar la información del perfil. Por favor, intenta recargar la página.');
     }
 }
+
+// (Se elimina la función 'loadProfileData' redundante)
 
 // Renderizar información personal
 function renderPersonalInfo(personalInfo) {
@@ -103,7 +67,7 @@ function renderPersonalInfo(personalInfo) {
                 <p><strong>Apellido:</strong> ${personalInfo.last_name || 'No especificado'}</p>
             </div>
             <div class="col-md-6">
-                <p><strong>Fecha de Nacimiento:</strong> ${formatDate(personalInfo.date_of_birth) || 'No especificada'}</p>
+                <p><strong>Fecha de Nacimiento:</strong> ${PatientCore.formatDate(personalInfo.date_of_birth) || 'No especificada'}</p>
                 <p><strong>Email Principal:</strong> ${personalInfo.primary_email || 'No especificado'}</p>
             </div>
         </div>
@@ -265,13 +229,13 @@ function populatePersonalInfoForm(personalInfo) {
 }
 
 // Configurar event listeners para formularios
-function setupProfileFormListeners(API) {
+function setupProfileFormListeners() {
     // Formulario de información personal
     const personalInfoForm = document.getElementById('personal-info-form');
     if (personalInfoForm) {
         personalInfoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handlePersonalInfoSubmit(API);
+            await handlePersonalInfoSubmit();
         });
     }
 
@@ -280,7 +244,7 @@ function setupProfileFormListeners(API) {
     if (emailForm) {
         emailForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleEmailSubmit(API);
+            await handleEmailSubmit();
         });
     }
 
@@ -289,7 +253,7 @@ function setupProfileFormListeners(API) {
     if (phoneForm) {
         phoneForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handlePhoneSubmit(API);
+            await handlePhoneSubmit();
         });
     }
 
@@ -298,7 +262,7 @@ function setupProfileFormListeners(API) {
     if (addressForm) {
         addressForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleAddressSubmit(API);
+            await handleAddressSubmit();
         });
     }
 
@@ -307,7 +271,7 @@ function setupProfileFormListeners(API) {
     if (passwordForm) {
         passwordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handlePasswordChange(API);
+            await handlePasswordChange();
         });
 
         // Validación en tiempo real para confirmar contraseña
@@ -336,8 +300,9 @@ function setupProfileFormListeners(API) {
     }
 }
 
-// Manejadores de envío de formularios
-async function handlePersonalInfoSubmit(API) {
+// --- Manejadores de envío de formularios (REFACTORIZADOS) ---
+
+async function handlePersonalInfoSubmit() {
     const form = document.getElementById('personal-info-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -347,45 +312,37 @@ async function handlePersonalInfoSubmit(API) {
 
         const formData = new FormData(form);
         const personalData = Object.fromEntries(formData);
-
-        const response = await fetch('/api/web/patient/personal-info', {
+        
+        // Usar PatientCore.apiRequest
+        const result = await PatientCore.apiRequest('/api/web/patient/personal-info', {
             method: 'PUT',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(personalData)
+            body: personalData
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al actualizar la información personal');
-        }
 
         // Cerrar modal y recargar datos
         const modal = bootstrap.Modal.getInstance(document.getElementById('personalInfoModal'));
         modal.hide();
 
-        await loadProfileData(API);
+        // Recargar datos usando PatientCore
+        const userInfo = await PatientCore.getCurrentUserInfo();
+        const profileData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
+        );
+        renderPersonalInfo(profileData.personal_info);
+        renderEmails(profileData.emails);
 
-        showSuccessMessage('Información personal actualizada exitosamente');
+        PatientCore.showSuccessMessage('Información personal actualizada exitosamente');
 
     } catch (error) {
         console.error('Error actualizando información personal:', error);
-        showErrorMessage(error.message || 'Error al actualizar la información personal');
+        // PatientCore.apiRequest ya muestra el error, no es necesario duplicar
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar Cambios';
     }
 }
 
-async function handleEmailSubmit(API) {
+async function handleEmailSubmit() {
     const form = document.getElementById('email-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -396,45 +353,35 @@ async function handleEmailSubmit(API) {
         const formData = new FormData(form);
         const emailData = Object.fromEntries(formData);
 
-        const response = await fetch('/api/web/patient/emails', {
+        // Usar PatientCore.apiRequest
+        const result = await PatientCore.apiRequest('/api/web/patient/emails', {
             method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(emailData)
+            body: emailData
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el email');
-        }
 
         // Cerrar modal y recargar datos
         const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
         modal.hide();
-
         form.reset();
-        await loadProfileData(API);
 
-        showSuccessMessage('Email agregado exitosamente');
+        // Recargar datos usando PatientCore
+        const userInfo = await PatientCore.getCurrentUserInfo();
+        const profileData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
+        );
+        renderEmails(profileData.emails);
+
+        PatientCore.showSuccessMessage('Email agregado exitosamente');
 
     } catch (error) {
         console.error('Error agregando email:', error);
-        showErrorMessage(error.message || 'Error al agregar el email');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Email';
     }
 }
 
-async function handlePhoneSubmit(API) {
+async function handlePhoneSubmit() {
     const form = document.getElementById('phone-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -445,45 +392,35 @@ async function handlePhoneSubmit(API) {
         const formData = new FormData(form);
         const phoneData = Object.fromEntries(formData);
 
-        const response = await fetch('/api/web/patient/phones', {
+        // Usar PatientCore.apiRequest
+        const result = await PatientCore.apiRequest('/api/web/patient/phones', {
             method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(phoneData)
+            body: phoneData
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el teléfono');
-        }
 
         // Cerrar modal y recargar datos
         const modal = bootstrap.Modal.getInstance(document.getElementById('phoneModal'));
         modal.hide();
-
         form.reset();
-        await loadProfileData(API);
 
-        showSuccessMessage('Teléfono agregado exitosamente');
+        // Recargar datos usando PatientCore
+        const userInfo = await PatientCore.getCurrentUserInfo();
+        const profileData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
+        );
+        renderPhones(profileData.phones);
+
+        PatientCore.showSuccessMessage('Teléfono agregado exitosamente');
 
     } catch (error) {
         console.error('Error agregando teléfono:', error);
-        showErrorMessage(error.message || 'Error al agregar el teléfono');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Teléfono';
     }
 }
 
-async function handleAddressSubmit(API) {
+async function handleAddressSubmit() {
     const form = document.getElementById('address-form');
     const submitBtn = form.querySelector('button[type="submit"]');
 
@@ -494,45 +431,35 @@ async function handleAddressSubmit(API) {
         const formData = new FormData(form);
         const addressData = Object.fromEntries(formData);
 
-        const response = await fetch('/api/web/patient/addresses', {
+        // Usar PatientCore.apiRequest
+        const result = await PatientCore.apiRequest('/api/web/patient/addresses', {
             method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(addressData)
+            body: addressData
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar la dirección');
-        }
 
         // Cerrar modal y recargar datos
         const modal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
         modal.hide();
-
         form.reset();
-        await loadProfileData(API);
 
-        showSuccessMessage('Dirección agregada exitosamente');
+        // Recargar datos usando PatientCore
+        const userInfo = await PatientCore.getCurrentUserInfo();
+        const profileData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
+        );
+        renderAddresses(profileData.addresses);
+
+        PatientCore.showSuccessMessage('Dirección agregada exitosamente');
 
     } catch (error) {
         console.error('Error agregando dirección:', error);
-        showErrorMessage(error.message || 'Error al agregar la dirección');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Dirección';
     }
 }
 
-async function handlePasswordChange(API) {
+async function handlePasswordChange() {
     const form = document.getElementById('password-change-form');
     const submitBtn = document.getElementById('change-password-btn');
 
@@ -548,53 +475,32 @@ async function handlePasswordChange(API) {
             throw new Error('Las contraseñas nuevas no coinciden');
         }
 
-        const response = await fetch('/api/web/auth/change-password', {
+        // Usar PatientCore.apiRequest
+        const result = await PatientCore.apiRequest('/api/web/auth/change-password', {
             method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
+            body: {
                 current_password: passwordData.currentPassword,
                 new_password: passwordData.newPassword
-            })
+            }
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al cambiar la contraseña');
-        }
 
         // Limpiar formulario
         form.reset();
-
-        showSuccessMessage('Contraseña cambiada exitosamente');
+        PatientCore.showSuccessMessage('Contraseña cambiada exitosamente');
 
     } catch (error) {
         console.error('Error cambiando contraseña:', error);
-        showErrorMessage(error.message || 'Error al cambiar la contraseña');
+        // PatientCore.apiRequest ya muestra el error, pero podemos ser más específicos
+        if (error.message.includes('coinciden')) {
+            PatientCore.showErrorMessage(error.message);
+        }
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-key me-1"></i>Cambiar Contraseña';
     }
 }
 
-// Funciones auxiliares
-function formatDate(dateString) {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
+// --- Funciones auxiliares (eliminadas las duplicadas con PatientCore) ---
 
 function formatPhoneNumber(phoneNumber) {
     if (!phoneNumber) return 'No disponible';
@@ -634,52 +540,12 @@ function getAddressTypeText(type) {
         'work': 'Trabajo',
         'home': 'Casa'
     };
+
     return types[type] || type || 'No especificado';
 }
 
-function showErrorMessage(message) {
-    console.error('Error:', message);
+// --- Funciones globales para los botones de editar/eliminar ---
 
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Error:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-function showSuccessMessage(message) {
-    console.log('Success:', message);
-
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        <strong>Éxito:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
-}
-
-// Funciones globales para los botones de editar/eliminar
 window.editEmail = function(id) {
     console.log('Editar email:', id);
     // TODO: Implementar edición

@@ -75,11 +75,11 @@ def login():
 
             # Cookie segura con el access_token del servicio de autenticación
             resp.set_cookie(
-                'predicthealth_session',
+                'predicthealth_jwt',
                 result['access_token'],
                 httponly=True,
                 secure=False,  # True en producción con HTTPS
-                samesite='Strict',
+                samesite='Lax',
                 max_age=15*60  # 15 minutos (expiración del token)
             )
 
@@ -145,7 +145,7 @@ def jwt_health():
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     """Cerrar sesión revocando el token JWT"""
-    token = request.cookies.get('predicthealth_session')
+    token = request.cookies.get('predicthealth_jwt')
 
     if token:
         try:
@@ -170,14 +170,14 @@ def logout():
 
     # Limpiar cookie de todos modos
     resp = jsonify({"success": True, "message": "Sesión cerrada exitosamente"})
-    resp.set_cookie('predicthealth_session', '', expires=0, httponly=True)
+    resp.set_cookie('predicthealth_jwt', '', expires=0, httponly=True, samesite='Lax')
     return resp
 
 # Nuevo endpoint para validar sesión (restaurado para compatibilidad con frontend)
 @auth_bp.route('/session/validate', methods=['GET'])
 def validate_session():
     """Validar token JWT activo"""
-    token = request.cookies.get('predicthealth_session')
+    token = request.cookies.get('predicthealth_jwt')
 
     if not token:
         return jsonify({

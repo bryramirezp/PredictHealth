@@ -3,6 +3,11 @@
 
 {% block title %}Mi Perfil Profesional - PredictHealth{% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/doctor-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/doctor-profile.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">Gestionar Mi Perfil Profesional</h1>
@@ -14,20 +19,22 @@
         </div>
         <div class="card-body">
             <p>Actualiza tu información profesional que será visible para la institución.</p>
-            <!-- Formulario de Información Profesional (Próximamente) -->
-            <form>
+            
+            <!-- ID y 'name' atributos añadidos -->
+            <form id="doctor-profile-form">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="specialty" class="form-label">Especialidad</label>
-                        <input type="text" class="form-control" id="specialty" value="Cardiología (Próximamente)">
+                        <!-- TODO: Reemplazar con un <select> dinámico -->
+                        <input type="text" class="form-control" id="specialty" name="specialty" placeholder="Cargando...">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="experience" class="form-label">Años de Experiencia</label>
-                        <input type="number" class="form-control" id="experience" value="15 (Próximamente)">
+                        <input type="number" class="form-control" id="experience" name="experience" placeholder="0">
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="consultationFee" class="form-label">Tarifa de Consulta (USD)</label>
-                        <input type="number" class="form-control" id="consultationFee" value="150 (Próximamente)">
+                        <input type="number" class="form-control" id="consultationFee" name="consultationFee" placeholder="0.00">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Actualizar Perfil Profesional</button>

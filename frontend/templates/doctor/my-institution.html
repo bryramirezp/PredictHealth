@@ -3,6 +3,11 @@
 
 {% block title %}Mi Institución - PredictHealth{% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/doctor-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/doctor-institution.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">Información de Mi Institución</h1>
@@ -11,15 +16,13 @@
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="fas fa-hospital-user me-2"></i>Detalles de la Institución</h6>
         </div>
-        <div class="card-body">
-            <h2 class="card-title">Nombre de la Institución (Próximamente)</h2>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item"><strong>Tipo:</strong> Hospital Universitario (Próximamente)</li>
-                <li class="list-group-item"><strong>Dirección:</strong> Av. Siempre Viva 742, Ciudad (Próximamente)</li>
-                <li class="list-group-item"><strong>Teléfono:</strong> +123 456 7890 (Próximamente)</li>
-                <li class="list-group-item"><strong>Email de Contacto:</strong> contacto@institucion.com (Próximamente)</li>
-                <li class="list-group-item"><strong>Número de Licencia:</strong> 12345-ABC (Próximamente)</li>
-            </ul>
+        <!-- ID añadido para que el JS lo llene -->
+        <div class="card-body" id="institution-details">
+            <!-- JS llenará esta sección -->
+            <div class="d-flex align-items-center text-muted justify-content-center p-5">
+                <span class="spinner-border spinner-border-lg me-2" role="status" aria-hidden="true"></span>
+                <span>Cargando información de la institución...</span>
+            </div>
         </div>
     </div>
 </div>

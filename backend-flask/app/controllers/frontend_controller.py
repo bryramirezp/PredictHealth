@@ -17,7 +17,7 @@ def login_required(role=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            token = request.cookies.get('predicthealth_session')
+            token = request.cookies.get('predicthealth_jwt')
             if not token:
                 return redirect(url_for('index'))
 
@@ -26,7 +26,7 @@ def login_required(role=None):
             if not session_data:
                 # Si el token es inválido o expirado, limpiar la cookie y redirigir
                 resp = make_response(redirect(url_for('index')))
-                resp.set_cookie('predicthealth_session', '', expires=0)
+                resp.set_cookie('predicthealth_jwt', '', expires=0)
                 return resp
 
             user_role = session_data.get('user_type')

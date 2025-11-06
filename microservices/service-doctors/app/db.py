@@ -10,26 +10,23 @@ from psycopg2.pool import SimpleConnectionPool
 logger = logging.getLogger(__name__)
 
 # Configuración de la base de datos desde variables de entorno
-# Soporta tanto DATABASE_URL completo como variables individuales
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
-    # Usar DATABASE_URL completo (para Docker/producción)
     DB_CONFIG = DATABASE_URL
-    logger.info(f"🔧 Usando DATABASE_URL: {DATABASE_URL}")
+    logger.info(f"🔧 Usando DATABASE_URL")
 else:
-    # Usar variables individuales (para desarrollo local)
+    # Configuración para desarrollo local si DATABASE_URL no está
     DB_CONFIG = {
         'host': os.getenv('DB_HOST', 'localhost'),
         'port': os.getenv('DB_PORT', '5432'),
-        'database': os.getenv('DB_NAME', 'predicthealth'),
-        'user': os.getenv('DB_USER', 'postgres'),
-        'password': os.getenv('DB_PASSWORD', 'password'),
-        'sslmode': os.getenv('DB_SSLMODE', 'prefer')
+        'database': os.getenv('DB_NAME', 'predicthealth_db'),
+        'user': os.getenv('DB_USER', 'predictHealth_user'),
+        'password': os.getenv('DB_PASSWORD', 'password')
     }
-    logger.info(f"🔧 Usando configuración individual: {DB_CONFIG['host']}:{DB_CONFIG['port']}")
+    logger.info(f"🔧 Usando configuración individual: {DB_CONFIG.get('host')}:{DB_CONFIG.get('port')}")
 
-# Pool de conexiones para mejor rendimiento
+# Pool de conexiones
 connection_pool = None
 
 def init_connection_pool():
@@ -37,14 +34,12 @@ def init_connection_pool():
     global connection_pool
     try:
         if isinstance(DB_CONFIG, str):
-            # DATABASE_URL completo
             connection_pool = SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
                 dsn=DB_CONFIG
             )
         else:
-            # DB_CONFIG como diccionario
             connection_pool = SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
@@ -57,54 +52,23 @@ def init_connection_pool():
         return False
 
 def get_db_connection():
-    """
-    Obtiene una conexión a la base de datos PostgreSQL
-
-    Returns:
-        psycopg2.extensions.connection: Conexión a la base de datos
-    """
+    """Obtiene una conexión del pool."""
     global connection_pool
-
     try:
         if connection_pool is None:
-            init_connection_pool()
-
-        # Usar el pool si está disponible
-        if connection_pool:
-            conn = connection_pool.getconn()
-            # Configurar para que los diccionarios sean retornados como DictRow
-            conn.cursor_factory = psycopg2.extras.DictCursor
-            return conn
-        else:
-            # Conexión directa si el pool no está disponible
-            if isinstance(DB_CONFIG, str):
-                # DATABASE_URL completo
-                conn = psycopg2.connect(
-                    DB_CONFIG,
-                    cursor_factory=psycopg2.extras.DictCursor
-                )
-            else:
-                # DB_CONFIG como diccionario
-                conn = psycopg2.connect(
-                    cursor_factory=psycopg2.extras.DictCursor,
-                    **DB_CONFIG
-                )
-            return conn
-
+            if not init_connection_pool():
+                raise Exception("Fallo al inicializar el pool de conexiones")
+        
+        conn = connection_pool.getconn()
+        conn.cursor_factory = psycopg2.extras.DictCursor
+        return conn
     except Exception as e:
         logger.error(f"❌ Error conectando a la base de datos: {str(e)}")
-        logger.error(f"🔍 Configuración usada: {DB_CONFIG}")
         raise e
 
 def release_connection(conn):
-    """
-    Libera una conexión al pool
-
-    Args:
-        conn: Conexión a liberar
-    """
+    """Libera una conexión de vuelta al pool."""
     global connection_pool
-
     try:
         if connection_pool and conn:
             connection_pool.putconn(conn)
@@ -113,21 +77,12 @@ def release_connection(conn):
     except Exception as e:
         logger.error(f"❌ Error liberando conexión: {str(e)}")
 
-def close_all_connections():
-    """Cierra todas las conexiones del pool"""
-    global connection_pool
-
-    try:
-        if connection_pool:
-            connection_pool.closeall()
-            logger.info("✅ Todas las conexiones cerradas")
-    except Exception as e:
-        logger.error(f"❌ Error cerrando conexiones: {str(e)}")
-
-# Context manager para manejo automático de conexiones
+# Context manager para manejo automático de conexiones y transacciones
 class DatabaseConnection:
-    """Context manager para manejo de conexiones a la base de datos"""
-
+    """
+    Context manager para manejo de conexiones a la base de datos.
+    Garantiza que las operaciones sean transaccionales (commit/rollback).
+    """
     def __init__(self):
         self.conn = None
         self.cursor = None
@@ -139,6 +94,7 @@ class DatabaseConnection:
             return self.conn, self.cursor
         except Exception as e:
             logger.error(f"❌ Error en DatabaseConnection.__enter__: {str(e)}")
+            release_connection(self.conn)
             raise e
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -149,24 +105,19 @@ class DatabaseConnection:
                 if exc_type is None:
                     self.conn.commit()
                 else:
+                    logger.warning(f"🔄 Rollback ejecutado debido a un error: {exc_val}")
                     self.conn.rollback()
                 release_connection(self.conn)
         except Exception as e:
             logger.error(f"❌ Error en DatabaseConnection.__exit__: {str(e)}")
 
-# Función de utilidad para ejecutar queries con manejo automático de conexión
+# Función de utilidad para ejecutar queries
 def execute_query(query, params=None, fetch_one=False, fetch_all=True):
     """
-    Ejecuta una query con manejo automático de conexión
-
-    Args:
-        query (str): Query SQL a ejecutar
-        params (tuple): Parámetros de la query
-        fetch_one (bool): Si debe retornar solo un resultado
-        fetch_all (bool): Si debe retornar todos los resultados
-
-    Returns:
-        Resultados de la query o None si hay error
+    Ejecuta una query con manejo automático de conexión.
+    IMPORTANTE: Esta función abre su propia conexión y hace commit,
+    NO debe ser usada dentro de un bloque 'with DatabaseConnection()' más grande.
+    Usar para operaciones de LECTURA simples.
     """
     try:
         with DatabaseConnection() as (conn, cursor):
@@ -178,7 +129,6 @@ def execute_query(query, params=None, fetch_one=False, fetch_all=True):
                 return cursor.fetchall()
             else:
                 return None
-
     except Exception as e:
         logger.error(f"❌ Error ejecutando query: {str(e)}")
         logger.error(f"Query: {query}")

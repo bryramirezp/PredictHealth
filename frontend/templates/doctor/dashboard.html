@@ -3,10 +3,10 @@
 
 {% block title %}Dashboard del Doctor - PredictHealth{% endblock %}
 
-{% block head %}
-<script src="/static/js/api-client.js"></script>
-<script src="/static/js/auth-manager.js"></script>
-<script src="/static/js/doctor.js"></script>
+{% block scripts %}
+<!-- Cargar el core de doctor y el script de esta página -->
+<script src="{{ url_for('static', filename='js/doctor-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/doctor-dashboard.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -107,7 +107,7 @@
                 </div>
                 <div class="card-body">
                     <div id="upcoming-appointments">
-                        <p class="text-muted">Cargando citas...</p>
+                        <!-- JS llenará esto -->
                     </div>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                 </div>
                 <div class="card-body">
                     <div id="recent-patients">
-                        <p class="text-muted">Cargando pacientes recientes...</p>
+                        <!-- JS llenará esto -->
                     </div>
                 </div>
             </div>

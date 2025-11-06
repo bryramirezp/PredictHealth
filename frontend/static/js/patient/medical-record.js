@@ -3,83 +3,63 @@
 // Maneja formularios modales, validaciones y llamadas API para el expediente médico
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const Auth = window.AuthManager;
-    const API = window.PredictHealthAPI;
-
-    // Verificar autenticación
-    const userInfo = await Auth.getUserInfo();
-    if (!userInfo || userInfo.user_type !== 'patient') {
-        console.warn('Acceso denegado: usuario no es paciente');
-        return window.location.href = '/';
-    }
-
-    // Solo inicializar si estamos en la página de expediente médico
+    // Verificar si estamos en la página de expediente médico antes de ejecutar
     if (window.location.pathname.includes('/patient/medical-record')) {
-        initMedicalRecordPage(userInfo, API);
+        // PatientCore se encargará de la autenticación y proporcionará las utilidades
+        if (!window.PatientCore) {
+            console.error("Error: patient-core.js no está cargado. El expediente médico no puede funcionar.");
+            return;
+        }
+        
+        const userInfo = await PatientCore.checkAuth();
+        if (userInfo) {
+            initMedicalRecordPage(userInfo);
+        }
     }
 });
 
 // Función principal de inicialización
-async function initMedicalRecordPage(userInfo, API) {
+async function initMedicalRecordPage(userInfo) {
     console.log("Inicializando expediente médico con formularios dinámicos...");
 
     try {
-        // Cargar datos del expediente médico
-        await loadMedicalRecordData(API);
+        const patientId = PatientCore.getUserId(userInfo);
+        if (!patientId) {
+            throw new Error("No se pudo obtener el ID del paciente.");
+        }
+
+        // --- INICIO DE LA CORRECCIÓN ---
+        // El endpoint /api/v1/patients/{id} tiene el 'health_profile' correcto.
+        // El endpoint /medical-record tiene las listas (condiciones, alergias, etc.).
+        // Llamaremos a ambos en paralelo y combinaremos los datos.
+
+        // 1. Definir los endpoints a llamar
+        // (Asumimos que la ruta base /api/v1/patients/{id} está en tu proxy, 
+        // basado en los logs de api-client.js)
+        const generalPatientEndpoint = `/api/v1/patients/${patientId}`; 
+        const medicalRecordEndpoint = PatientCore.ENDPOINTS.MEDICAL_RECORD(patientId);
+
+        // 2. Realizar ambas llamadas en paralelo
+        const [patientData, recordData] = await Promise.all([
+            PatientCore.apiRequest(generalPatientEndpoint),
+            PatientCore.apiRequest(medicalRecordEndpoint)
+        ]);
+
+        // 3. Renderizar cada sección con los datos de la fuente correcta
+        renderHealthProfile(patientData.health_profile); // <-- Usamos patientData para el perfil
+        renderConditions(recordData.conditions);       // <-- Usamos recordData para el resto
+        renderMedications(recordData.medications);   
+        renderAllergies(recordData.allergies);       
+        renderFamilyHistory(recordData.family_history);
+        // --- FIN DE LA CORRECCIÓN ---
 
         // Configurar event listeners para formularios
-        setupMedicalRecordFormListeners(API);
+        setupMedicalRecordFormListeners();
 
         console.log('Expediente médico con formularios dinámicos inicializado correctamente');
     } catch (error) {
         console.error('Error inicializando expediente médico:', error);
-        showErrorMessage('Error al cargar el expediente médico. Por favor, intenta recargar la página.');
-    }
-}
-
-// Cargar datos del expediente médico
-async function loadMedicalRecordData(API) {
-    try {
-        // Obtener el token JWT y patient_id del usuario autenticado
-        const token = await Auth.getToken();
-        const patientId = userInfo.reference_id;
-
-        if (!token || !patientId) {
-            throw new Error('No se pudo obtener la información de autenticación del paciente');
-        }
-
-        const response = await fetch(`/api/web/patients/${patientId}/medical-record`, {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error en la respuesta del servidor');
-        }
-
-        const recordData = result.data;
-
-        // Renderizar cada sección
-        renderHealthProfile(recordData.health_profile);
-        renderConditions(recordData.conditions);
-        renderMedications(recordData.medications);
-        renderAllergies(recordData.allergies);
-        renderFamilyHistory(recordData.family_history);
-
-    } catch (error) {
-        console.error('Error cargando datos del expediente médico:', error);
-        throw error;
+        PatientCore.showErrorMessage('Error al cargar el expediente médico. Por favor, intenta recargar la página.');
     }
 }
 
@@ -129,7 +109,7 @@ function renderConditions(conditions) {
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <div class="fw-bold">${condition.name}</div>
-                    <div class="text-muted small">Diagnosticado: ${formatDate(condition.diagnosis_date)}</div>
+                    <div class="text-muted small">Diagnosticado: ${PatientCore.formatDate(condition.diagnosis_date)}</div>
                     ${condition.notes ? `<div class="text-muted small mt-1">${condition.notes}</div>` : ''}
                 </div>
                 <div class="dropdown">
@@ -171,7 +151,7 @@ function renderMedications(medications) {
                         Dosis: ${medication.dosage || 'No especificada'} |
                         Frecuencia: ${medication.frequency || 'No especificada'}
                     </div>
-                    ${medication.start_date ? `<div class="text-muted small">Inicio: ${formatDate(medication.start_date)}</div>` : ''}
+                    ${medication.start_date ? `<div class="text-muted small">Inicio: ${PatientCore.formatDate(medication.start_date)}</div>` : ''}
                 </div>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -289,13 +269,13 @@ function populateHealthProfileForm(healthProfile) {
 }
 
 // Configurar event listeners para formularios
-function setupMedicalRecordFormListeners(API) {
+function setupMedicalRecordFormListeners() {
     // Formulario de perfil de salud
     const healthProfileForm = document.getElementById('health-profile-form');
     if (healthProfileForm) {
         healthProfileForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleHealthProfileSubmit(API);
+            await handleHealthProfileSubmit();
         });
     }
 
@@ -304,7 +284,7 @@ function setupMedicalRecordFormListeners(API) {
     if (conditionForm) {
         conditionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleConditionSubmit(API);
+            await handleConditionSubmit();
         });
     }
 
@@ -313,7 +293,7 @@ function setupMedicalRecordFormListeners(API) {
     if (medicationForm) {
         medicationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleMedicationSubmit(API);
+            await handleMedicationSubmit();
         });
     }
 
@@ -322,7 +302,7 @@ function setupMedicalRecordFormListeners(API) {
     if (allergyForm) {
         allergyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleAllergySubmit(API);
+            await handleAllergySubmit();
         });
     }
 
@@ -331,278 +311,33 @@ function setupMedicalRecordFormListeners(API) {
     if (familyHistoryForm) {
         familyHistoryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleFamilyHistorySubmit(API);
+            await handleFamilyHistorySubmit();
         });
     }
 }
 
 // Manejadores de envío de formularios
-async function handleHealthProfileSubmit(API) {
-    const form = document.getElementById('health-profile-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Guardando...';
-
-        const formData = new FormData(form);
-        const profileData = Object.fromEntries(formData);
-
-        // Convertir valores numéricos
-        if (profileData.height_cm) profileData.height_cm = parseFloat(profileData.height_cm);
-        if (profileData.weight_kg) profileData.weight_kg = parseFloat(profileData.weight_kg);
-        if (profileData.physical_activity) profileData.physical_activity = parseInt(profileData.physical_activity);
-        if (profileData.smoking_years) profileData.smoking_years = parseInt(profileData.smoking_years);
-
-        // Convertir checkboxes
-        profileData.is_smoker = form.is_smoker.checked;
-        profileData.consumes_alcohol = form.consumes_alcohol.checked;
-
-        const response = await fetch('/api/web/patient/health-profile', {
-            method: 'PUT',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(profileData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al actualizar el perfil de salud');
-        }
-
-        // Cerrar modal y recargar datos
-        const modal = bootstrap.Modal.getInstance(document.getElementById('healthProfileModal'));
-        modal.hide();
-
-        // Recargar la página para mostrar los cambios
-        window.location.reload();
-
-        showSuccessMessage('Perfil de salud actualizado exitosamente');
-
-    } catch (error) {
-        console.error('Error actualizando perfil de salud:', error);
-        showErrorMessage(error.message || 'Error al actualizar el perfil de salud');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Guardar Cambios';
-    }
+async function handleHealthProfileSubmit() {
+    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente.');
 }
 
-async function handleConditionSubmit(API) {
-    const form = document.getElementById('condition-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-
-        const formData = new FormData(form);
-        const conditionData = Object.fromEntries(formData);
-
-        const response = await fetch('/api/web/patient/conditions', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(conditionData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar la condición médica');
-        }
-
-        // Cerrar modal y recargar datos
-        const modal = bootstrap.Modal.getInstance(document.getElementById('conditionModal'));
-        modal.hide();
-
-        form.reset();
-        await loadMedicalRecordData(API);
-
-        showSuccessMessage('Condición médica agregada exitosamente');
-
-    } catch (error) {
-        console.error('Error agregando condición médica:', error);
-        showErrorMessage(error.message || 'Error al agregar la condición médica');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Condición';
-    }
+async function handleConditionSubmit() {
+    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente.');
 }
 
-async function handleMedicationSubmit(API) {
-    const form = document.getElementById('medication-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-
-        const formData = new FormData(form);
-        const medicationData = Object.fromEntries(formData);
-
-        const response = await fetch('/api/web/patient/medications', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(medicationData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el medicamento');
-        }
-
-        // Cerrar modal y recargar datos
-        const modal = bootstrap.Modal.getInstance(document.getElementById('medicationModal'));
-        modal.hide();
-
-        form.reset();
-        await loadMedicalRecordData(API);
-
-        showSuccessMessage('Medicamento agregado exitosamente');
-
-    } catch (error) {
-        console.error('Error agregando medicamento:', error);
-        showErrorMessage(error.message || 'Error al agregar el medicamento');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Medicamento';
-    }
+async function handleMedicationSubmit() {
+    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente.');
 }
 
-async function handleAllergySubmit(API) {
-    const form = document.getElementById('allergy-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-
-        const formData = new FormData(form);
-        const allergyData = Object.fromEntries(formData);
-
-        const response = await fetch('/api/web/patient/allergies', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(allergyData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar la alergia');
-        }
-
-        // Cerrar modal y recargar datos
-        const modal = bootstrap.Modal.getInstance(document.getElementById('allergyModal'));
-        modal.hide();
-
-        form.reset();
-        await loadMedicalRecordData(API);
-
-        showSuccessMessage('Alergia agregada exitosamente');
-
-    } catch (error) {
-        console.error('Error agregando alergia:', error);
-        showErrorMessage(error.message || 'Error al agregar la alergia');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Alergia';
-    }
+async function handleAllergySubmit() {
+    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente.');
 }
 
-async function handleFamilyHistorySubmit(API) {
-    const form = document.getElementById('family-history-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-
-        const formData = new FormData(form);
-        const familyHistoryData = Object.fromEntries(formData);
-
-        const response = await fetch('/api/web/patient/family-history', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(familyHistoryData)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el historial familiar');
-        }
-
-        // Cerrar modal y recargar datos
-        const modal = bootstrap.Modal.getInstance(document.getElementById('familyHistoryModal'));
-        modal.hide();
-
-        form.reset();
-        await loadMedicalRecordData(API);
-
-        showSuccessMessage('Historial familiar agregado exitosamente');
-
-    } catch (error) {
-        console.error('Error agregando historial familiar:', error);
-        showErrorMessage(error.message || 'Error al agregar el historial familiar');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Historial';
-    }
+async function handleFamilyHistorySubmit() {
+    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente.');
 }
 
 // Funciones auxiliares
-function formatDate(dateString) {
-    if (!dateString) return 'Fecha no disponible';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
 function getSeverityText(severity) {
     const severityMap = {
         'mild': 'Leve',
@@ -612,49 +347,20 @@ function getSeverityText(severity) {
     return severityMap[severity] || severity || 'No especificada';
 }
 
-function showErrorMessage(message) {
-    console.error('Error:', message);
-
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Error:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-function showSuccessMessage(message) {
-    console.log('Success:', message);
-
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-check-circle me-2"></i>
-        <strong>Éxito:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
-}
-
 // Funciones globales para los botones de editar/eliminar
+// (Se asume que PatientCore.formatDate está disponible si se elimina la local)
+// Si no, se debe descomentar la función formatDate local
+// function formatDate(dateString) {
+//     if (!dateString) return 'Fecha no disponible';
+//     const date = new Date(dateString);
+//     return date.toLocaleDateString('es-ES', {
+//         year: 'numeric',
+//         month: 'long',
+//         day: 'numeric'
+//     });
+// }
+
+
 window.editCondition = function(id) {
     console.log('Editar condición:', id);
     // TODO: Implementar edición

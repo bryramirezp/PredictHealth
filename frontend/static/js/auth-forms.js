@@ -207,7 +207,7 @@ class AuthFormsHandler {
 
             if (isLoginPage) {
                 // En la página de login, solo verificar si hay cookie y redirigir si está logueado
-                const sessionCookie = this.authManager.getCookie('predicthealth_session');
+                const sessionCookie = this.authManager.getCookie('predicthealth_jwt');
                 if (sessionCookie) {
                     // Verificar sesión solo si hay cookie
                     if (await this.authManager.isLoggedIn()) {

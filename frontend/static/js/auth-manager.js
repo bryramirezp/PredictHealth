@@ -1,163 +1,187 @@
-// /frontend/static/js/auth-manager.js
+// /frontend/static/js/auth-manager.js (REFACTORIZADO PARA JWT EN COOKIES)
 
-/**
- * Lee el valor de una cookie específica.
- * @param {string} name - El nombre de la cookie.
- * @returns {string|null} El valor de la cookie o null si no se encuentra.
- */
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
+(function(window) {
+    'use strict';
 
-/**
- * Gestiona el inicio de sesión del usuario.
- * @param {string} email - Email del usuario
- * @param {string} password - Contraseña del usuario
- * @param {string} userType - Tipo de usuario (patient, doctor, institution)
- * @returns {Promise<Object>} Resultado del login con éxito o error
- */
-async function login(email, password, userType = 'patient') {
-    try {
-        const response = await fetch('/api/v1/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                user_type: userType
-            })
-        });
+    // Claves para las cookies.
+    const TOKEN_COOKIE_KEY = 'predicthealth_jwt';
+    const USER_INFO_COOKIE_KEY = 'predicthealth_user';
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            return {
-                success: false,
-                error: data.error || data.message || 'Error en el login'
-            };
-        }
-
-        if (data.success) {
-            // La cookie ya fue establecida por el backend
-            return {
-                success: true,
-                user: data.user,
-                tokenInfo: data.token_info
-            };
-        } else {
-            return {
-                success: false,
-                error: data.error || 'Error en el login'
-            };
-        }
-
-    } catch (error) {
-        console.error('Error en login:', error);
-        return {
-            success: false,
-            error: 'Error de conexión al servidor'
-        };
+    /**
+     * Lee el valor de una cookie específica.
+     * @param {string} name - El nombre de la cookie.
+     * @returns {string|null} El valor de la cookie o null si no se encuentra.
+     */
+    function _getCookie(name) {
+        const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return cookieValue ? cookieValue.pop() : null;
     }
-}
 
-/**
- * Verifica si el usuario está autenticado.
- * @returns {Promise<boolean>} True si está autenticado, false si no
- */
-async function isLoggedIn() {
-    try {
-        // Verificar si hay cookie de sesión primero
-        const sessionCookie = getCookie('predicthealth_session');
-        if (!sessionCookie) {
-            return false;
-        }
-
-        const response = await fetch('/api/web/auth/session/validate', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const data = await response.json();
-        return data.valid === true;
-    } catch (error) {
-        console.error('Error verificando sesión:', error);
-        return false;
+    /**
+     * Establece una cookie de sesión (se borra al cerrar el navegador).
+     * @param {string} name - El nombre de la cookie.
+     * @param {string} value - El valor de la cookie.
+     */
+    function _setSessionCookie(name, value) {
+        // SameSite=Lax allows cross-origin cookies for localhost development
+        // path=/ asegura que la cookie esté disponible en todo el sitio.
+        document.cookie = `${name}=${value}; path=/; SameSite=Lax`;
     }
-}
 
-/**
- * Obtiene la información del usuario autenticado.
- * @returns {Promise<Object|null>} Información del usuario o null si no está autenticado
- */
-async function getUserInfo() {
-    try {
-        // Verificar si hay cookie de sesión primero
-        const sessionCookie = getCookie('predicthealth_session');
-        if (!sessionCookie) {
+    /**
+     * Elimina una cookie estableciendo su fecha de expiración en el pasado.
+     * @param {string} name - El nombre de la cookie a eliminar.
+     */
+    function _deleteCookie(name) {
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    }
+
+    /**
+     * Decodifica el payload de un token JWT (sin verificar firma).
+     * @param {string} token - El token JWT.
+     * @returns {Object|null} El payload decodificado.
+     */
+    function _decodeToken(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error("Error decodificando el token:", e);
             return null;
         }
-
-        const response = await fetch('/api/web/auth/session/validate', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            return null;
-        }
-
-        const data = await response.json();
-        return data.valid ? data.user : null;
-    } catch (error) {
-        console.error('Error obteniendo información del usuario:', error);
-        return null;
     }
-}
 
-/**
- * Gestiona el cierre de sesión del usuario.
- * Llama al endpoint de logout del backend para limpiar la cookie de sesión
- * y luego redirige al usuario a la página de inicio.
- */
-async function logout() {
-    try {
-        const response = await fetch('/api/web/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+    const AuthManager = {
+        /**
+         * Gestiona el inicio de sesión del usuario.
+         * Si tiene éxito, almacena el token JWT y los datos del usuario en cookies de sesión.
+         */
+        async login(email, password, userType = 'patient') {
+            this.logout(false); // Limpiar sesión anterior sin redirigir
+
+            try {
+                const response = await fetch(`/api/web/auth/${userType}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Error en el inicio de sesión.');
+                }
+
+                if (data.access_token && data.user) {
+                    _setSessionCookie(TOKEN_COOKIE_KEY, data.access_token);
+                    _setSessionCookie(USER_INFO_COOKIE_KEY, JSON.stringify(data.user)); // Almacenamos como string JSON
+                    return data.user;
+                } else {
+                    throw new Error('Respuesta de login inválida desde el servidor.');
+                }
+            } catch (error) {
+                console.error('Error en AuthManager.login:', error);
+                this.logout(false); // Asegurarse de que todo esté limpio si el login falla
+                throw error;
             }
-        });
+        },
 
-        if (!response.ok) {
-            console.error('El servidor no pudo cerrar la sesión.');
+        /**
+         * Cierra la sesión del usuario eliminando las cookies de sesión.
+         */
+        logout(redirect = true) {
+            fetch('/api/web/auth/logout', { method: 'POST' }).catch(err => console.warn("No se pudo notificar el logout al servidor:", err));
+            
+            // La acción principal es eliminar las cookies del cliente.
+            _deleteCookie(TOKEN_COOKIE_KEY);
+            _deleteCookie(USER_INFO_COOKIE_KEY);
+
+            if (redirect) {
+                window.location.href = '/';
+            }
+        },
+
+        /**
+         * Obtiene el token JWT desde la cookie.
+         */
+        getToken() {
+            return _getCookie(TOKEN_COOKIE_KEY);
+        },
+
+        /**
+         * Obtiene la información del usuario.
+         * Primero intenta desde cookies, luego desde datos del template (JINJA2),
+         * finalmente desde api-client si está disponible.
+         * Es síncrono y rápido, sin llamadas de red.
+         */
+        getUserInfo() {
+            try {
+                // 1. Intentar desde cookies de sesión (método original)
+                const userInfoString = _getCookie(USER_INFO_COOKIE_KEY);
+                if (userInfoString) {
+                    const userInfo = JSON.parse(userInfoString);
+                    if (userInfo && typeof userInfo === 'object') {
+                        console.log('📝 Usuario desde cookies:', userInfo);
+                        return userInfo;
+                    }
+                }
+
+                // 2. Fallback: usar datos del template JINJA2 (desde base.html)
+                if (window.PatientUserData) {
+                    console.log('📝 Usuario desde template JINJA2:', window.PatientUserData);
+                    return window.PatientUserData;
+                }
+
+                // 3. Último fallback: verificar si PredictHealthAPI tiene datos
+                if (window.PredictHealthAPI && window.PredictHealthAPI.getUserInfo) {
+                    const apiUserInfo = window.PredictHealthAPI.getUserInfo();
+                    if (apiUserInfo) {
+                        console.log('📝 Usuario desde api-client:', apiUserInfo);
+                        return apiUserInfo;
+                    }
+                }
+
+                console.warn('⚠️ No se pudo obtener información del usuario desde ninguna fuente');
+                return null;
+            } catch (e) {
+                console.error("Error obteniendo información del usuario:", e);
+                // No cerrar sesión automáticamente para evitar loops
+                return null;
+            }
+        },
+        
+        /**
+         * Verifica si el usuario tiene un token válido y no expirado en las cookies.
+         */
+        isLoggedIn() {
+            const token = this.getToken();
+            if (!token) {
+                return false;
+            }
+
+            const payload = _decodeToken(token);
+            if (!payload || !payload.exp) {
+                // Token malformado
+                this.logout(false);
+                return false;
+            }
+            
+            // Comprueba si la fecha de expiración (en segundos) ya pasó.
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            
+            if (payload.exp < nowInSeconds) {
+                console.warn("Token JWT expirado. Se requiere nuevo login.");
+                this.logout(); // Limpiar sesión expirada y redirigir
+                return false;
+            }
+
+            return true;
         }
+    };
 
-    } catch (error) {
-        console.error('Error al intentar cerrar la sesión:', error);
-    } finally {
-        // Redirigir siempre a la página de inicio, incluso si el logout falla
-        window.location.href = '/';
-    }
-}
+    // Exponer el AuthManager al objeto global 'window'
+    window.AuthManager = AuthManager;
 
-// Para mayor comodidad, podemos exponer las funciones en un objeto global
-window.AuthManager = {
-    getCookie,
-    login,
-    isLoggedIn,
-    getUserInfo,
-    logout
-};
+})(window);

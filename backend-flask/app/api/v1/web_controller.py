@@ -150,11 +150,11 @@ def generic_login():
 
             # Cookie segura con el JWT completo
             resp.set_cookie(
-                'predicthealth_session',
+                'predicthealth_jwt',  # ← Cookie name matching frontend
                 access_token,  # ← JWT completo en la cookie
                 httponly=True,
                 secure=False,  # True en producción con HTTPS
-                samesite='Strict',
+                samesite='Lax',  # ← LA CLAVE! 'Strict' fallará con cross-origin
                 max_age=expires_in  # Usar expires_in del servicio JWT
             )
 
@@ -175,7 +175,7 @@ def validate_session():
     """Validar sesión JWT activa"""
     try:
         # Obtener token de la cookie
-        token = request.cookies.get('predicthealth_session')
+        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
 
         if not token:
             return web_controller._handle_auth_error("No active session", 401)
@@ -200,12 +200,37 @@ def validate_session():
         return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
 
 
+@web_bp.route('/auth/token', methods=['GET'])
+@require_auth()
+def get_token():
+    """Obtener el token JWT actual del usuario autenticado"""
+    try:
+        # El token ya está validado por el decorador @require_auth()
+        current_user = get_current_user()
+        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+
+        if not token:
+            return web_controller._handle_auth_error("No token found", 401)
+
+        return web_controller._handle_success({
+            "token": token,
+            "user": {
+                "user_id": current_user.get("user_id"),
+                "user_type": current_user.get("user_type"),
+                "email": current_user.get("email")
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error en get_token: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+
 @web_bp.route('/auth/logout', methods=['POST'])
 def generic_logout():
     """Endpoint genérico para cerrar sesión."""
     try:
         # Get token from cookie before clearing it
-        token = request.cookies.get('predicthealth_session')
+        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
 
         # Remove token from Redis if it exists
         if token and jwt_middleware.redis_client:
@@ -219,11 +244,15 @@ def generic_logout():
         from flask import make_response
         resp = make_response(web_controller._handle_success({}, "Logout exitoso"))
         # Instruye al navegador para que elimine la cookie
-        resp.set_cookie('predicthealth_session', '', expires=0, httponly=True, samesite='Strict')
+        resp.set_cookie('predicthealth_jwt', '', expires=0, httponly=True, samesite='Lax')  # ← FIXED: match frontend
         logger.info("✅ Logout successful, session cookie cleared and token removed from Redis")
         return resp
     except Exception as e:
         logger.error(f"Error en generic_logout: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+
+    except Exception as e:
+        logger.error(f"Error en generic_login: {str(e)}")
         return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
 
 
@@ -386,7 +415,7 @@ def patient_dashboard():
         # Llamar al microservicio service-patients para obtener datos del dashboard
         dashboard_response = web_controller.proxy_service.call_patients_service(
             "GET", f"/patients/{patient_id}/dashboard",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
         )
 
         if dashboard_response.get('status_code') == 200:
@@ -422,7 +451,7 @@ def patient_medical_record():
         # Llamar al microservicio service-patients
         medical_record_response = web_controller.proxy_service.call_patients_service(
             "GET", f"/patients/{patient_id}/medical-record",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
         )
 
         if medical_record_response.get('status_code') == 200:
@@ -457,7 +486,7 @@ def patient_care_team():
         # Llamar al microservicio service-patients
         care_team_response = web_controller.proxy_service.call_patients_service(
             "GET", f"/patients/{patient_id}/care-team",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
         )
 
         if care_team_response.get('status_code') == 200:
@@ -492,7 +521,7 @@ def patient_profile():
         # Obtener información básica del paciente
         basic_info_response = web_controller.proxy_service.call_patients_service(
             "GET", f"/patients/{patient_id}/basic-info",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_session', '')}"}
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
         )
 
         if basic_info_response.get('status_code') != 200:

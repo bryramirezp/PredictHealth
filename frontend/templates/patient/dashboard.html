@@ -1,11 +1,8 @@
-<!-- /frontend/templates/patient/dashboard.html -->
 {% extends "base.html" %}
 
 {% block title %}Dashboard del Paciente - PredictHealth{% endblock %}
 
-{% block head %}
-<script src="{{ url_for('static', filename='js/api-client.js') }}"></script>
-<script src="{{ url_for('static', filename='js/auth-manager.js') }}"></script>
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/patient/patient-core.js') }}"></script>
 <script src="{{ url_for('static', filename='js/patient/dashboard.js') }}"></script>
 {% endblock %}
@@ -15,72 +12,78 @@
     <div class="row">
         <div class="col-12">
             <h1 class="mb-4" id="welcome-title">Cargando...</h1>
-            <p class="lead">Este es tu panel de control. Desde aquí podrás acceder a tu información de salud.</p>
         </div>
     </div>
 
-    <!-- Dashboard Widgets -->
     <div class="row mt-4" id="dashboard-widgets">
-        <!-- Health Score Widget -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-heartbeat fa-3x text-danger mb-3"></i>
-                    <h2 id="health-score">--</h2>
-                    <p class="card-text">Puntuación de Salud</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Medications Widget -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-pills fa-3x text-warning mb-3"></i>
-                    <h5 class="card-title">Medicamentos Activos</h5>
-                    <div id="active-medications">
-                        <p class="text-muted">Cargando...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions Widget -->
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 dashboard-card">
-                <div class="card-body text-center">
-                    <i class="fas fa-bolt fa-3x text-success mb-3"></i>
-                    <h5 class="card-title">Acciones Rápidas</h5>
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary btn-sm" onclick="window.location.href='/patient/medical-record'">
-                            <i class="fas fa-file-medical"></i> Ver Expediente
-                        </button>
-                        <button class="btn btn-outline-success btn-sm" onclick="window.location.href='/patient/my-care-team'">
-                            <i class="fas fa-user-md"></i> Mi Equipo
-                        </button>
-                        <button class="btn btn-outline-info btn-sm" onclick="window.location.href='/patient/profile'">
-                            <i class="fas fa-user-cog"></i> Mi Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Health Alerts Section -->
-    <div class="row mt-4">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Alertas de Salud</h5>
-                </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <div id="health-alerts">
-                        <p class="text-muted">No hay alertas activas</p>
+                    <h5 class="card-title mb-3">Resumen Rápido</h5>
+                    <div id="quick-summary-box" class="text-center">
+                        <div class="d-flex align-items-center text-muted justify-content-center">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Calculando resumen...</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm text-center" 
+                 style="cursor: pointer;" 
+                 data-bs-toggle="modal" 
+                 data-bs-target="#healthScoreModal">
+                <div class="card-body">
+                    <i class="fas fa-heartbeat fa-3x text-danger mb-3"></i>
+                    <h5 class="card-title">Puntuación de Salud <i class="fas fa-info-circle fa-xs text-muted ms-1"></i></h5>
+                    <h2 class="display-4 fw-bold" id="health-score-value">--</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm text-center">
+                <div class="card-body">
+                    <i class="fas fa-weight fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Índice de Masa (IMC)</h5>
+                    <h2 class="display-4 fw-bold" id="imc-value">--</h2>
+                    <span class="badge fs-6" id="imc-classification">Calculando...</span>
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+</div>
+
+<div class="modal fade" id="healthScoreModal" tabindex="-1" aria-labelledby="healthScoreModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="healthScoreModalLabel">
+          <i class="fas fa-heartbeat text-danger me-2"></i>¿Qué es la Puntuación de Salud?
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Tu puntuación de salud es un indicador general calculado en tiempo real. No reemplaza un diagnóstico médico.</p>
+        <p>Se calcula así:</p>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">Inicia en <b>100 puntos</b>.</li>
+          <li class="list-group-item text-danger"><b>-10 puntos</b> por cada condición médica activa.</li>
+          <li class="list-group-item text-danger"><b>-5 puntos</b> por cada medicamento recetado.</li>
+          <li class="list-group-item text-danger"><b>-15 puntos</b> si eres fumador.</li>
+          <li class="list-group-item text-danger"><b>-10 puntos</b> si consumes alcohol.</li>
+          <li class="list-group-item text-success"><b>+10 puntos</b> por 150+ minutos de actividad física semanal.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" data-bs-dismiss="modal">Entendido</button>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

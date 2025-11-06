@@ -3,79 +3,44 @@
 // Maneja la visualización completa de información del doctor e institución
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const Auth = window.AuthManager;
-    const API = window.PredictHealthAPI;
-
-    // Verificar autenticación
-    const userInfo = await Auth.getUserInfo();
-    if (!userInfo || userInfo.user_type !== 'patient') {
-        console.warn('Acceso denegado: usuario no es paciente');
-        return window.location.href = '/';
-    }
-
-    // Solo inicializar si estamos en la página del equipo médico
+    // Verificar si estamos en la página del equipo médico antes de ejecutar
     if (window.location.pathname.includes('/patient/my-care-team')) {
-        initCareTeamPage(userInfo, API);
+        // PatientCore se encargará de la autenticación y proporcionará las utilidades
+        if (!window.PatientCore) {
+            console.error("Error: patient-core.js no está cargado. El equipo médico no puede funcionar.");
+            return;
+        }
+        
+        const userInfo = await PatientCore.checkAuth();
+        if (userInfo) {
+            initCareTeamPage(userInfo);
+        }
     }
 });
 
 // Función principal de inicialización
-async function initCareTeamPage(userInfo, API) {
+async function initCareTeamPage(userInfo) {
     console.log("Inicializando equipo médico con datos completos...");
 
     try {
-        // Cargar datos del equipo médico
-        await loadCareTeamData(API);
-
-        console.log('Equipo médico inicializado correctamente');
-    } catch (error) {
-        console.error('Error inicializando equipo médico:', error);
-        showErrorMessage('Error al cargar la información del equipo médico. Por favor, intenta recargar la página.');
-    }
-}
-
-// Cargar datos del equipo médico
-async function loadCareTeamData(API) {
-    try {
-        // Obtener el token JWT y patient_id del usuario autenticado
-        const token = await Auth.getToken();
-        const patientId = userInfo.reference_id;
-
-        if (!token || !patientId) {
-            throw new Error('No se pudo obtener la información de autenticación del paciente');
-        }
-
-        const response = await fetch(`/api/web/patients/${patientId}/care-team`, {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error en la respuesta del servidor');
-        }
-
-        const careTeamData = result.data;
+        // Cargar datos del equipo médico usando PatientCore
+        const careTeamData = await PatientCore.apiRequest(
+            PatientCore.ENDPOINTS.CARE_TEAM(PatientCore.getUserId(userInfo))
+        );
 
         // Renderizar información del doctor e institución
         renderDoctorInfo(careTeamData.doctor);
         renderInstitutionInfo(careTeamData.institution);
 
+        console.log('Equipo médico inicializado correctamente');
     } catch (error) {
-        console.error('Error cargando datos del equipo médico:', error);
-        throw error;
+
+        console.error('Error inicializando equipo médico:', error);
+        PatientCore.showErrorMessage('Error al cargar la información del equipo médico. Por favor, intenta recargar la página.');
     }
 }
+
+// (Se elimina la función 'loadCareTeamData' redundante y rota)
 
 // Renderizar información completa del doctor
 function renderDoctorInfo(doctor) {
@@ -99,7 +64,6 @@ function renderDoctorInfo(doctor) {
 
     container.innerHTML = `
         <div class="doctor-profile">
-            <!-- Avatar y nombre -->
             <div class="text-center mb-4">
                 <div class="doctor-avatar mx-auto mb-3">
                     <i class="fas fa-user-md fa-4x text-primary"></i>
@@ -108,7 +72,6 @@ function renderDoctorInfo(doctor) {
                 <p class="text-muted mb-0">Dr. ${doctor.first_name} ${doctor.last_name}</p>
             </div>
 
-            <!-- Información profesional -->
             <div class="professional-info mb-4">
                 <div class="row">
                     <div class="col-sm-6 mb-3">
@@ -128,7 +91,6 @@ function renderDoctorInfo(doctor) {
                 </div>
             </div>
 
-            <!-- Información de contacto -->
             <div class="contact-info">
                 <h6 class="text-primary mb-3">
                     <i class="fas fa-address-book me-2"></i>Información de Contacto
@@ -136,7 +98,6 @@ function renderDoctorInfo(doctor) {
                 ${contactInfo}
             </div>
 
-            <!-- Acciones -->
             <div class="actions mt-4 pt-3 border-top">
                 <div class="row">
                     <div class="col-6">
@@ -182,7 +143,6 @@ function renderInstitutionInfo(institution) {
 
     container.innerHTML = `
         <div class="institution-profile">
-            <!-- Logo y nombre -->
             <div class="text-center mb-4">
                 <div class="institution-logo mx-auto mb-3">
                     <i class="fas fa-hospital fa-4x text-success"></i>
@@ -191,7 +151,6 @@ function renderInstitutionInfo(institution) {
                 <p class="text-muted mb-0">${institution.type || 'Institución Médica'}</p>
             </div>
 
-            <!-- Información institucional -->
             <div class="institution-info mb-4">
                 <div class="info-item mb-3">
                     <i class="fas fa-building text-success me-2"></i>
@@ -208,7 +167,6 @@ function renderInstitutionInfo(institution) {
                 ` : ''}
             </div>
 
-            <!-- Información de contacto -->
             <div class="contact-info">
                 <h6 class="text-success mb-3">
                     <i class="fas fa-address-book me-2"></i>Información de Contacto
@@ -216,7 +174,6 @@ function renderInstitutionInfo(institution) {
                 ${contactInfo}
             </div>
 
-            <!-- Servicios y acciones -->
             <div class="services mt-4 pt-3 border-top">
                 <h6 class="text-success mb-3">
                     <i class="fas fa-concierge-bell me-2"></i>Servicios Disponibles
@@ -362,37 +319,19 @@ function getDirections() {
     if (institutionAddress) {
         const addressText = institutionAddress.parentElement.querySelector('.text-muted').textContent;
         const encodedAddress = encodeURIComponent(addressText);
-        window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+        // CORREGIDO: URL de Google Maps
+        window.open(`https://maps.google.com/?q=${encodedAddress}`, '_blank');
     } else {
         showInfoMessage('Dirección de la institución no disponible.');
     }
 }
 
-// Funciones de utilidad para mensajes
-function showErrorMessage(message) {
-    console.error('Error:', message);
-
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    notification.innerHTML = `
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Error:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 5000);
-}
+// Funciones de utilidad para mensajes usando PatientCore
+// (Se elimina showErrorMessage local, se usará PatientCore.showErrorMessage)
 
 function showInfoMessage(message) {
     console.log('Info:', message);
-
+    // Crear notificación manual ya que PatientCore no tiene showInfoMessage
     const notification = document.createElement('div');
     notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';

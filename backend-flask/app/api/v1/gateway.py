@@ -24,7 +24,8 @@ def require_auth(f):
     """Decorador para validar el token JWT antes de reenviar la solicitud."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token = request.cookies.get('predicthealth_session')
+        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+
         if not token:
             return jsonify({"error": "Token de autenticación no proporcionado"}), 401
 
@@ -55,7 +56,13 @@ def _proxy_request(service, path):
 
     url = f"{service_url}{request.full_path}" # Usamos full_path para incluir los query params
 
-    headers = {key: value for (key, value) in request.headers if key != 'Host'}
+    # Copiar cabeceras, pero excluir Host y Cookie
+    headers = {key: value for (key, value) in request.headers if key.lower() not in ['host', 'cookie']}
+    
+    # Obtener el token de la cookie para inyectarlo en la cabecera Authorization
+    token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+    if token:
+        headers['Authorization'] = f"Bearer {token}"
     data = request.get_data()
 
     # Inyectar la información del usuario si está disponible

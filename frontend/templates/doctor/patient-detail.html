@@ -3,9 +3,17 @@
 
 {% block title %}Detalle del Paciente - PredictHealth{% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/doctor-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/doctor-patient-detail.js') }}"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Expediente de: Nombre Paciente (Próximamente)</h1>
+<!-- ID añadido para el JS -->
+<div class="container mt-4" id="patient-detail-container">
+    
+    <!-- ID añadido para el JS -->
+    <h1 class="mb-4" id="patient-name-header">Cargando expediente...</h1>
 
     <!-- Pestañas de Navegación -->
     <ul class="nav nav-tabs" id="medicalRecordTab" role="tablist">
@@ -26,57 +34,22 @@
         </li>
     </ul>
 
-    <!-- Contenido de las Pestañas -->
+    <!-- Contenido de las Pestañas (Limpiado para que el JS lo llene) -->
     <div class="tab-content" id="medicalRecordTabContent">
         <div class="tab-pane fade show active" id="health-profile" role="tabpanel">
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">Perfil de Salud del Paciente</h5>
-                    <p>Modificar el perfil de salud del paciente.</p>
-                    <p class="text-muted">Formulario de CRUD de Perfil de Salud (Próximamente).</p>
-                    <button class="btn btn-primary">Guardar Cambios</button>
-                </div>
-            </div>
+            <!-- JS llenará esto -->
         </div>
         <div class="tab-pane fade" id="conditions" role="tabpanel">
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gestionar Condiciones Médicas</h5>
-                    <p>Añadir, editar o eliminar condiciones médicas del paciente.</p>
-                    <p class="text-muted">Formulario de CRUD de Condiciones (Próximamente).</p>
-                    <button class="btn btn-success">Añadir Condición</button>
-                </div>
-            </div>
+            <!-- JS llenará esto -->
         </div>
         <div class="tab-pane fade" id="medications" role="tabpanel">
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gestionar Medicamentos</h5>
-                     <p>Añadir, editar o eliminar medicamentos recetados.</p>
-                     <p class="text-muted">Formulario de CRUD de Medicamentos (Próximamente).</p>
-                    <button class="btn btn-success">Añadir Medicamento</button>
-                </div>
-            </div>
+            <!-- JS llenará esto -->
         </div>
         <div class="tab-pane fade" id="allergies" role="tabpanel">
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gestionar Alergias</h5>
-                    <p>Añadir, editar o eliminar alergias conocidas.</p>
-                    <p class="text-muted">Formulario de CRUD de Alergias (Próximamente).</p>
-                    <button class="btn btn-success">Añadir Alergia</button>
-                </div>
-            </div>
+            <!-- JS llenará esto -->
         </div>
         <div class="tab-pane fade" id="family-history" role="tabpanel">
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5 class="card-title">Gestionar Historial Familiar</h5>
-                    <p>Añadir, editar o eliminar historial médico familiar.</p>
-                    <p class="text-muted">Formulario de CRUD de Historial Familiar (Próximamente).</p>
-                    <button class="btn btn-success">Añadir Historial</button>
-                </div>
-            </div>
+            <!-- JS llenará esto -->
         </div>
     </div>
 </div>
