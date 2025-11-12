@@ -1,9 +1,9 @@
 # /microservices/service-doctors/app/main.py
-# Microservicio de Doctores - REFACTORIZADO con importación corregida
+# CORREGIDO: Maneja 'reference_id' anidado y elimina conversiones (UUID())
 
 from fastapi import FastAPI, Depends, HTTPException, status, Header
 from typing import List, Optional, Dict, Any
-from uuid import UUID
+from uuid import UUID # Sigue siendo necesario para el type hint
 import jwt
 import os
 import logging
@@ -18,7 +18,7 @@ from .domain import (
     DoctorInstitutionResponse,
     DoctorPatientListResponse,
     DoctorPatientMedicalRecord,
-    DoctorDashboardKPIs # <-- ESTA ES LA LÍNEA QUE FALTABA Y CORRIGE EL ERROR
+    DoctorDashboardKPIs
 )
 
 # --- Configuración de la Aplicación ---
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Servicio de Doctores", 
-    version="3.2.0",
+    version="3.4.0",
     description="Microservicio para la gestión de doctores, perfiles y pacientes asignados."
 )
 
@@ -54,18 +54,47 @@ def get_current_user(authorization: str = Header(None)) -> Dict[str, Any]:
     token = authorization.split(" ")[1]
     return verify_jwt_token(token)
 
+def get_reference_id_from_token(payload: Dict[str, Any]) -> Optional[str]:
+    """
+    Helper para extraer el reference_id, incluso si está anidado
+    dentro de 'metadata' (como se ve en los logs de Redis).
+    """
+    ref_id = payload.get("reference_id")
+    if ref_id:
+        return str(ref_id)
+    
+    metadata = payload.get("metadata")
+    if isinstance(metadata, dict):
+        ref_id = metadata.get("reference_id")
+        if ref_id:
+            logger.info(f"✅ 'reference_id' encontrado dentro de 'metadata': {ref_id}")
+            return str(ref_id)
+            
+    user_id = payload.get("user_id")
+    if user_id:
+        logger.warning(f"⚠️ No se encontró 'reference_id', usando 'user_id' como fallback: {user_id}")
+        return str(user_id)
+        
+    return None
+
 def require_doctor_role(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
     """
-    Dependencia que verifica que el usuario autenticado sea un doctor
-    y retorna el payload del token.
+    Dependencia que verifica que el usuario sea un doctor y extrae
+    correctamente el reference_id.
     """
     if current_user.get("user_type") != "doctor":
         raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de Doctor.")
     
-    if not current_user.get("reference_id"):
+    reference_id = get_reference_id_from_token(current_user)
+    
+    if not reference_id:
+        logger.error(f"❌ Token de doctor inválido. Payload: {current_user}")
         raise HTTPException(status_code=400, detail="Token de doctor inválido, no contiene reference_id.")
-        
-    return current_user 
+    
+    return {
+        "payload": current_user,
+        "reference_id": reference_id 
+    }
 
 # --- Lógica de Negocio ---
 
@@ -93,7 +122,7 @@ def _create_full_doctor_transaction(doctor_data: DoctorCreateRequest) -> UUID:
             doctor_data.consultation_fee
         ))
         
-        doctor_id = cursor.fetchone()['id']
+        doctor_id = cursor.fetchone()['id'] # Esto ya es un objeto UUID de la BD
 
         email_query = """
             INSERT INTO emails (entity_type, entity_id, email_type_id, email_address, is_primary, is_verified)
@@ -128,7 +157,8 @@ def _get_doctor_details_from_db(doctor_id: str) -> dict:
         LEFT JOIN emails e ON e.entity_type = 'doctor' AND e.entity_id = d.id AND e.is_primary = TRUE
         WHERE d.id = %s
     """
-    doctor_data = execute_query(query, (UUID(doctor_id),), fetch_one=True)
+    # Pasamos el string 'doctor_id' directamente. psycopg2 lo manejará.
+    doctor_data = execute_query(query, (doctor_id,), fetch_one=True)
 
     if not doctor_data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor no encontrado.")
@@ -138,19 +168,19 @@ def _get_doctor_details_from_db(doctor_id: str) -> dict:
 # --- Endpoints del Doctor Autenticado (para el Frontend del Doctor) ---
 
 @app.get("/api/v1/doctors/me/dashboard", response_model=DoctorDashboardKPIs)
-def get_my_dashboard_kpis(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)):
+def get_my_dashboard_kpis(auth_info: Dict[str, Any] = Depends(require_doctor_role)):
     """
     Obtiene los KPIs para el dashboard.html del doctor.
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
     
-    # KPI 1: Conteo de pacientes
     patients_query = "SELECT COUNT(*) as count FROM patients WHERE doctor_id = %s AND is_active = TRUE"
-    patients_count_row = execute_query(patients_query, (UUID(doctor_id),), fetch_one=True)
     
-    # KPIs de citas y revisiones (placeholders, ya que no tenemos esas tablas)
-    today_appointments = 0 # TODO: Implementar lógica de citas
-    pending_reviews = 0    # TODO: Implementar lógica de revisiones
+    # Pasamos el string 'doctor_id' directamente.
+    patients_count_row = execute_query(patients_query, (doctor_id,), fetch_one=True)
+    
+    today_appointments = 0
+    pending_reviews = 0
 
     return {
         "total_patients": patients_count_row['count'] if patients_count_row else 0,
@@ -159,11 +189,11 @@ def get_my_dashboard_kpis(doctor_payload: Dict[str, Any] = Depends(require_docto
     }
 
 @app.get("/api/v1/doctors/me/profile", response_model=DoctorProfileResponse)
-def get_my_profile(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)):
+def get_my_profile(auth_info: Dict[str, Any] = Depends(require_doctor_role)):
     """
     Obtiene el perfil del doctor actualmente autenticado para profile.html.
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
 
     query = """
         SELECT
@@ -179,7 +209,7 @@ def get_my_profile(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)
         LEFT JOIN medical_institutions mi ON d.institution_id = mi.id
         WHERE d.id = %s AND d.is_active = TRUE
     """
-    profile_data = execute_query(query, (UUID(doctor_id),), fetch_one=True)
+    profile_data = execute_query(query, (doctor_id,), fetch_one=True)
 
     if not profile_data:
         raise HTTPException(status_code=404, detail="Perfil de doctor no encontrado.")
@@ -189,19 +219,19 @@ def get_my_profile(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)
 @app.put("/api/v1/doctors/me/profile", response_model=DoctorProfileResponse)
 def update_my_profile(
     profile_update: DoctorUpdateRequest, 
-    doctor_payload: Dict[str, Any] = Depends(require_doctor_role)
+    auth_info: Dict[str, Any] = Depends(require_doctor_role)
 ):
     """
     Actualiza el perfil del doctor actualmente autenticado (profile.html).
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
     
     update_data = profile_update.dict(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No hay datos para actualizar.")
 
     set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
-    values = list(update_data.values()) + [UUID(doctor_id)]
+    values = list(update_data.values()) + [doctor_id]
 
     update_query = f"UPDATE doctors SET {set_clause} WHERE id = %s"
     
@@ -212,14 +242,14 @@ def update_my_profile(
         logger.error(f"Error al actualizar perfil de doctor: {e}")
         raise HTTPException(status_code=500, detail="Error al actualizar la base de datos.")
 
-    return get_my_profile(doctor_payload) # Devuelve el perfil actualizado
+    return get_my_profile(auth_info)
 
 @app.get("/api/v1/doctors/me/institution", response_model=DoctorInstitutionResponse)
-def get_my_institution(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)):
+def get_my_institution(auth_info: Dict[str, Any] = Depends(require_doctor_role)):
     """
     Obtiene la información de la institución del doctor (my-institution.html).
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
     
     query = """
         SELECT
@@ -239,12 +269,11 @@ def get_my_institution(doctor_payload: Dict[str, Any] = Depends(require_doctor_r
         LEFT JOIN countries c ON a.country_id = c.id
         WHERE d.id = %s
     """
-    inst_data = execute_query(query, (UUID(doctor_id),), fetch_one=True)
+    inst_data = execute_query(query, (doctor_id,), fetch_one=True)
     
     if not inst_data:
         raise HTTPException(status_code=404, detail="Institución no encontrada para este doctor.")
 
-    # Convertir a dict y anidar la dirección
     inst_dict = dict(inst_data)
     inst_dict["address"] = {
         "street_address": inst_data["street_address"],
@@ -258,11 +287,11 @@ def get_my_institution(doctor_payload: Dict[str, Any] = Depends(require_doctor_r
 
 
 @app.get("/api/v1/doctors/me/patients", response_model=DoctorPatientListResponse)
-def get_my_patients(doctor_payload: Dict[str, Any] = Depends(require_doctor_role)):
+def get_my_patients(auth_info: Dict[str, Any] = Depends(require_doctor_role)):
     """
     Obtiene la lista de pacientes asignados al doctor (patients.html).
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
 
     query = """
         SELECT
@@ -275,7 +304,7 @@ def get_my_patients(doctor_payload: Dict[str, Any] = Depends(require_doctor_role
         WHERE p.doctor_id = %s AND p.is_active = TRUE
         ORDER BY p.last_name, p.first_name
     """
-    patients_rows = execute_query(query, (UUID(doctor_id),), fetch_all=True)
+    patients_rows = execute_query(query, (doctor_id,), fetch_all=True)
     
     patient_list = [dict(row) for row in patients_rows]
 
@@ -285,12 +314,12 @@ def get_my_patients(doctor_payload: Dict[str, Any] = Depends(require_doctor_role
     }
 
 @app.get("/api/v1/doctors/me/patients/{patient_id}/medical-record", response_model=DoctorPatientMedicalRecord)
-def get_patient_medical_record_for_doctor(patient_id: UUID, doctor_payload: Dict[str, Any] = Depends(require_doctor_role)):
+def get_patient_medical_record_for_doctor(patient_id: str, auth_info: Dict[str, Any] = Depends(require_doctor_role)):
     """
     Obtiene el expediente de un paciente específico, PERO solo si está
     asignado al doctor autenticado (patient-detail.html).
     """
-    doctor_id = doctor_payload.get("reference_id")
+    doctor_id = auth_info.get("reference_id")
 
     # --- 1. Seguridad: Verificar que el paciente pertenece al doctor ---
     patient_info_query = """
@@ -303,7 +332,7 @@ def get_patient_medical_record_for_doctor(patient_id: UUID, doctor_payload: Dict
         LEFT JOIN phones ph ON ph.entity_id = p.id AND ph.entity_type = 'patient' AND ph.is_primary = TRUE
         WHERE p.id = %s AND p.doctor_id = %s AND p.is_active = TRUE
     """
-    patient_info_row = execute_query(patient_info_query, (patient_id, UUID(doctor_id)), fetch_one=True)
+    patient_info_row = execute_query(patient_info_query, (patient_id, doctor_id), fetch_one=True)
     
     if not patient_info_row:
         raise HTTPException(status_code=404, detail="Paciente no encontrado o no asignado a este doctor.")
@@ -385,7 +414,7 @@ def update_doctor(doctor_id: str, doctor_update: DoctorUpdateRequest, current_us
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No hay datos para actualizar.")
 
     set_clause = ", ".join([f"{key} = %s" for key in update_data.keys()])
-    values = list(update_data.values()) + [UUID(doctor_id)]
+    values = list(update_data.values()) + [doctor_id]
 
     update_query = f"UPDATE doctors SET {set_clause} WHERE id = %s"
     
@@ -406,7 +435,7 @@ def delete_doctor(doctor_id: str, current_user: Dict[str, Any] = Depends(get_cur
 
     try:
         with DatabaseConnection() as (conn, cursor):
-            cursor.execute("UPDATE doctors SET is_active = FALSE WHERE id = %s", (UUID(doctor_id),))
+            cursor.execute("UPDATE doctors SET is_active = FALSE WHERE id = %s", (doctor_id,))
     except Exception as e:
         logger.error(f"Error al eliminar doctor: {e}")
         raise HTTPException(status_code=500, detail="Error al actualizar la base de datos.")

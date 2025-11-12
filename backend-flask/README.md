@@ -1,177 +1,134 @@
-# Backend Flask - API Gateway PredictHealth
+# Backend Flask - API Gateway
 
-## Resumen
+Flask-based API Gateway and web server for PredictHealth microservices architecture. Acts as the single entry point for frontend requests, handling both HTML page rendering and intelligent routing of API calls to specialized microservices.
 
-El **Backend Flask** es el componente central de la arquitectura de microservicios de PredictHealth, funcionando como **API Gateway** y servidor web principal. Actúa como punto de entrada único para todas las solicitudes del frontend, manejando tanto la renderización de páginas HTML como el enrutamiento inteligente de llamadas API hacia los microservicios especializados.
+## Architecture
 
-## Arquitectura General
+### Core Components
 
-### Roles Principales
+- **API Gateway**: Routes HTTP requests to specific microservices
+- **Web Server**: Serves HTML pages, Jinja2 templates, and static files
+- **Session Manager**: Handles JWT authentication with Redis storage
+- **Proxy Service**: Intelligent communication with retries and error handling
 
-1. **API Gateway**: Enruta solicitudes HTTP hacia microservicios específicos
-2. **Servidor Web**: Sirve páginas HTML, plantillas Jinja2 y archivos estáticos
-3. **Gestor de Sesiones**: Maneja autenticación JWT con almacenamiento en Redis
-4. **Proxy Inteligente**: Comunicación con reintentos y manejo de errores
+### Technology Stack
 
-### Componentes Arquitectónicos
+- **Framework**: Flask 2.3.3
+- **Authentication**: JWT with custom middleware
+- **Proxy**: Intelligent proxy service with automatic retries
+- **Sessions**: Redis for JWT token storage
+- **CORS**: Flask-CORS for frontend integration
+- **Templates**: Jinja2 for HTML rendering
 
-```
-Frontend Browser → Backend Flask → Microservicios
-                        ↓
-                Servidor Web (HTML/CSS/JS)
-                        ↓
-                API Gateway (JSON APIs)
-```
-
-## Pila Tecnológica
-
-- **Framework**: Flask 2.3.3 con extensiones especializadas
-- **Autenticación**: JWT (JSON Web Tokens) con middleware personalizado
-- **Proxy**: Servicio de proxy inteligente con reintentos automáticos
-- **Sesiones**: Redis para almacenamiento de tokens JWT
-- **CORS**: Flask-CORS para integración con frontend
-- **Plantillas**: Jinja2 para renderizado de páginas HTML
-- **Base de Datos**: PostgreSQL para configuración del sistema
-
-## Estructura del Proyecto
+## Project Structure
 
 ```
 backend-flask/
-├── app.py                    # Punto de entrada principal
-├── Dockerfile               # Configuración de contenedor
-├── requirements.txt         # Dependencias Python
-├── .env                     # Variables de entorno
+├── app.py                    # Main entry point
+├── Dockerfile               # Container configuration
+├── requirements.txt         # Python dependencies
 ├── app/
-│   ├── __init__.py          # Fábrica de aplicación Flask
 │   ├── core/
-│   │   └── config.py        # Configuración centralizada
+│   │   └── config.py        # Centralized configuration
 │   ├── api/
-│   │   ├── __init__.py
 │   │   └── v1/
-│   │       ├── __init__.py  # API v1 con health check
-│   │       ├── web_controller.py  # Endpoints JSON /api/web
-│   │       ├── auth.py      # Endpoints de autenticación
-│   │       ├── doctors.py   # Proxy a servicio doctores
-│   │       ├── patients.py  # Proxy a servicio pacientes
-│   │       ├── institutions.py  # Proxy a servicio instituciones
-│   │       ├── admins.py    # Proxy a servicio administradores
-│   │       └── main.py      # Endpoints principales
+│   │       ├── __init__.py  # API v1 blueprint
+│   │       ├── gateway.py   # Gateway routing
+│   │       ├── auth.py      # Authentication endpoints
+│   │       ├── health_controller.py  # Health checks
+│   │       ├── main.py      # Main endpoints
+│   │       └── web_controller.py  # Web API endpoints
 │   ├── middleware/
-│   │   ├── __init__.py
-│   │   └── jwt_middleware.py  # Middleware JWT con Redis
+│   │   └── jwt_middleware.py  # JWT middleware with Redis
 │   ├── services/
-│   │   ├── __init__.py
-│   │   ├── proxy_service.py  # Servicio de proxy inteligente
-│   │   ├── auth_service.py   # Servicios de autenticación
-│   │   ├── health_service.py # Servicios de salud
-│   │   └── logging_service.py # Servicios de logging
+│   │   ├── proxy_service.py  # Intelligent proxy service
+│   │   ├── health_service.py # Health services
+│   │   └── logging_service.py # Logging services
+│   ├── controllers/
+│   │   └── frontend_controller.py  # Frontend routes
 │   └── utils/
-│       ├── __init__.py
-│       └── client_detector.py # Detección de clientes
-└── frontend/                 # Archivos del frontend (copiados en build)
-    ├── templates/           # Plantillas Jinja2
-    └── static/              # CSS, JS, imágenes
+│       └── client_detector.py # Client detection
+└── frontend/                # Frontend files (copied in build)
+    ├── templates/           # Jinja2 templates
+    └── static/              # CSS, JS, images
 ```
 
-## Funcionalidades Principales
+## Features
 
-### 1. API Gateway Inteligente
+### API Gateway
 
-#### Enrutamiento Automático
-- **Detección de Servicio**: Basado en URL y tipo de usuario
-- **Headers de Autenticación**: Inyección automática de JWT Bearer tokens
-- **Reintentos**: Lógica de backoff exponencial para fallos temporales
-- **Timeouts**: Configuración de timeouts por servicio
+- Automatic service detection based on URL and user type
+- Automatic JWT Bearer token injection in headers
+- Exponential backoff retry logic for temporary failures
+- Configurable timeouts per service
 
-#### Servicios Gestionados
+### Microservices
+
 ```python
 MICROSERVICES = {
     'jwt': 'http://servicio-auth-jwt:8003',
     'doctors': 'http://servicio-doctores:8000',
     'patients': 'http://servicio-pacientes:8004',
-    'institutions': 'http://servicio-instituciones:8002'
+    'institutions': 'http://servicio-instituciones:8002',
+    'admins': 'http://servicio-admins:8006'
 }
 ```
 
-### 2. Servidor Web Dual
+### Web Server
 
-#### Páginas HTML Dinámicas
-- **Landing Page**: Página de inicio público
-- **Dashboards**: Paneles específicos por tipo de usuario
-- **Formularios**: Páginas de registro y login
-- **Documentación**: Páginas de docs técnicas
+- Landing page
+- User-specific dashboards
+- Registration and login forms
+- Documentation pages
 
-#### Endpoints de Página
-```python
-@app.route('/')                    # Landing page
-@app.route('/login')              # Página de login
-@app.route('/patient/dashboard')  # Dashboard paciente
-@app.route('/doctor/dashboard')   # Dashboard doctor
-@app.route('/docs')               # Documentación
-```
+### JWT Authentication
 
-### 3. Sistema de Autenticación JWT
+- Token validation against Redis
+- Automatic token renewal on usage
+- Secure cookies: HttpOnly, Secure, SameSite
+- Secure logout with Redis token removal
 
-#### Middleware JWT
-- **Validación de Tokens**: Verificación contra Redis
-- **Renovación Automática**: Extensión de expiración en uso
-- **Cookies Seguras**: HttpOnly, Secure, SameSite
-- **Logout Seguro**: Eliminación de tokens de Redis
-
-#### Flujo de Autenticación
-```
-Login → JWT Service → Access Token → Cookie HttpOnly → Redis Storage
-```
-
-### 4. Gestión de Sesiones
-
-#### Almacenamiento en Redis
-```python
-# Estructura de claves
-access_token:{jwt_token}  # Token de acceso (15 min)
-refresh_token:{jwt_token} # Token de refresco (7 días)
-```
-
-#### Validación de Sesión
-- **Verificación Automática**: En cada request protegido
-- **Expiración**: Renovación automática en uso activo
-- **Logout**: Eliminación completa de sesión
-
-## Endpoints Principales
+## Endpoints
 
 ### API Endpoints (`/api/v1/`)
 
-#### Autenticación
-- `POST /api/v1/auth/login` - Login genérico
-- `GET /api/v1/auth/validate` - Validar sesión
+#### Authentication
+- `POST /api/v1/auth/login` - Generic login
+- `GET /api/v1/auth/validate` - Validate session
 
 #### Web Controller (`/api/web/`)
-- `POST /api/web/auth/patient/login` - Login paciente
-- `POST /api/web/auth/doctor/login` - Login doctor
-- `POST /api/web/auth/institution/login` - Login institución
-- `GET /api/web/patient/dashboard` - Dashboard paciente
-- `GET /api/web/doctor/dashboard` - Dashboard doctor
-- `GET /api/web/institution/dashboard` - Dashboard institución
+- `POST /api/web/auth/patient/login` - Patient login
+- `POST /api/web/auth/doctor/login` - Doctor login
+- `POST /api/web/auth/institution/login` - Institution login
+- `GET /api/web/patient/dashboard` - Patient dashboard
+- `GET /api/web/doctor/dashboard` - Doctor dashboard
+- `GET /api/web/institution/dashboard` - Institution dashboard
 
-#### Gestión de Entidades
-- `GET/POST /api/v1/doctors/` - CRUD doctores
-- `GET/POST /api/v1/patients/` - CRUD pacientes
-- `GET/POST /api/v1/institutions/` - CRUD instituciones
+#### Gateway
+- `GET/POST /api/v1/doctors/*` - Proxy to doctors service
+- `GET/POST /api/v1/patients/*` - Proxy to patients service
+- `GET/POST /api/v1/institutions/*` - Proxy to institutions service
 
-### Páginas Web
+### Web Pages
 
-#### Públicas
-- `GET /` - Página de inicio
-- `GET /docs` - Documentación
+#### Public
+- `GET /` - Landing page
+- `GET /login` - Login page (redirects to landing with modal)
+- `GET /docs` - Documentation
+- `GET /docs/arquitectura` - Architecture documentation
 
-#### Protegidas
-- `GET /patient/dashboard` - Dashboard paciente
-- `GET /doctor/dashboard` - Dashboard doctor
-- `GET /institution/dashboard` - Dashboard institución
+#### Protected
+- `GET /patient/dashboard` - Patient dashboard
+- `GET /doctor/dashboard` - Doctor dashboard
+- `GET /institution/dashboard` - Institution dashboard
 
-## Configuración
+### Health
+- `GET /health` - Service health check
+- `GET /api/v1/health` - API health check
 
-### Variables de Entorno
+## Configuration
+
+### Environment Variables
 
 ```bash
 # JWT Configuration
@@ -183,6 +140,7 @@ JWT_SERVICE_URL=http://servicio-auth-jwt:8003
 DOCTOR_SERVICE_URL=http://servicio-doctores:8000
 PATIENT_SERVICE_URL=http://servicio-pacientes:8004
 INSTITUTION_SERVICE_URL=http://servicio-instituciones:8002
+ADMIN_SERVICE_URL=http://servicio-admins:8006
 
 # Database and Cache
 DATABASE_URL=postgresql://user:pass@postgres:5432/predicthealth
@@ -191,155 +149,41 @@ REDIS_URL=redis://redis:6379/0
 # Flask Configuration
 SECRET_KEY=flask-secret-key
 FLASK_ENV=development
+FLASK_DEBUG=1
 LOG_LEVEL=INFO
 
 # CORS Configuration
 CORS_ORIGINS=http://localhost:5000,http://localhost:3000
 ```
 
-### Configuración Docker
+## Development
 
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-COPY ../frontend/ /app/frontend/
-EXPOSE 5000
-CMD ["python", "app.py"]
-```
-
-## Flujo de Operación
-
-### 1. Inicio de Solicitud
-
-```
-Usuario → Backend Flask → Validación JWT → Enrutamiento
-```
-
-### 2. Procesamiento de API
-
-```
-Request → JWT Middleware → Proxy Service → Microservicio → Respuesta
-```
-
-### 3. Renderizado de Página
-
-```
-Request → Flask Route → Template Engine → HTML Response
-```
-
-### 4. Autenticación
-
-```
-Login → JWT Service → Token Generation → Cookie Storage → Redis
-```
-
-## Características Avanzadas
-
-### Proxy Service Inteligente
-
-#### Reintentos Automáticos
-```python
-max_retries = 3
-retry_delay = 1  # segundos
-backoff_exponential = True
-```
-
-#### Manejo de Errores
-- **Timeouts**: Configurables por servicio
-- **Circuit Breaker**: Protección contra fallos en cascada
-- **Fallbacks**: Respuestas por defecto en caso de fallo
-
-### Middleware JWT
-
-#### Validación Robusta
-- **Expiración**: Verificación automática
-- **Integridad**: Validación de firma HMAC
-- **Claims**: Verificación de tipo de usuario y roles
-
-#### Gestión de Sesión
-- **Renovación**: Extensión automática en uso
-- **Logout**: Eliminación completa de tokens
-- **Concurrente**: Soporte para múltiples sesiones
-
-### CORS y Seguridad
-
-#### Configuración CORS
-```python
-CORS(app, origins=config.CORS_ORIGINS, supports_credentials=True)
-```
-
-#### Cookies Seguras
-```python
-resp.set_cookie('predicthealth_session',
-                token,
-                httponly=True,
-                secure=False,  # True en producción
-                samesite='Strict')
-```
-
-## Monitoreo y Salud
-
-### Health Checks
-
-#### Endpoint Principal
-```bash
-GET /health
-# Response: {"status": "healthy", "service": "backend-flask"}
-```
-
-#### Health Check API
-```bash
-GET /api/v1/health
-# Response: Lista completa de endpoints disponibles
-```
-
-### Logging
-
-#### Niveles Configurables
-```python
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-```
-
-#### Logs Especializados
-- **Proxy Requests**: Enrutamiento y respuestas
-- **JWT Operations**: Validación y renovación
-- **Authentication**: Login/logout events
-- **Errors**: Excepciones y fallos
-
-## Desarrollo y Despliegue
-
-### Configuración de Desarrollo
+### Setup
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 
-# Las variables de entorno ya están configuradas en .env (editar si es necesario)
+# Set environment variables (create .env file)
+cp .env.example .env
 
-# Ejecutar aplicación
+# Run application
 python app.py
 ```
 
-### Despliegue Docker
+### Docker
 
 ```bash
-# Construir imagen
+# Build image
 docker build -t predicthealth/backend-flask .
 
-# Ejecutar contenedor
-docker run -p 5000:5000 predicthealth/backend-flask
+# Run container
+docker run -p 5000:5000 --env-file .env predicthealth/backend-flask
 ```
 
-### Despliegue con Docker Compose
+### Docker Compose
 
 ```yaml
-version: '3.8'
 services:
   backend-flask:
     build: ./backend-flask
@@ -356,135 +200,148 @@ services:
       - servicio-instituciones
 ```
 
-## Integración con Microservicios
+## Proxy Service
 
-### Comunicación Síncrona
+### Features
 
-#### Patrón Request-Response
+- Automatic `/api/v1` prefix handling for domain services
+- JWT Bearer token injection in all requests
+- Exponential backoff retry (3 attempts, 1s base delay)
+- Configurable timeouts (10s default)
+- Comprehensive error handling
+
+### Usage
+
 ```python
-# Proxy service maneja automáticamente:
-# - Headers de autenticación
-# - Timeouts y reintentos
-# - Manejo de errores
-# - Logging detallado
+from app.services.proxy_service import proxy_service
 
-response = proxy_service.proxy_post('doctors', '/api/v1/doctors/', data)
+# Proxy GET request
+response = proxy_service.proxy_get('doctors', '/api/v1/doctors/')
+
+# Proxy POST request
+response = proxy_service.proxy_post('patients', '/api/v1/patients/', data={'name': 'John'})
+
+# Service-specific methods
+response = proxy_service.call_doctors_service('GET', '/api/v1/doctors/')
+response = proxy_service.call_patients_service('POST', '/api/v1/patients/', data)
 ```
 
-### Dependencias de Servicios
+## JWT Middleware
 
-#### Servicios Requeridos
-- **servicio-auth-jwt**: Gestión de tokens JWT
-- **servicio-doctores**: Lógica de negocio de doctores
-- **servicio-pacientes**: Lógica de negocio de pacientes
-- **servicio-instituciones**: Lógica de negocio de instituciones
+### Decorators
 
-#### Servicios de Infraestructura
-- **PostgreSQL**: Base de datos principal
-- **Redis**: Cache y sesiones
+```python
+from app.middleware.jwt_middleware import require_session, require_auth, optional_session
 
-## Seguridad
+# Require valid session
+@require_session
+def protected_route():
+    user = g.current_user
+    return jsonify(user)
 
-### Autenticación
-- **JWT Stateless**: Tokens autofirmados
-- **Redis Validation**: Verificación de sesiones activas
-- **Password Hashing**: bcrypt para contraseñas
+# Require specific user type
+@require_auth(required_user_type='doctor')
+def doctor_only_route():
+    return jsonify({'message': 'Doctor access'})
 
-### Autorización
-- **Role-Based Access**: Control por tipo de usuario
-- **Route Protection**: Decoradores de autenticación
-- **Session Management**: Cookies seguras HttpOnly
+# Optional session
+@optional_session
+def public_route():
+    if is_authenticated():
+        return jsonify(g.current_user)
+    return jsonify({'message': 'Public'})
+```
 
-### Protección de API
-- **CORS**: Configuración restrictiva de orígenes
-- **Rate Limiting**: Protección contra abuso (futuro)
-- **Input Validation**: Validación de datos de entrada
+### Session Storage
 
-## Rendimiento y Escalabilidad
+Tokens are stored in Redis with the format:
+- `access_token:{jwt_token}` - Access token (15 min default)
 
-### Optimizaciones Implementadas
+## Security
 
-#### Proxy Service
-- **Connection Pooling**: Reutilización de conexiones
-- **Async Operations**: Procesamiento no bloqueante
-- **Caching**: Respuestas cacheadas cuando apropiado
+### Authentication
+- JWT stateless tokens
+- Redis session validation
+- Password hashing with bcrypt
 
-#### Base de Datos
-- **Connection Pooling**: SQLAlchemy connection pooling
-- **Query Optimization**: Consultas optimizadas
-- **Indexing**: Índices estratégicos en tablas críticas
+### Authorization
+- Role-based access control
+- Route protection decorators
+- Secure session management
 
-### Métricas de Rendimiento
+### API Protection
+- CORS with restrictive origin configuration
+- Input validation
+- Secure cookie settings (HttpOnly, SameSite)
 
-#### Latencia
-- **API Gateway**: <50ms overhead típico
-- **Proxy Operations**: <200ms para servicios internos
-- **Template Rendering**: <100ms para páginas complejas
+## Monitoring
 
-#### Throughput
-- **Concurrent Users**: Soporte para 1000+ usuarios concurrentes
-- **Request Rate**: 1000+ requests/segundo
-- **Memory Usage**: <200MB en operación normal
+### Health Checks
 
-## Solución de Problemas
-
-### Problemas Comunes
-
-#### Conexión a Microservicios
 ```bash
-# Verificar conectividad
+# Service health
+curl http://localhost:5000/health
+
+# API health
+curl http://localhost:5000/api/v1/health
+```
+
+### Logging
+
+Logging levels are configurable via `LOG_LEVEL` environment variable:
+- `DEBUG`: Detailed debug information
+- `INFO`: General informational messages
+- `WARNING`: Warning messages
+- `ERROR`: Error messages
+
+## Troubleshooting
+
+### Microservice Connection Issues
+
+```bash
+# Verify connectivity
 curl http://servicio-doctores:8000/health
 
-# Verificar configuración
+# Check configuration
 echo $DOCTOR_SERVICE_URL
 ```
 
-#### Problemas de JWT
+### JWT Issues
+
 ```bash
-# Verificar token en Redis
+# Check tokens in Redis
 redis-cli KEYS "access_token:*"
 
-# Validar token manualmente
+# Validate token manually
 python -c "import jwt; jwt.decode(token, 'secret', algorithms=['HS256'])"
 ```
 
-#### Errores de CORS
+### CORS Errors
+
 ```bash
-# Verificar configuración CORS
+# Verify CORS configuration
 echo $CORS_ORIGINS
 
-# Verificar headers de respuesta
+# Check response headers
 curl -I http://localhost:5000/api/v1/health
 ```
 
-### Logs de Depuración
+## Dependencies
 
-#### Habilitar Debug Mode
-```bash
-export FLASK_ENV=development
-export LOG_LEVEL=DEBUG
-python app.py
-```
+### Production
+- Flask==2.3.3
+- Flask-CORS==4.0.0
+- requests==2.31.0
+- python-dotenv==1.0.0
+- pydantic[email]==2.5.0
+- PyJWT==2.8.0
+- bcrypt==4.2.0
+- redis==5.0.1
 
-#### Logs Importantes
-```
-🔄 Proxy request to doctors: /api/v1/doctors/
-✅ Response from microservice doctors: 200
-🔑 JWT Bearer token added to headers
-⏰ Timeout in attempt 1/3
-```
+### Development
+- pytest==7.4.3
+- pytest-flask==1.3.0
 
-## Conclusión
+## License
 
-El **Backend Flask** es el corazón de la arquitectura PredictHealth, proporcionando una capa de abstracción inteligente entre el frontend y los microservicios especializados. Su diseño como API Gateway dual (web + API) permite una experiencia de usuario fluida mientras mantiene la escalabilidad y mantenibilidad del sistema de microservicios.
-
-### Beneficios Arquitectónicos
-
-- **✅ Punto Único de Entrada**: Simplifica el frontend
-- **✅ Abstracción de Microservicios**: Oculta complejidad interna
-- **✅ Autenticación Centralizada**: JWT con Redis
-- **✅ Escalabilidad Horizontal**: Stateless design
-- **✅ Monitoreo Integral**: Health checks y logging
-- **✅ Seguridad Robusta**: CORS, JWT, cookies seguras
-
-Esta arquitectura permite que PredictHealth evolucione manteniendo una experiencia de usuario consistente mientras escala sus capacidades de backend de manera independiente.
+Part of the PredictHealth project.

@@ -13,107 +13,223 @@
 
 - [🏥 PredictHealth - Plataforma de Salud Predictiva](#-predicthealth---plataforma-de-salud-predictiva)
   - [📋 Tabla de Contenidos](#-tabla-de-contenidos)
-  - [🌟 Características Principales](#-características-principales)
-  - [🏗️ Arquitectura del Sistema](#️-arquitectura-del-sistema)
-  - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
+  - [🎯 Contexto y Problema](#-contexto-y-problema)
+  - [🎯 Objetivos del Proyecto](#-objetivos-del-proyecto)
+  - [💡 Descripción de la Solución](#-descripción-de-la-solución)
+  - [✨ Beneficios y Valor](#-beneficios-y-valor)
+  - [📅 Plan de Trabajo y Roadmap](#-plan-de-trabajo-y-roadmap)
+  - [👥 Recursos y Equipo](#-recursos-y-equipo)
   - [🚀 Inicio Rápido](#-inicio-rápido)
-  - [📚 Documentación](#-documentación)
+  - [📚 Documentación Técnica](#-documentación-técnica)
+    - [📖 Documentación por Componente](#-documentación-por-componente)
+    - [🔗 Enlaces Rápidos](#-enlaces-rápidos)
   - [🔧 Tecnologías](#-tecnologías)
-  - [📊 Componentes](#-componentes)
-  - [💻 Requisitos del Sistema](#-requisitos-del-sistema)
-  - [🛠️ Instalación y Configuración](#️-instalación-y-configuración)
-  - [🔐 Seguridad](#-seguridad)
+  - [🔄 Próximos Pasos](#-próximos-pasos)
 
-## 🌟 Características Principales
+## 🎯 Contexto y Problema
 
-### 🎯 **Salud Predictiva Inteligente**
-- **Análisis de Riesgos**: Algoritmos avanzados para predicción de enfermedades cardiovasculares y diabetes
-- **Recomendaciones Personalizadas**: Sugerencias basadas en IA adaptadas a cada paciente
-- **Monitoreo Continuo**: Seguimiento en tiempo real de indicadores de salud
+El **activo más valioso** es la salud. Sin embargo, la atención médica tradicional se enfoca principalmente en el **tratamiento reactivo**: esperamos a que aparezcan síntomas o enfermedades antes de actuar.
 
-### 👥 **Multi-Usuario Completo**
-- **Pacientes**: Dashboards personales con métricas de salud y recomendaciones
-- **Doctores**: Gestión de pacientes, análisis clínicos y herramientas de diagnóstico
-- **Instituciones**: Administración de personal médico y análisis institucionales
-- **Administradores**: Control total del sistema con herramientas CMS avanzadas
+### El Problema
 
-### 🔬 **Datos Biométricos Avanzados**
-- **Mediciones Médicas**: Presión arterial, glucosa, peso, altura, frecuencia cardíaca
-- **Hábitos de Vida**: Actividad física, alimentación, consumo de sustancias
-- **Historial Médico**: Antecedentes familiares y condiciones preexistentes
-- **Validación Inteligente**: Rangos médicos y lógica de negocio integrada
+Existe una necesidad urgente de una **gestión proactiva de la salud** que vaya más allá del modelo reactivo actual. Específicamente, buscamos abordar el riesgo de **enfermedades crónicas comunes**, como:
 
-### 📊 **Analytics y Reportes**
-- **Dashboards en Tiempo Real**: KPIs y métricas actualizadas automáticamente
-- **Reportes Exportables**: PDF, Excel y CSV con datos estructurados
-- **Visualizaciones Interactivas**: Gráficos y tendencias con Chart.js
-- **Análisis Geográfico**: Distribución regional de servicios de salud
+- **Diabetes**: Afecta a millones de personas y puede prevenirse con intervención temprana
+- **Hipertensión**: Una de las principales causas de enfermedades cardiovasculares
+- **Enfermedades Cardiovasculares**: Principal causa de mortalidad a nivel mundial
 
-## 🏗️ Arquitectura del Sistema
+Estas condiciones pueden **prevenirse o gestionarse mejor** cuando se cuenta con información oportuna, análisis predictivo y recomendaciones personalizadas basadas en los datos individuales de cada persona.
 
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        WEB[🌐 Frontend Web<br/>HTML/CSS/JS]
-        CMS[📊 CMS Backend<br/>Flask Admin]
-    end
+### La Oportunidad
 
-    subgraph "API Gateway Layer"
-        GATEWAY[🚪 Backend Flask<br/>API Gateway]
-    end
+La tecnología actual permite recopilar, procesar y analizar grandes volúmenes de datos de salud para generar insights predictivos. Sin embargo, falta una plataforma integrada que:
 
-    subgraph "Microservices Layer"
-        AUTH[🔐 auth-jwt-service<br/>Authentication]
-        DOCTORS[👨‍⚕️ service-doctors<br/>Healthcare Providers]
-        PATIENTS[🏥 service-patients<br/>Patient Management]
-        INSTITUTIONS[🏢 service-institutions<br/>Medical Facilities]
-    end
+- Combine datos históricos del paciente con información de estilo de vida
+- Genere predicciones de riesgo personalizadas
+- Proporcione recomendaciones preventivas activas y adaptativas
+- Evolucione con el comportamiento diario del usuario
 
-    subgraph "Data Layer"
-        POSTGRES[(📊 PostgreSQL<br/>Primary Database)]
-        REDIS[(⚡ Redis<br/>Cache & Sessions)]
-    end
+## 🎯 Objetivos del Proyecto
 
-    WEB --> GATEWAY
-    CMS --> POSTGRES
-    GATEWAY --> AUTH
-    GATEWAY --> DOCTORS
-    GATEWAY --> PATIENTS
-    GATEWAY --> INSTITUTIONS
+### Objetivo Principal
 
-    AUTH --> POSTGRES
-    AUTH --> REDIS
-    DOCTORS --> POSTGRES
-    PATIENTS --> POSTGRES
-    INSTITUTIONS --> POSTGRES
-```
+Generar **medidas preventivas personalizadas** basadas en los datos de los pacientes, transformando la atención médica de reactiva a proactiva.
 
-### 🏛️ **Principios Arquitectónicos**
+### Objetivo a Corto Plazo: MVP (12 Semanas)
 
-- **🔄 Microservicios**: Arquitectura modular con servicios especializados
-- **🚪 API Gateway**: Punto único de entrada con enrutamiento inteligente
-- **📊 Base de Datos Compartida**: PostgreSQL normalizado 3NF con Redis para caché
-- **🔐 Autenticación Centralizada**: JWT con gestión de sesiones en Redis
-- **📱 Frontend Responsivo**: Interfaz web moderna con Bootstrap y WebGL
-- **⚡ Alto Rendimiento**: Optimización con índices estratégicos y caché inteligente
+Desarrollar un **Producto Mínimo Viable (MVP)** que pueda:
 
-## 📁 Estructura del Proyecto
+1. **Recopilar datos médicos y de estilo de vida** del usuario
+   - Expedientes médicos históricos
+   - Información de estilo de vida (actividad física, alimentación, hábitos)
+   - Datos genéticos y antecedentes familiares
 
-```
-predicthealth/
-├── 📁 microservices/           # 🏗️ Servicios especializados
-│   ├── auth-jwt-service/       # Autenticación JWT
-│   ├── service-doctors/        # Gestión de doctores
-│   ├── service-patients/       # Gestión de pacientes
-│   └── service-institutions/   # Gestión de instituciones
-├── 📁 backend-flask/           # 🚪 API Gateway Flask
-├── 📁 cms-backend/             # 📊 Sistema de gestión administrativa
-├── 📁 frontend/                # 🌐 Interfaz web del usuario
-├── 📁 database/                # 🗄️ Configuración de base de datos
-├── docker-compose.yml          # 🐳 Orquestación de contenedores
-├── Dockerfile                  # 🐳 Configuración principal
-└── README.md                   # 📖 Este archivo
-```
+2. **Procesar los datos para generar predicciones de riesgo**
+   - Predicción inicial de riesgo de diabetes
+   - Predicción inicial de riesgo de hipertensión
+   - Modelo básico entrenado con datos públicos
+
+3. **Proporcionar recomendaciones preventivas básicas**
+   - Sugerencias personalizadas basadas en el perfil del paciente
+   - Recomendaciones de estilo de vida y hábitos saludables
+   - Alertas y recordatorios personalizados
+
+4. **Ser accesible mediante múltiples plataformas**
+   - **App Android**: Aplicación móvil nativa para pacientes
+   - **Interfaz Web**: Plataforma web para acceso desde cualquier dispositivo
+   - **API**: Interfaz de programación para integraciones futuras
+
+## 💡 Descripción de la Solución
+
+PredictHealth es una **plataforma de inteligencia artificial** que funciona en dos niveles para ofrecer una experiencia de salud predictiva completa:
+
+### 🔍 Nivel 1: Análisis Básico (MVP)
+
+Utiliza **datos históricos del paciente** para generar una predicción inicial de riesgo de enfermedades crónicas:
+
+- **Expedientes Médicos**: Historial clínico, diagnósticos previos, medicaciones
+- **Estilo de Vida**: Actividad física, alimentación, consumo de sustancias, hábitos diarios
+- **Genética**: Antecedentes familiares y factores genéticos predisponentes
+- **Mediciones Biométricas**: Presión arterial, glucosa, peso, altura, frecuencia cardíaca
+
+Con estos datos, la plataforma genera un **perfil de riesgo inicial** que identifica la probabilidad de desarrollar condiciones crónicas específicas.
+
+### ⚡ Nivel 2: Análisis en Tiempo Real (Futuro)
+
+**Integración con dispositivos wearables** para que la predicción de riesgo evolucione dinámicamente:
+
+- **Datos en Tiempo Real**: Ritmo cardíaco, actividad física, patrones de sueño
+- **Evolución Dinámica**: La predicción no es estática, se actualiza según los hábitos diarios
+- **Recomendaciones Adaptativas**: Las sugerencias se ajustan automáticamente al comportamiento reciente del usuario
+- **Monitoreo Continuo**: Seguimiento 24/7 de indicadores de salud
+
+### 🎯 Valor Diferencial
+
+El valor diferencial de PredictHealth no se limita a mostrar un **porcentaje de riesgo estático**. En su lugar, la plataforma:
+
+- ✅ **Entrega recomendaciones preventivas activas** personalizadas para cada usuario
+- ✅ **Se adapta al comportamiento reciente** del usuario, no solo a datos históricos
+- ✅ **Evoluciona con el tiempo** para reflejar cambios en hábitos y estilo de vida
+- ✅ **Facilita la adherencia** mediante recordatorios, alertas y seguimiento personalizado
+
+## ✨ Beneficios y Valor
+
+### 💎 Valor para el Usuario Final
+
+#### Cualitativos
+
+- **Diferenciador Competitivo**: La plataforma ofrece **retroalimentación personalizada** en lugar de un puntaje de riesgo estático
+- **Empoderamiento del Usuario**: Permite a los usuarios **cuidar y entender activamente** su salud
+- **Mayor Adherencia**: Las recomendaciones adaptativas y el seguimiento continuo generan mayor compromiso
+- **Prevención Proactiva**: Intervención temprana antes de que aparezcan síntomas o condiciones avanzadas
+- **Personalización**: Cada recomendación se adapta al perfil individual, no es genérica
+
+#### Cuantitativos
+
+- **Reducción de Costos de Salud**: Prevención temprana reduce la necesidad de tratamientos costosos
+- **Mejora de Resultados de Salud**: Intervención proactiva mejora los indicadores de salud a largo plazo
+- **Ahorro de Tiempo**: Menos visitas a emergencias y tratamientos de urgencia
+- **Mayor Calidad de Vida**: Prevención de complicaciones y mejor gestión de condiciones crónicas
+
+### 🏥 Valor para el Negocio
+
+- **Modelo de Negocio Escalable**: Plataforma que puede crecer con la base de usuarios
+- **Datos Valiosos**: Información agregada y anónima para investigación y mejoras del modelo
+- **Integración con Ecosistema de Salud**: Posibilidad de integrarse con hospitales, clínicas y aseguradoras
+- **Mercado en Crecimiento**: El mercado de salud digital y preventiva está en expansión constante
+
+## 📅 Plan de Trabajo y Roadmap
+
+### 🚀 Fase 1: MVP (12 Semanas)
+
+Entregables principales para el MVP:
+
+#### 1. Documentación
+- Definición del proyecto y alcance
+- Documentación de tecnologías y arquitectura
+- Especificaciones de funcionalidades
+
+#### 2. Backend y API
+- Creación de servicios para gestionar usuarios y datos
+- API REST para comunicación entre componentes
+- Gestión de autenticación y seguridad
+- Integración con base de datos
+
+#### 3. Modelo de IA (MVP)
+- Un modelo básico entrenado con datos públicos
+- Predicción de 1-2 enfermedades (diabetes e hipertensión)
+- Procesamiento de datos del paciente
+- Generación de recomendaciones básicas
+
+#### 4. Frontend
+- **App Android básica** para captura de datos y visualización del riesgo
+- **Página web** para acceso desde cualquier dispositivo
+- Interfaz de usuario intuitiva y accesible
+- Visualización de predicciones y recomendaciones
+
+### 🔮 Fase 2: Funcionalidades Futuras (Opcionales)
+
+Estas funcionalidades se abordarán si el MVP se termina antes de tiempo o en una siguiente fase del proyecto:
+
+#### Integración de Datos en Tiempo Real
+- Conexión con dispositivos wearables (smartwatches, monitores de actividad)
+- Sincronización de datos de salud en tiempo real
+- Actualización dinámica de predicciones de riesgo
+
+#### Visualización Inmersiva de Datos
+- Integración con tecnologías como Leap Motion para visualización gestual
+- Dashboards interactivos y experiencias de usuario avanzadas
+- Visualizaciones 3D de datos de salud
+
+#### Mejoras de Rendimiento
+- Implementación de caché con Redis para optimización
+- Mejora de tiempos de respuesta de la API
+- Escalabilidad horizontal del sistema
+
+#### Ampliación del Modelo de IA
+- Cubrir más enfermedades y condiciones crónicas
+- Modelos más avanzados con machine learning profundo
+- Predicciones más precisas y personalizadas
+
+## 👥 Recursos y Equipo
+
+### 👨‍💻 Equipo de Desarrollo
+
+| Rol | Responsable | Responsabilidades |
+|-----|-------------|-------------------|
+| **Backend y Arquitectura** | Bryan Ramírez | Desarrollo de servicios backend, API, arquitectura del sistema |
+| **Machine Learning (IA)** | Mariana Samperio | Desarrollo de modelos predictivos, procesamiento de datos, algoritmos de IA |
+| **App Móvil (Android) y Web** | Margarita Cuervo | Desarrollo de aplicación Android, interfaz web, experiencia de usuario |
+
+### 🔧 Recursos Tecnológicos
+
+#### Lenguaje y Backend
+- **Python**: Lenguaje principal de desarrollo
+- **Flask**: Framework web para API y backend
+- **FastAPI**: Framework para microservicios de alto rendimiento
+
+#### Procesamiento de Datos
+- **Pandas**: Manipulación y análisis de datos
+- **NumPy**: Computación numérica y procesamiento matemático
+
+#### Base de Datos
+- **PostgreSQL**: Base de datos relacional principal
+- **Redis**: Sistema de caché y gestión de sesiones
+
+#### Desarrollo Móvil
+- **Kotlin**: Lenguaje para desarrollo de aplicación Android
+- **Android Studio**: Entorno de desarrollo para aplicación móvil
+
+#### Frontend Web
+- **HTML5/CSS3**: Estructura y estilos modernos
+- **JavaScript ES6+**: Lógica del lado cliente
+- **Bootstrap**: Framework CSS responsivo
+
+#### DevOps y Control de Versiones
+- **Git**: Control de versiones
+- **GitHub**: Repositorio y colaboración
+- **Docker**: Contenedorización de servicios
+- **Docker Compose**: Orquestación de múltiples contenedores
 
 ## 🚀 Inicio Rápido
 
@@ -130,29 +246,6 @@ docker-compose up --build
 # 3. Acceder a la aplicación
 # Frontend: http://localhost:5000
 # CMS Admin: http://localhost:5001
-# Documentación API: http://localhost:8000/docs (auth-jwt)
-```
-
-### 🔧 Configuración Manual
-
-```bash
-# 1. Instalar dependencias del sistema
-sudo apt-get update
-sudo apt-get install postgresql redis-server python3.11
-
-# 2. Configurar base de datos
-sudo -u postgres createdb predicthealth_db
-sudo -u postgres createuser predictHealth_user
-
-# 3. Instalar dependencias Python
-pip install -r backend-flask/requirements.txt
-pip install -r cms-backend/requirements.txt
-
-# 4. Las variables de entorno ya están configuradas en .env (editar si es necesario)
-
-# 5. Ejecutar servicios
-python backend-flask/app.py &
-python cms-backend/app.py &
 ```
 
 ### 🎯 Primeros Pasos
@@ -163,196 +256,86 @@ python cms-backend/app.py &
 4. **Explorar Dashboard**: Ver métricas de salud y recomendaciones
 5. **Administrar Sistema**: Acceder al CMS en `http://localhost:5001`
 
-## 📚 Documentación
+> 📚 **¿Necesitas más información?** Consulta la [Documentación Técnica](#-documentación-técnica) para detalles sobre cada componente del sistema.
 
-### 📖 **Documentación Técnica Detallada**
+## 📚 Documentación Técnica
+
+Para información técnica detallada sobre cada componente del sistema, consulta la documentación específica en las siguientes subcarpetas:
+
+### 📖 Documentación por Componente
 
 | Componente | Documentación | Descripción |
 |------------|---------------|-------------|
-| 🗄️ **Base de Datos** | [📊 Ver README](database/README.md) | Esquema PostgreSQL y Redis |
-| 🚪 **API Gateway** | [🔧 Ver README](backend-flask/README.md) | Backend Flask y enrutamiento |
-| 🏥 **Microservicios** | [⚙️ Ver README](microservices/README.md) | Servicios especializados |
-| 📊 **CMS Backend** | [🛠️ Ver README](cms-backend/README.md) | Sistema administrativo |
-| 🌐 **Frontend** | [💻 Ver README](frontend/README.md) | Interfaz web de usuario |
-
+| 🗄️ **Base de Datos** | [📊 Ver README](database/README.md) | Esquema PostgreSQL y Redis, configuración de base de datos, estructura de tablas y relaciones |
+| 🚪 **API Gateway** | [🔧 Ver README](backend-flask/README.md) | Backend Flask, enrutamiento de microservicios, autenticación JWT y proxy de servicios |
+| 🏥 **Microservicios** | [⚙️ Ver README](microservices/README.md) | Arquitectura de microservicios, servicios especializados (autenticación, doctores, pacientes, instituciones) |
+| 📊 **CMS Backend** | [🛠️ Ver README](cms-backend/README.md) | Sistema administrativo, gestión de entidades, reportes y análisis, control de acceso basado en roles |
+| 🌐 **Frontend** | [💻 Ver README](frontend/README.md) | Interfaz web de usuario, componentes JavaScript, autenticación, integración con API |
 
 ## 🔧 Tecnologías
 
-### 🏗️ **Backend & APIs**
+### 🏗️ Backend & APIs
 - **Python 3.11+**: Lenguaje principal de desarrollo
 - **FastAPI**: Framework para microservicios de alto rendimiento
 - **Flask**: Framework web para API Gateway y CMS
 - **SQLAlchemy**: ORM para gestión de base de datos
 - **Pydantic**: Validación de datos y serialización
 
-### 🗄️ **Base de Datos & Cache**
+### 🗄️ Base de Datos & Cache
 - **PostgreSQL 15**: Base de datos relacional principal
 - **Redis**: Sistema de caché y gestión de sesiones
 
-### 🌐 **Frontend**
+### 🌐 Frontend
 - **HTML5/CSS3**: Estructura y estilos modernos
 - **JavaScript ES6+**: Lógica del lado cliente
 - **Bootstrap 5.3**: Framework CSS responsivo
 - **WebGL**: Efectos visuales avanzados
 - **Chart.js**: Visualizaciones de datos
 
-### 🐳 **DevOps & Despliegue**
+### 📱 Desarrollo Móvil
+- **Kotlin**: Lenguaje para aplicación Android
+- **Android Studio**: Entorno de desarrollo
+
+### 🐳 DevOps & Despliegue
 - **Docker**: Contenedorización de servicios
 - **Docker Compose**: Orquestación de múltiples contenedores
-- **Nginx**: Proxy reverso y balanceo de carga
-- **PostgreSQL Client**: Cliente de base de datos
-- **Redis Client**: Cliente de caché
+- **Git**: Control de versiones
+- **GitHub**: Repositorio y colaboración
 
-## 📊 Componentes
+## 🔄 Próximos Pasos
 
-### 🔐 **Servicio de Autenticación (auth-jwt-service)**
-- Gestión centralizada de tokens JWT
-- Validación y renovación de sesiones
-- Huella digital de dispositivos
-- Puerto: `8003`
+### 📋 Estado Actual
 
-### 👨‍⚕️ **Servicio de Doctores (service-doctors)**
-- CRUD completo de perfiles médicos
-- Gestión de especialidades y licencias
-- Asociación con instituciones
-- Puerto: `8000`
+El proyecto está en una **fase de definición avanzada**. Se ha completado la documentación inicial, definición del proyecto y selección de tecnologías.
 
-### 🏥 **Servicio de Pacientes (service-patients)**
-- Gestión de datos de pacientes
-- Flujo de trabajo de validación médica
-- Integración con perfiles de salud
-- Puerto: `8004`
+### 🎯 Próximos Pasos Inmediatos
 
-### 🏢 **Servicio de Instituciones (service-institutions)**
-- Administración de instalaciones médicas
-- Organización geográfica y regional
-- Gestión de acreditaciones
-- Puerto: `8002`
+1. **Iniciar Sprint de Desarrollo**: Comenzar formalmente el sprint de 12 semanas para el MVP
+2. **Desarrollo de Backend**: Crear servicios para gestión de usuarios y datos
+3. **Desarrollo de Modelo de IA**: Entrenar modelo básico con datos públicos
+4. **Desarrollo de Frontend**: Crear aplicación Android y página web básica
+5. **Integración y Pruebas**: Integrar todos los componentes y realizar pruebas
 
-### 🚪 **API Gateway (backend-flask)**
-- Punto único de entrada para el frontend
-- Enrutamiento inteligente a microservicios
-- Servidor de páginas HTML
-- Puerto: `5000`
+### 🤔 Decisiones Pendientes
 
-### 📊 **CMS Backend (cms-backend)**
-- Interfaz administrativa completa
-- Control de acceso basado en roles
-- Generación de reportes y análisis
-- Puerto: `5001`
+#### Priorización de Funcionalidades Opcionales
 
-## 💻 Requisitos del Sistema
+La principal decisión pendiente es **cuándo y cómo se priorizarán las funcionalidades opcionales** de la Fase 2:
 
-### 🔧 **Requisitos Mínimos**
-- **CPU**: 2 núcleos (4+ recomendado)
-- **RAM**: 4GB (8GB+ recomendado)
-- **Almacenamiento**: 10GB de espacio disponible
-- **Sistema Operativo**: Linux, macOS, Windows 10+
+- **Si el MVP se completa antes de las 12 semanas**: Evaluar qué funcionalidades opcionales agregar antes del lanzamiento
+- **Si el MVP se completa en tiempo**: Las funcionalidades opcionales se abordarán en una siguiente fase del proyecto
+- **Aprobación de Continuación**: Decidir si se aprueba una continuación futura del proyecto después del MVP
 
-### 🐳 **Requisitos para Docker**
-- **Docker**: Versión 20.10+
-- **Docker Compose**: Versión 2.0+
-- **Memoria**: 8GB+ RAM disponible para contenedores
+#### Otras Decisiones
 
-### 💾 **Requisitos de Base de Datos**
-- **PostgreSQL**: Versión 15+
-- **Redis**: Versión 6.0+
-- **Conexiones**: 20+ conexiones simultáneas soportadas
-
-## 🛠️ Instalación y Configuración
-
-### 📦 **Instalación Completa**
-
-```bash
-# 1. Clonar repositorio
-git clone https://github.com/your-org/predicthealth.git
-cd predicthealth
-
-# 2. Las variables de entorno ya están configuradas en .env (editar si es necesario)
-
-# 3. Construir y ejecutar
-docker-compose up --build -d
-
-# 4. Verificar estado
-docker-compose ps
-docker-compose logs
-```
-
-### ⚙️ **Configuración Avanzada**
-
-#### Variables de Entorno Principales
-```bash
-# Base de datos
-DATABASE_URL=postgresql://user:pass@postgres:5432/predicthealth_db
-REDIS_URL=redis://redis:6379/0
-
-# JWT
-JWT_SECRET_KEY=your-super-secret-key-here
-JWT_ALGORITHM=HS256
-
-# Flask
-SECRET_KEY=flask-secret-key-change-in-production
-FLASK_ENV=production
-
-# Microservicios
-AUTH_SERVICE_URL=http://auth-jwt-service:8003
-DOCTOR_SERVICE_URL=http://service-doctors:8000
-PATIENT_SERVICE_URL=http://service-patients:8004
-INSTITUTION_SERVICE_URL=http://service-institutions:8002
-```
-
-#### Configuración de Docker Compose
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: predicthealth_db
-      POSTGRES_USER: predictHealth_user
-      POSTGRES_PASSWORD: password
-
-  redis:
-    image: redis:alpine
-    command: redis-server --maxmemory 1gb --maxmemory-policy allkeys-lru
-
-  backend-flask:
-    build: ./backend-flask
-    ports:
-      - "5000:5000"
-    depends_on:
-      - postgres
-      - redis
-
-  # ... otros servicios
-```
-
-## 🔐 Seguridad
-
-### 🛡️ **Características de Seguridad**
-
-- **🔒 Autenticación JWT**: Tokens seguros con expiración automática
-- **🔐 Hash de Contraseñas**: bcrypt con sal para almacenamiento seguro
-- **🚪 Control de Acceso**: Autorización basada en roles (RBAC)
-- **🔍 Validación de Entrada**: Sanitización completa de datos de usuario
-- **🛑 Prevención XSS**: Escape de plantillas y validación de contenido
-- **🔒 Cookies Seguras**: HttpOnly, Secure, SameSite configuradas
-- **📝 Auditoría**: Registro completo de acciones administrativas
-
-### 🔐 **Mejores Prácticas de Seguridad**
-
-- **Claves Fuertes**: Generar claves secretas aleatorias para producción
-- **HTTPS**: Habilitar encriptación SSL/TLS en producción
-- **Variables de Entorno**: Nunca commitear datos sensibles
-- **Actualizaciones**: Mantener dependencias actualizadas regularmente
-- **Monitoreo**: Implementar logging y alertas de seguridad
-
+- **Estrategia de Lanzamiento**: Cómo y cuándo lanzar el MVP a usuarios reales
+- **Recopilación de Feedback**: Cómo recopilar y procesar feedback de usuarios iniciales
+- **Mejoras Iterativas**: Plan para mejoras continuas basadas en uso real
 
 ---
 
 <div align="center">
 
 **🚀 PredictHealth - Transformando la atención médica con tecnología inteligente**
-
 
 </div>

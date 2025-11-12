@@ -1,827 +1,502 @@
-# Frontend Data Flow Architecture
+# PredictHealth Frontend
+
+Frontend web application for the PredictHealth platform, providing user interfaces for patients, doctors, institutions, and administrators.
 
 ## Table of Contents
-1. [Overview](#overview)
-2. [Architecture Components](#architecture-components)
-3. [Authentication System](#authentication-system)
-4. [JavaScript Module Structure](#javascript-module-structure)
-5. [PatientCore Framework](#patientcore-framework)
-6. [API Gateway Communication](#api-gateway-communication)
-7. [Form Handling Patterns](#form-handling-patterns)
-8. [Error Handling & Notifications](#error-handling--notifications)
-9. [Patient Modules](#patient-modules)
-10. [Database Connectivity](#database-connectivity)
 
----
+1. [Overview](#overview)
+2. [Technologies](#technologies)
+3. [Project Structure](#project-structure)
+4. [User Types & Features](#user-types--features)
+5. [Core Components](#core-components)
+6. [Authentication System](#authentication-system)
+7. [API Integration](#api-integration)
+8. [Styling & Theming](#styling--theming)
+9. [Development](#development)
+10. [Architecture](#architecture)
 
 ## Overview
 
-The PredictHealth frontend is built on a layered architecture that separates concerns across multiple JavaScript modules. The system follows a modular approach where each patient functionality is encapsulated in dedicated modules that share common utilities through the `PatientCore` framework.
+The PredictHealth frontend is a multi-user web application built with vanilla JavaScript, HTML5, and CSS3. It provides role-based interfaces for different user types, each with specialized features and dashboards.
 
-### Key Architectural Principles
-- **Modular Design**: Each patient feature is a separate, self-contained module
-- **Centralized Utilities**: Common functionality is abstracted in `PatientCore`
-- **Consistent Patterns**: All modules follow the same initialization and communication patterns
-- **Graceful Degradation**: Fallback mechanisms for API failures
-- **Type Safety**: Consistent data structures and error handling
+### Key Features
 
----
+- **Multi-User Support**: Separate interfaces for patients, doctors, institutions, and administrators
+- **JWT Authentication**: Secure token-based authentication with cookie storage
+- **Responsive Design**: Mobile-first design using Bootstrap 5.3
+- **Modular Architecture**: Component-based JavaScript modules for maintainability
+- **Real-time Updates**: Dynamic data loading and UI updates
+- **Error Handling**: Comprehensive error handling with user-friendly notifications
 
-## Architecture Components
+## Technologies
 
-### 1. Core Authentication Layer
+### Core Stack
+
+- **HTML5**: Semantic markup and structure
+- **CSS3**: Custom stylesheets with role-based theming
+- **JavaScript ES6+**: Modern JavaScript with async/await patterns
+- **Bootstrap 5.3**: Responsive UI framework
+- **Font Awesome 6.0**: Icon library
+- **WebGL**: Advanced visual effects for landing page
+
+### External Libraries
+
+- **Chart.js**: Data visualization (where applicable)
+- **Bootstrap Icons**: Additional icon support
+
+## Project Structure
+
 ```
-AuthManager (auth-manager.js)
-    ↓
-JWT Token Management
-    ↓
-User Session State
-    ↓
-PatientCore Authentication
+frontend/
+├── static/
+│   ├── css/
+│   │   ├── landing.css          # Landing page styles
+│   │   ├── patient.css          # Patient-specific styles
+│   │   ├── doctor.css           # Doctor-specific styles
+│   │   ├── institution.css      # Institution-specific styles
+│   │   └── docs.css             # Documentation styles
+│   ├── images/
+│   │   └── logo.jpg             # Application logo
+│   └── js/
+│       ├── api-client.js        # Centralized API client
+│       ├── auth-manager.js      # JWT authentication manager
+│       ├── auth-forms.js        # Authentication form handlers
+│       ├── landing.js           # Landing page functionality
+│       ├── patient/             # Patient modules
+│       │   ├── patient-core.js  # Patient core utilities
+│       │   ├── dashboard.js     # Patient dashboard
+│       │   ├── medical-record.js # Medical record management
+│       │   ├── care-team.js     # Care team management
+│       │   └── profile.js       # Profile management
+│       ├── doctor/              # Doctor modules
+│       │   ├── doctor-core.js   # Doctor core utilities
+│       │   ├── doctor-dashboard.js
+│       │   ├── doctor-patients.js
+│       │   ├── doctor-patient-detail.js
+│       │   ├── doctor-institution.js
+│       │   └── doctor-profile.js
+│       └── institution/         # Institution modules
+│           └── institution.js   # Institution core
+├── templates/
+│   ├── base.html                # Base template
+│   ├── index.html               # Landing page
+│   ├── 404.html                 # Error pages
+│   ├── 500.html
+│   ├── includes/
+│   │   └── app-header.html      # Shared header component
+│   ├── patient/                 # Patient templates
+│   │   ├── dashboard.html
+│   │   ├── medical-record.html
+│   │   ├── my-care-team.html
+│   │   └── profile.html
+│   ├── doctor/                  # Doctor templates
+│   │   ├── dashboard.html
+│   │   ├── patients.html
+│   │   ├── patient-detail.html
+│   │   ├── my-institution.html
+│   │   └── profile.html
+│   ├── institution/             # Institution templates
+│   │   ├── dashboard.html
+│   │   ├── doctors.html
+│   │   ├── patients.html
+│   │   └── profile.html
+│   └── docs/                    # Documentation pages
+│       ├── docs.html
+│       ├── arquitectura.html
+│       ├── frontend/
+│       ├── backend/
+│       ├── database/
+│       ├── deploy/
+│       ├── devices/
+│       └── ml/
+└── README.md                    # This file
 ```
 
-### 2. Patient Module Layer
-```
-Patient Modules
-├── dashboard.js
-├── medical-record.js
-├── care-team.js
-└── profile.js
-    ↓
-PatientCore Framework
-    ↓
-AuthManager & API Client
+## User Types & Features
+
+### Patient Interface
+
+**Templates**: `templates/patient/`
+**JavaScript**: `static/js/patient/`
+
+#### Features
+
+- **Dashboard**: Health metrics, medications, conditions overview
+- **Medical Record**: Complete health profile, conditions, medications, allergies, family history
+- **Care Team**: Primary doctor and institution information
+- **Profile**: Personal information, contact details (emails, phones, addresses), password management
+
+#### Key Modules
+
+- `patient-core.js`: Core utilities and API endpoints
+- `dashboard.js`: Dashboard initialization and rendering
+- `medical-record.js`: Medical record data management
+- `care-team.js`: Care team information display
+- `profile.js`: Profile management with form handlers
+
+### Doctor Interface
+
+**Templates**: `templates/doctor/`
+**JavaScript**: `static/js/doctor/`
+
+#### Features
+
+- **Dashboard**: Patient overview and statistics
+- **Patients**: List of assigned patients
+- **Patient Detail**: Detailed patient information and medical records
+- **My Institution**: Institution association and details
+- **Profile**: Professional profile management
+
+#### Key Modules
+
+- `doctor-core.js`: Doctor-specific utilities
+- `doctor-dashboard.js`: Doctor dashboard
+- `doctor-patients.js`: Patient list management
+- `doctor-patient-detail.js`: Individual patient details
+- `doctor-institution.js`: Institution management
+- `doctor-profile.js`: Profile management
+
+### Institution Interface
+
+**Templates**: `templates/institution/`
+**JavaScript**: `static/js/institution/`
+
+#### Features
+
+- **Dashboard**: Institutional overview and metrics
+- **Doctors**: Doctor management and assignments
+- **Patients**: Patient registry and management
+- **Profile**: Institution profile and settings
+
+### Landing Page
+
+**Template**: `templates/index.html`
+**JavaScript**: `static/js/landing.js`
+
+Features:
+- WebGL animated background
+- Login modal integration
+- Responsive hero section
+- Call-to-action buttons
+
+## Core Components
+
+### API Client (`api-client.js`)
+
+Centralized API communication module providing:
+
+- Unified request handling
+- Automatic authentication header injection
+- Error handling and response parsing
+- Session-based authentication support
+
+```javascript
+// Example usage
+const data = await PredictHealthAPI.get('/api/v1/patients/123/dashboard');
 ```
 
-### 3. Backend Communication Layer
-```
-Frontend JavaScript
-    ↓
-API Gateway (Flask Backend)
-    ↓
-Microservices
-    ↓
-PostgreSQL Database + Redis Cache
+### Auth Manager (`auth-manager.js`)
+
+JWT token management and user authentication:
+
+- Token storage in secure cookies
+- Token validation and expiration checking
+- User information retrieval
+- Login/logout functionality
+
+```javascript
+// Check authentication
+const isLoggedIn = await AuthManager.isLoggedIn();
+
+// Get user info
+const userInfo = await AuthManager.getUserInfo();
 ```
 
----
+### Patient Core (`patient-core.js`)
+
+Shared utilities for patient modules:
+
+- Endpoint definitions
+- Authentication checks
+- API request wrapper
+- Error notification system
+- Mock data fallback for development
+
+```javascript
+// Check auth and get user
+const userInfo = await PatientCore.checkAuth();
+
+// Make API request
+const data = await PatientCore.apiRequest(
+    PatientCore.ENDPOINTS.DASHBOARD(patientId)
+);
+```
+
+### Doctor Core (`doctor-core.js`)
+
+Similar structure to Patient Core, providing doctor-specific utilities and endpoints.
 
 ## Authentication System
 
-### AuthManager Role
-The `AuthManager` serves as the primary authentication interface, managing JWT tokens stored in secure cookies.
+### JWT Token Flow
 
-```javascript
-// Token-based authentication
-const AuthManager = {
-    // Get JWT token from cookies
-    getToken() {
-        return _getCookie('predicthealth_jwt');
-    },
-    
-    // Get user information from multiple sources
-    getUserInfo() {
-        // 1. Cookies (primary)
-        // 2. Template JINJA2 variables
-        // 3. API fallback
-        return userData;
-    },
-    
-    // Check login status with token validation
-    isLoggedIn() {
-        const token = this.getToken();
-        const payload = _decodeToken(token);
-        return payload.exp > currentTime;
-    }
-};
-```
+1. User logs in through landing page modal
+2. Backend validates credentials and returns JWT token
+3. Token stored in secure cookie (`predicthealth_jwt`)
+4. All subsequent requests include token in Authorization header
+5. Token validated on each request by backend
 
-### PatientCore Authentication Flow
-`PatientCore` provides a standardized authentication interface for all patient modules:
+### Token Storage
 
-```javascript
-// Standardized authentication pattern
-const userInfo = await PatientCore.checkAuth();
-if (!userInfo) {
-    window.location.href = '/'; // Redirect to login
-    return;
-}
+- **Method**: Secure HTTP-only cookies
+- **Cookie Name**: `predicthealth_jwt`
+- **Security**: SameSite=Lax, HttpOnly (handled by backend)
 
-// Get user ID with fallback support
-const userId = PatientCore.getUserId(userInfo);
-```
+### Authentication Check Pattern
 
----
-
-## JavaScript Module Structure
-
-### Module Initialization Pattern
-All patient modules follow a consistent initialization pattern:
+All protected pages follow this pattern:
 
 ```javascript
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Page-specific check
-    if (window.location.pathname.includes('/patient/module-name')) {
-        
-        // 2. Dependency verification
+    const userInfo = await PatientCore.checkAuth();
+    if (!userInfo) {
+        window.location.href = '/';
+        return;
+    }
+    // Initialize page
+});
+```
+
+## API Integration
+
+### Endpoint Structure
+
+All API calls go through the Flask API Gateway:
+
+```
+/api/v1/gateway/{resource}/{id}/{action}
+```
+
+### Patient Endpoints
+
+- `GET /api/v1/gateway/patients/{id}/dashboard`
+- `GET /api/v1/gateway/patients/{id}/medical-record`
+- `GET /api/v1/gateway/patients/{id}/care-team`
+- `GET /api/v1/gateway/patients/{id}/profile`
+- `POST /api/web/patient/emails`
+- `POST /api/web/patient/phones`
+- `POST /api/web/patient/addresses`
+- `POST /api/web/auth/change-password`
+
+### Request Pattern
+
+```javascript
+const response = await fetch('/api/v1/gateway/endpoint', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    }
+});
+```
+
+### Error Handling
+
+- Network errors: Fallback to mock data (development mode)
+- 401 Unauthorized: Redirect to login
+- 400/500 errors: Display user-friendly error messages
+- All errors logged to console for debugging
+
+## Styling & Theming
+
+### Role-Based CSS
+
+The application loads different stylesheets based on user type:
+
+```html
+{% if user and user.user_type == 'patient' %}
+<link href="{{ url_for('static', filename='css/patient.css') }}" rel="stylesheet">
+{% elif user and user.user_type == 'doctor' %}
+<link href="{{ url_for('static', filename='css/doctor.css') }}" rel="stylesheet">
+{% elif user and user.user_type == 'institution' %}
+<link href="{{ url_for('static', filename='css/institution.css') }}" rel="stylesheet">
+{% endif %}
+```
+
+### CSS Files
+
+- `landing.css`: Landing page styles with WebGL integration
+- `patient.css`: Patient interface theme
+- `doctor.css`: Doctor interface theme
+- `institution.css`: Institution interface theme
+- `docs.css`: Documentation pages styling
+
+### Design System
+
+- **Font**: Inter (Google Fonts)
+- **Icons**: Font Awesome 6.0
+- **Framework**: Bootstrap 5.3
+- **Color Scheme**: Role-specific themes
+- **Responsive**: Mobile-first approach
+
+## Development
+
+### Local Development
+
+1. Ensure backend services are running (Flask API Gateway, microservices)
+2. Serve frontend through Flask backend (port 5000)
+3. Access at `http://localhost:5000`
+
+### Template Engine
+
+Uses Jinja2 templating (Flask):
+
+- Base template inheritance
+- Block-based content injection
+- User data injection via template variables
+- Static file URL generation
+
+### JavaScript Module Loading
+
+Modules are loaded in specific order:
+
+1. `api-client.js` - Base API client
+2. `auth-manager.js` - Authentication
+3. `auth-forms.js` - Form handlers
+4. Role-specific core (e.g., `patient-core.js`)
+5. Page-specific modules (e.g., `dashboard.js`)
+
+### Development Patterns
+
+#### Module Initialization
+
+```javascript
+document.addEventListener('DOMContentLoaded', async () => {
+    if (window.location.pathname.includes('/patient/dashboard')) {
         if (!window.PatientCore) {
             console.error("Error: patient-core.js not loaded");
             return;
         }
         
-        // 3. Authentication check
         const userInfo = await PatientCore.checkAuth();
         if (userInfo) {
-            // 4. Module initialization
-            initModuleName(userInfo);
+            initDashboardPage(userInfo);
         }
     }
 });
 ```
 
-### Module Communication Flow
-```
-Page Load → Authentication → Data Fetch → UI Render → User Interaction → Form Submit → API Call → Update UI
-```
-
----
-
-## PatientCore Framework
-
-### Purpose
-`PatientCore` serves as the central utility framework that provides:
-- Authentication utilities
-- API request handling
-- Error management
-- UI feedback systems
-- Data formatting helpers
-
-### Key Components
-
-#### 1. Endpoint Management
-```javascript
-const PatientCore = {
-    ENDPOINTS: {
-        DASHBOARD: (patientId) => `/api/v1/gateway/patients/${patientId}/dashboard`,
-        MEDICAL_RECORD: (patientId) => `/api/v1/gateway/patients/${patientId}/medical-record`,
-        CARE_TEAM: (patientId) => `/api/v1/gateway/patients/${patientId}/care-team`,
-        PROFILE: (patientId) => `/api/v1/gateway/patients/${patientId}/profile`,
-    }
-};
-```
-
-#### 2. API Request Handler
-```javascript
-// Centralized API communication
-async apiRequest(url, options = {}) {
-    const token = await window.AuthManager.getToken();
-    
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
-    });
-    
-    if (!response.ok) {
-        // Fallback to mock data for demo mode
-        return this.getMockDataForUrl(url);
-    }
-    
-    return response.json();
-}
-```
-
-#### 3. Mock Data System
-Provides fallback data when APIs are unavailable:
-```javascript
-mockDashboardData() {
-    return {
-        patient: { /* mock patient data */ },
-        health_score: 85,
-        medications: [ /* mock medications */ ],
-        conditions: [ /* mock conditions */ ]
-    };
-}
-```
-
----
-
-## API Gateway Communication
-
-### Gateway Routing Pattern
-The API Gateway (Flask backend) acts as a central router for all requests:
-
-```
-Frontend Request → API Gateway → Microservice → Database
-     ↓                 ↓              ↓            ↓
-/api/v1/gateway/ → auth-jwt-service → patients-service → PostgreSQL
-/patients/{id}/    (token validation)   (business logic)    (data persistence)
-```
-
-### Endpoint Structure
-```
-/api/v1/gateway/patients/{patientId}/dashboard
-/api/v1/gateway/patients/{patientId}/medical-record
-/api/v1/gateway/patients/{patientId}/care-team
-/api/v1/gateway/patients/{patientId}/profile
-```
-
-### Request Flow Example
-```javascript
-// 1. Frontend makes request
-const data = await PatientCore.apiRequest(
-    PatientCore.ENDPOINTS.DASHBOARD(patientId)
-);
-
-// 2. Gateway validates JWT and routes
-// 3. Microservice processes business logic
-// 4. Database returns data
-// 5. Gateway formats response
-// 6. Frontend receives formatted JSON
-```
-
----
-
-## Form Handling Patterns
-
-### Standard Form Handler Structure
-All form submission handlers follow a consistent pattern with three phases:
+#### Form Submission Pattern
 
 ```javascript
 async function handleFormSubmit() {
-    // Phase 1: Get form elements
     const form = document.getElementById('form-id');
     const submitBtn = form.querySelector('button[type="submit"]');
     
     try {
-        // Phase 2: Setup loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Processing...';
         
-        // Phase 3: Process form data
         const formData = new FormData(form);
-        const submitData = Object.fromEntries(formData);
+        const data = Object.fromEntries(formData);
         
-        // Phase 4: API call
         const response = await fetch('/api/endpoint', {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(submitData)
+            body: JSON.stringify(data)
         });
         
-        // Phase 5: Handle response
         if (response.ok) {
-            // Success: Close modal, reset form, reload data
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
-            form.reset();
-            
-            // Reload relevant data
-            const userInfo = await PatientCore.getCurrentUserInfo();
-            const newData = await PatientCore.apiRequest(endpoint);
-            renderUpdatedSection(newData);
-            
-            // Show success message
-            PatientCore.showSuccessMessage('Operation completed successfully');
+            // Success handling
+            PatientCore.showSuccessMessage('Operation successful');
         } else {
-            throw new Error('API request failed');
+            throw new Error('Request failed');
         }
-        
     } catch (error) {
-        // Error handling
         PatientCore.showErrorMessage(error.message);
     } finally {
-        // Cleanup: Reset button state
         submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Original Button Text';
+        submitBtn.innerHTML = 'Submit';
     }
 }
 ```
 
-### Email Submission Handler
-```javascript
-async function handleEmailSubmit() {
-    const form = document.getElementById('email-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-        
-        const formData = new FormData(form);
-        const emailData = Object.fromEntries(formData);
-        
-        const response = await fetch('/api/web/patient/emails', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(emailData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el email');
-        }
-        
-        // Success actions
-        const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
-        modal.hide();
-        form.reset();
-        
-        // Reload email section
-        const userInfo = await PatientCore.getCurrentUserInfo();
-        const profileData = await PatientCore.apiRequest(
-            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
-        );
-        renderEmails(profileData.emails);
-        
-        PatientCore.showSuccessMessage('Email agregado exitosamente');
-        
-    } catch (error) {
-        PatientCore.showErrorMessage(error.message || 'Error al agregar el email');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Email';
-    }
-}
+### Debugging
+
+- Console logging for all API requests
+- Error messages displayed to users via notification system
+- Network tab for API request inspection
+- Template variables exposed to `window.PatientUserData`
+
+## Architecture
+
+### Data Flow
+
 ```
-
-### Phone Submission Handler
-```javascript
-async function handlePhoneSubmit() {
-    const form = document.getElementById('phone-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-        
-        const formData = new FormData(form);
-        const phoneData = Object.fromEntries(formData);
-        
-        const response = await fetch('/api/web/patient/phones', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(phoneData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar el teléfono');
-        }
-        
-        // Success actions
-        const modal = bootstrap.Modal.getInstance(document.getElementById('phoneModal'));
-        modal.hide();
-        form.reset();
-        
-        // Reload phone section
-        const userInfo = await PatientCore.getCurrentUserInfo();
-        const profileData = await PatientCore.apiRequest(
-            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
-        );
-        renderPhones(profileData.phones);
-        
-        PatientCore.showSuccessMessage('Teléfono agregado exitosamente');
-        
-    } catch (error) {
-        PatientCore.showErrorMessage(error.message || 'Error al agregar el teléfono');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Teléfono';
-    }
-}
-```
-
-### Address Submission Handler
-```javascript
-async function handleAddressSubmit() {
-    const form = document.getElementById('address-form');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agregando...';
-        
-        const formData = new FormData(form);
-        const addressData = Object.fromEntries(formData);
-        
-        const response = await fetch('/api/web/patient/addresses', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(addressData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al agregar la dirección');
-        }
-        
-        // Success actions
-        const modal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
-        modal.hide();
-        form.reset();
-        
-        // Reload address section
-        const userInfo = await PatientCore.getCurrentUserInfo();
-        const profileData = await PatientCore.apiRequest(
-            PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
-        );
-        renderAddresses(profileData.addresses);
-        
-        PatientCore.showSuccessMessage('Dirección agregada exitosamente');
-        
-    } catch (error) {
-        PatientCore.showErrorMessage(error.message || 'Error al agregar la dirección');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Agregar Dirección';
-    }
-}
-```
-
-### Password Change Handler
-```javascript
-async function handlePasswordChange() {
-    const form = document.getElementById('password-change-form');
-    const submitBtn = document.getElementById('change-password-btn');
-    
-    try {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Cambiando...';
-        
-        const formData = new FormData(form);
-        const passwordData = Object.fromEntries(formData);
-        
-        // Client-side validation
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            throw new Error('Las contraseñas nuevas no coinciden');
-        }
-        
-        const response = await fetch('/api/web/auth/change-password', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                current_password: passwordData.currentPassword,
-                new_password: passwordData.newPassword
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.status !== 'success') {
-            throw new Error(result.message || 'Error al cambiar la contraseña');
-        }
-        
-        // Success actions
-        form.reset();
-        PatientCore.showSuccessMessage('Contraseña cambiada exitosamente');
-        
-    } catch (error) {
-        PatientCore.showErrorMessage(error.message || 'Error al cambiar la contraseña');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-key me-1"></i>Cambiar Contraseña';
-    }
-}
-```
-
----
-
-## Error Handling & Notifications
-
-### Unified Notification System
-All modules use `PatientCore` for consistent notification management:
-
-```javascript
-// Error notification
-PatientCore.showErrorMessage('Error description');
-
-// Success notification  
-PatientCore.showSuccessMessage('Success description');
-
-// In module-specific handlers
-function showErrorMessage(message) {
-    console.error('Error:', message);
-    PatientCore.showErrorMessage(message);
-}
-```
-
-### Notification Implementation
-```javascript
-// PatientCore notification system
-showErrorMessage(message) {
-    console.error('UI Error:', message);
-    
-    // Special handling for API errors
-    if (message.includes('API') || message.includes('network')) {
-        this._showNotification(
-            'Modo Demo: Mostrando datos de ejemplo. Las APIs están en desarrollo.', 
-            'info', 
-            'fa-info-circle'
-        );
-    } else {
-        this._showNotification(message, 'danger', 'fa-exclamation-triangle');
-    }
-},
-
-showSuccessMessage(message) {
-    console.log('UI Success:', message);
-    this._showNotification(message, 'success', 'fa-check-circle');
-},
-
-_showNotification(message, type, icon) {
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050;';
-    notification.innerHTML = `
-        <i class="fas ${icon} me-2"></i>
-        <strong>${type === 'danger' ? 'Error' : 'Éxito'}:</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        const bsAlert = bootstrap.Alert.getOrCreateInstance(notification);
-        if (bsAlert) bsAlert.close();
-        else notification.remove();
-    }, 5000);
-}
-```
-
-### Cross-Module Consistency
-Each module implements the notification interface:
-
-#### dashboard.js
-```javascript
-// Error handling
-PatientCore.showErrorMessage(error.message || 'No se pudo cargar la información del dashboard.');
-
-// Success states
-PatientCore.showErrorMessage('La respuesta del servidor no contiene datos válidos del paciente.');
-```
-
-#### medical-record.js  
-```javascript
-// Form submission handlers
-async function handleHealthProfileSubmit() {
-    PatientCore.showErrorMessage('Funcionalidad no implementada temporalmente. Use los datos existentes.');
-}
-
-// Page initialization
-catch (error) {
-    PatientCore.showErrorMessage('Error al cargar el expediente médico. Por favor, intenta recargar la página.');
-}
-```
-
-#### profile.js
-```javascript
-// Form handlers
-async function handlePersonalInfoSubmit() {
-    PatientCore.showErrorMessage(error.message || 'Error al actualizar la información personal');
-    PatientCore.showSuccessMessage('Información personal actualizada exitosamente');
-}
-```
-
----
-
-## Patient Modules
-
-### Module Overview
-
-#### 1. Dashboard Module (dashboard.js)
-**Purpose**: Main patient dashboard with health metrics and summaries
-
-**Key Functions**:
-```javascript
-// Main initialization
-async function initDashboardPage(userInfo) {
-    // Load dashboard data
-    const dashboardData = await PatientCore.apiRequest(
-        PatientCore.ENDPOINTS.DASHBOARD(PatientCore.getUserId(userInfo))
-    );
-    
-    // Render widgets
-    renderDashboardWidgets(dashboardData);
-}
-
-// Widget rendering
-function renderDashboardWidgets(data) {
-    renderWelcomeTitle(data.patient);
-    renderHealthScore(data.health_score);
-    renderMedications(data.medications);
-    renderConditions(data.conditions);
-}
-```
-
-#### 2. Medical Record Module (medical-record.js)
-**Purpose**: Complete medical history management
-
-**Key Functions**:
-```javascript
-// Initialize medical record page
-async function initMedicalRecordPage(userInfo) {
-    const recordData = await PatientCore.apiRequest(
-        PatientCore.ENDPOINTS.MEDICAL_RECORD(PatientCore.getUserId(userInfo))
-    );
-    
-    renderHealthProfile(recordData.health_profile);
-    renderConditions(recordData.conditions);
-    renderMedications(recordData.medications);
-    renderAllergies(recordData.allergies);
-    renderFamilyHistory(recordData.family_history);
-}
-
-// Data rendering
-function renderHealthProfile(healthProfile) {
-    // Render health profile data in UI
-    const container = document.getElementById('health-profile-content');
-    container.innerHTML = generateHealthProfileHTML(healthProfile);
-}
-```
-
-#### 3. Care Team Module (care-team.js)
-**Purpose**: Doctor and institution relationship management
-
-**Key Functions**:
-```javascript
-// Initialize care team page
-async function initCareTeamPage(userInfo) {
-    const careTeamData = await PatientCore.apiRequest(
-        PatientCore.ENDPOINTS.CARE_TEAM(PatientCore.getUserId(userInfo))
-    );
-    
-    renderDoctorInfo(careTeamData.doctor);
-    renderInstitutionInfo(careTeamData.institution);
-}
-
-// Render doctor information
-function renderDoctorInfo(doctor) {
-    const container = document.getElementById('primary-doctor');
-    container.innerHTML = generateDoctorProfileHTML(doctor);
-}
-```
-
-#### 4. Profile Module (profile.js)
-**Purpose**: Personal information and contact management
-
-**Key Functions**:
-```javascript
-// Initialize profile page
-async function initProfilePage(userInfo) {
-    const profileData = await PatientCore.apiRequest(
-        PatientCore.ENDPOINTS.PROFILE(PatientCore.getUserId(userInfo))
-    );
-    
-    renderPersonalInfo(profileData.personal_info);
-    renderEmails(profileData.emails);
-    renderPhones(profileData.phones);
-    renderAddresses(profileData.addresses);
-}
-
-// Form handlers
-async function handleEmailSubmit() { /* email handling */ }
-async function handlePhoneSubmit() { /* phone handling */ }
-async function handleAddressSubmit() { /* address handling */ }
-async function handlePasswordChange() { /* password handling */ }
-```
-
----
-
-## Database Connectivity
-
-### Database Layer Architecture
-```
-Frontend JavaScript
-    ↓ HTTP/API
-API Gateway (Flask)
-    ↓ RPC/HTTP
-Microservices (FastAPI)
-    ↓ SQLAlchemy ORM
-PostgreSQL Database
+User Interaction
     ↓
-Redis Cache
+JavaScript Module
+    ↓
+PatientCore/DoctorCore (API wrapper)
+    ↓
+API Client (auth headers)
+    ↓
+Flask API Gateway
+    ↓
+Microservices
+    ↓
+PostgreSQL Database
 ```
 
-### Database Schema Overview
-The shared PostgreSQL database contains these key tables:
+### Module Communication
 
-#### Users Table
-```sql
-users (
-    id UUID PRIMARY KEY,
-    email VARCHAR UNIQUE NOT NULL,
-    password_hash VARCHAR NOT NULL,
-    user_type VARCHAR NOT NULL, -- 'patient', 'doctor', 'institution'
-    created_at TIMESTAMP,
-    is_active BOOLEAN
-)
-```
+- **Shared Utilities**: Core modules provide shared functionality
+- **Event-Driven**: DOM events trigger module functions
+- **Async/Await**: All API calls are asynchronous
+- **Error Boundaries**: Try-catch blocks at module level
 
-#### Patients Table
-```sql
-patients (
-    id UUID PRIMARY KEY REFERENCES users(id),
-    first_name VARCHAR,
-    last_name VARCHAR,
-    date_of_birth DATE,
-    doctor_id UUID REFERENCES doctors(id),
-    institution_id UUID REFERENCES medical_institutions(id),
-    created_at TIMESTAMP
-)
-```
+### State Management
 
-#### Health Profiles Table
-```sql
-health_profiles (
-    id UUID PRIMARY KEY,
-    patient_id UUID REFERENCES patients(id),
-    height_cm INTEGER,
-    weight_kg DECIMAL,
-    blood_type VARCHAR,
-    is_smoker BOOLEAN,
-    physical_activity_minutes_weekly INTEGER,
-    notes TEXT
-)
-```
+- **No Global State**: Each module manages its own state
+- **Template Variables**: User data injected from backend
+- **Cookie Storage**: Authentication tokens in cookies
+- **DOM as State**: UI reflects current data state
 
-### Connection Pattern
-```python
-# Microservice database connection (FastAPI)
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+### Security Considerations
 
-# Database URL from environment
-DATABASE_URL = "postgresql://predictHealth_user:password@postgres:5432/predicthealth_db"
+- **XSS Prevention**: Template escaping via Jinja2
+- **CSRF Protection**: SameSite cookies
+- **Token Validation**: JWT validation on every request
+- **Input Sanitization**: Form data validation before submission
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+## File Organization Principles
 
-# Usage in endpoint
-@app.get("/patients/{patient_id}/profile")
-async def get_patient_profile(patient_id: str, db: Session = Depends(get_db)):
-    profile = db.query(HealthProfile).filter(
-        HealthProfile.patient_id == patient_id
-    ).first()
-    return profile
-```
+1. **Separation by Role**: Each user type has dedicated directories
+2. **Shared Components**: Common utilities in root `js/` directory
+3. **Template Inheritance**: Base template for common structure
+4. **CSS Modularity**: Role-specific stylesheets
+5. **Module Dependencies**: Clear loading order and dependencies
 
-### Redis Cache Integration
-```python
-# Token and session management
-import redis
-import json
+## Browser Support
 
-redis_client = redis.Redis(
-    host='redis',
-    port=6379,
-    decode_responses=True
-)
+- **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
+- **ES6+ Features**: Async/await, arrow functions, template literals
+- **CSS3**: Flexbox, Grid, custom properties
+- **APIs**: Fetch API, LocalStorage, Cookies
 
-# Store JWT token
-def store_token(user_id: str, token: str, expires_in: int = 900):
-    redis_client.setex(f"access_token:{token}", expires_in, user_id)
+## Performance Considerations
 
-# Retrieve token
-def get_token_user(token: str):
-    return redis_client.get(f"access_token:{token}")
-```
+- **Lazy Loading**: Scripts loaded per page
+- **Minimal Dependencies**: Vanilla JavaScript where possible
+- **Efficient Rendering**: DOM manipulation only when needed
+- **API Caching**: Consider implementing client-side caching for static data
 
----
+## Future Enhancements
 
-## Summary
-
-The PredictHealth frontend architecture demonstrates a well-structured, modular design that:
-
-1. **Separates Concerns**: Each module handles a specific patient functionality
-2. **Centralizes Utilities**: `PatientCore` provides consistent APIs and utilities
-3. **Ensures Security**: JWT-based authentication with secure cookie storage
-4. **Handles Errors Gracefully**: Unified notification system and fallback mechanisms
-5. **Follows Patterns**: Consistent initialization, API communication, and error handling
-6. **Enables Scalability**: Modular design allows easy addition of new features
-
-The system successfully integrates with the backend through the API Gateway, providing a seamless user experience while maintaining clean separation between frontend logic and backend services.
+- Progressive Web App (PWA) support
+- Service Worker for offline functionality
+- Client-side routing for SPA-like experience
+- Component library standardization
+- TypeScript migration for type safety
