@@ -7,6 +7,7 @@ from uuid import UUID # Sigue siendo necesario para el type hint
 import jwt
 import os
 import logging
+import requests
 
 from .db import DatabaseConnection, execute_query
 from shared.auth_client import create_user as create_auth_user
@@ -18,12 +19,14 @@ from .domain import (
     DoctorInstitutionResponse,
     DoctorPatientListResponse,
     DoctorPatientMedicalRecord,
-    DoctorDashboardKPIs
+    DoctorDashboardKPIs,
+    LoginRequest
 )
 
 # --- Configuración de la Aplicación ---
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "UDEM")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://servicio-auth-jwt:8003")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -95,6 +98,104 @@ def require_doctor_role(current_user: Dict[str, Any] = Depends(get_current_user)
         "payload": current_user,
         "reference_id": reference_id 
     }
+
+# --- Endpoint de Login ---
+
+@app.post("/auth/login")
+def login(login_request: LoginRequest):
+    """
+    Endpoint de login para doctores.
+    Valida que el doctor existe y está activo antes de delegar al auth-service.
+    """
+    try:
+        if not login_request.email or not login_request.password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email y contraseña son requeridos"
+            )
+        
+        # Verificar que el doctor existe y está activo en la BD
+        doctor_query = """
+            SELECT d.id, d.is_active, d.professional_status, e.email_address
+            FROM doctors d
+            LEFT JOIN emails e ON e.entity_id = d.id AND e.entity_type = 'doctor' AND e.is_primary = TRUE
+            WHERE e.email_address = %s
+        """
+        doctor_data = execute_query(doctor_query, (login_request.email,), fetch_one=True)
+        
+        if not doctor_data:
+            logger.warning(f"Login attempt with non-existent doctor email: {login_request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email o contraseña incorrectos"
+            )
+        
+        # Verificar que el doctor está activo
+        if not doctor_data.get('is_active'):
+            logger.warning(f"Login attempt for inactive doctor: {login_request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Doctor desactivado. Contacte al administrador."
+            )
+        
+        # Verificar estado profesional
+        professional_status = doctor_data.get('professional_status')
+        if professional_status and professional_status != 'active':
+            logger.warning(f"Login attempt for doctor with status '{professional_status}': {login_request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cuenta de doctor no disponible. Contacte al administrador."
+            )
+        
+        # Delegar autenticación al auth-jwt-service
+        auth_url = f"{AUTH_SERVICE_URL}/auth/login"
+        auth_payload = {
+            "email": login_request.email,
+            "password": login_request.password
+        }
+        
+        try:
+            auth_response = requests.post(auth_url, json=auth_payload, timeout=5)
+            auth_response.raise_for_status()
+            auth_data = auth_response.json()
+            
+            # Verificar que el usuario es de tipo doctor
+            if auth_data.get('user_type') != 'doctor':
+                logger.warning(f"Login attempt for non-doctor user: {login_request.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Este endpoint es solo para doctores"
+                )
+            
+            logger.info(f"Successful login for doctor: {login_request.email}")
+            return auth_data
+            
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 401:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Email o contraseña incorrectos"
+                )
+            logger.error(f"Error calling auth-service: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Error de comunicación con el servicio de autenticación"
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error connecting to auth-service: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="No se pudo conectar con el servicio de autenticación"
+            )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error during login for {login_request.email}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor durante el login"
+        )
 
 # --- Lógica de Negocio ---
 

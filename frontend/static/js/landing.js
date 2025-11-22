@@ -37,11 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reactivar listeners del formulario restaurado
         const toggleBtn = document.getElementById('toggleLoginPassword');
         if (toggleBtn) {
+            // Remover listener anterior si existe para evitar duplicados
+            toggleBtn.removeEventListener('click', toggleLoginPasswordVisibility);
             toggleBtn.addEventListener('click', toggleLoginPasswordVisibility);
         }
-        const submitBtn = document.querySelector('#loginForm .form-submit');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', handleLogin);
+        
+        // Agregar event listener al formulario para submit
+        // Remover listener anterior si existe para evitar duplicados
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.removeEventListener('submit', handleLogin);
+            loginForm.addEventListener('submit', handleLogin);
         }
 
         // El botón de cerrar se re-asigna en los listeners globales
@@ -132,7 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /** Maneja el envío del formulario de login */
-    async function handleLogin() {
+    async function handleLogin(e) {
+        // Prevenir el comportamiento por defecto del formulario
+        if (e) {
+            e.preventDefault();
+        }
+        
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         const submitBtn = document.querySelector('#loginForm .form-submit');
@@ -336,13 +347,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Configurar event listener del formulario de login (si ya existe en el DOM)
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+    
+    // Configurar event listener del botón de toggle de contraseña (si ya existe en el DOM)
+    const toggleBtn = document.getElementById('toggleLoginPassword');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleLoginPasswordVisibility);
+    }
+
     // Teclado
     document.addEventListener('keydown', (e) => {
         if (modal && modal.style.display === 'flex') {
             if (e.key === 'Enter') {
                 // Solo si el formulario de login es visible
-                if (document.getElementById('loginForm')) {
-                    handleLogin();
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    e.preventDefault();
+                    handleLogin(e);
                 }
             } else if (e.key === 'Escape') {
                 closeModal();

@@ -10,6 +10,11 @@ from datetime import date as date_type, datetime
 # MODELOS PARA SOLICITUDES (REQUESTS)
 # ============================================================================
 
+class LoginRequest(BaseModel):
+    """Esquema para login de doctores."""
+    email: EmailStr
+    password: str
+
 class EmailSchema(BaseModel):
     email_address: EmailStr
     is_primary: bool = True

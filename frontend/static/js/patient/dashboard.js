@@ -102,20 +102,37 @@ function renderSummaryBox(data) {
 
     const { patient, health_score, bmi, age } = data;
     
-    // Preparar los strings para el box
-    const name = `👤 ${patient.first_name || ''} ${patient.last_name || ''}`.padEnd(20);
-    const health = `Salud: ${health_score || '--'}/100 ⭐`;
-    const bmiText = `IMC: ${bmi || '--'} (${data.bmi_classification || 'N/A'})`.padEnd(20);
-    const ageText = `Edad: ${age || '--'} años`;
+    // Determinar clase de badge para IMC
+    let bmiBadgeClass = 'bg-secondary';
+    if (data.bmi_classification) {
+        if (data.bmi_classification.includes('Normal')) bmiBadgeClass = 'bg-success';
+        else if (data.bmi_classification.includes('Sobrepeso')) bmiBadgeClass = 'bg-warning text-dark';
+        else if (data.bmi_classification.includes('Obesidad')) bmiBadgeClass = 'bg-danger';
+    }
 
-    // Usar <pre> para mantener el formato ASCII
     container.innerHTML = `
-<pre class="text-start p-3 bg-light rounded" style="font-size: 1.1rem; line-height: 1.6; border: 1px solid #eee;">
-┌─────────────────────────────────────┐
-│  ${name}${health}  │
-│  ${bmiText}${ageText}  │
-└─────────────────────────────────────┘
-</pre>
+        <div class="d-flex align-items-center mb-4">
+            <div class="avatar-circle me-3">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="text-start">
+                <h5 class="mb-1 fw-bold">${patient.first_name || ''} ${patient.last_name || ''} <i class="fas fa-star text-warning fa-xs"></i></h5>
+                <small class="text-muted">Salud: <strong>${health_score || '--'}/100</strong></small>
+            </div>
+        </div>
+        
+        <hr class="my-3 opacity-10">
+        
+        <div class="row text-start">
+            <div class="col-6">
+                <small class="text-muted d-block mb-1">IMC: ${bmi || '--'}</small>
+                <span class="badge ${bmiBadgeClass} rounded-pill">${data.bmi_classification || 'N/A'}</span>
+            </div>
+            <div class="col-6">
+                <small class="text-muted d-block mb-1">Edad</small>
+                <span class="fw-bold fs-5">${age || '--'} años</span>
+            </div>
+        </div>
     `;
 }
 

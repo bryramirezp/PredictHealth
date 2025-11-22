@@ -6,23 +6,26 @@
    1. Global Styles & Variables
    -------------------------------------------------------------------------- */
 :root {
-    /* Primary Colors */
+    /* Core Colors - Preserving Institution Identity */
     --primary-color: #7c3aed;
     --primary-dark: #6d28d9;
-    --success-color: #16a34a; /* Bootstrap's Green */
-    --info-color: #0ea5e9;    /* Bootstrap's Sky */
-    --warning-color: #f59e0b; /* Bootstrap's Amber */
-    --danger-color: #dc2626;  /* Bootstrap's Red */
+    --primary-light: #ede9fe; /* Light purple for backgrounds/hovers */
+    
+    /* Functional Colors */
+    --success-color: #16a34a;
+    --info-color: #0ea5e9;
+    --warning-color: #f59e0b;
+    --danger-color: #dc2626;
 
-    /* Text */
+    /* Text Colors */
     --text-primary: #1f2937;
     --text-secondary: #5a6472;
-    --text-on-primary-bg: #ffffff; /* Texto sobre fondos de color */
+    --text-on-primary-bg: #ffffff;
 
     /* Backgrounds */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f9fafc;
-    --border-color: #e5e7eb;
+    --bg-primary: #f7fafc;     /* Matching Patient/Doctor */
+    --bg-secondary: #edf2f7;   /* Matching Patient/Doctor */
+    --bg-card: #ffffff;
 
     /* Status Colors (for Badges) */
     --status-success-fg: #166534;
@@ -30,29 +33,31 @@
     --status-inactive-fg: #374151;
     --status-inactive-bg: #f3f4f6;
 
-    /* Design System */
-    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.07);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.1);
-    --border-radius-lg: 16px;
-    --border-radius-md: 12px;
-    --border-radius-sm: 8px;
+    /* Layout & Effects - Matching Patient/Doctor */
+    --border-radius: 12px;
+    --border-color: #e5e7eb;
+    --shadow-soft: 0 8px 24px rgba(124, 58, 237, 0.08); /* Purple-tinted shadow */
+    --shadow-hover: 0 12px 32px rgba(124, 58, 237, 0.15);
     
     /* Transitions */
     --transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--bg-secondary);
+    font-family: var(--font-family);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
-h1 {
+h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
+    color: var(--text-primary);
 }
 
-/* --- A11Y: Estado de foco visible --- */
+/* --- A11Y: Focus States --- */
 *:focus-visible {
     outline: 3px solid var(--primary-dark);
     outline-offset: 2px;
@@ -75,9 +80,9 @@ h1 {
 
 /* --- Card --- */
 .card {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
+    border-radius: var(--border-radius);
     box-shadow: var(--shadow-soft);
     transition: var(--transition);
 }
@@ -85,7 +90,7 @@ h1 {
 .card-header {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0 !important;
+    border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
     padding: 1.25rem 1.5rem;
 }
 
@@ -100,29 +105,38 @@ h1 {
 
 /* --- Buttons --- */
 .btn {
-    border-radius: var(--border-radius-sm);
+    border-radius: 8px;
     font-weight: 600;
-    padding: 0.75rem 1.5rem;
+    padding: 0.65rem 1.5rem;
     transition: var(--transition);
     border: none;
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
 }
 
-.btn-primary { background-color: var(--primary-color); }
-.btn-primary:hover { background-color: var(--primary-dark); }
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary-bg);
+}
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--text-on-primary-bg);
+}
+.btn-success:hover {
+    background-color: #15803d;
+    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+}
 
 .btn-sm {
     padding: 0.4rem 0.8rem;
     font-size: 0.875rem;
-}
-
-.btn-sm:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-soft);
 }
 
 /* --- Forms --- */
@@ -132,9 +146,9 @@ h1 {
 }
 
 .form-control {
-    border-radius: var(--border-radius-sm);
+    border-radius: 8px;
     border: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 1rem;
 }
 
 .form-control:focus {
@@ -142,37 +156,47 @@ h1 {
     box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
 }
 
-/* --- Tables --- */
+/* --- Tables (Modernized) --- */
 .table {
-    border-color: var(--border-color);
+    margin-bottom: 0;
 }
 
-.table th {
-    font-weight: 600;
+.table thead th {
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
     color: var(--text-secondary);
+    font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     letter-spacing: 0.5px;
+    padding: 1rem;
 }
 
-.table-hover > tbody > tr:hover {
-    --bs-table-accent-bg: var(--bg-secondary);
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-hover tbody tr {
+    transition: var(--transition);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--primary-light);
     transform: scale(1.01);
-    box-shadow: var(--shadow-hover);
-    cursor: pointer;
-}
-
-.table-light {
-    --bs-table-bg: var(--bg-secondary);
-    --bs-table-border-color: var(--border-color);
+    box-shadow: var(--shadow-soft);
+    z-index: 1;
+    position: relative;
 }
 
 /* --- Badges --- */
 .badge {
-    padding: 0.4em 0.8em;
-    border-radius: 50px; /* pill shape */
+    padding: 0.5em 1em;
+    border-radius: 50px;
     font-weight: 600;
     font-size: 0.75rem;
+    letter-spacing: 0.5px;
 }
 
 .badge.bg-success {
@@ -189,40 +213,84 @@ h1 {
    3. Page-Specific Styles
    -------------------------------------------------------------------------- */
 
-/* --- institution/dashboard.html --- */
-.card.bg-primary { background-color: var(--primary-color) !important; }
-.card.bg-success { background-color: var(--success-color) !important; }
-.card.bg-info { background-color: var(--info-color) !important; }
-
+/* --- Dashboard Stat Cards --- */
 .dashboard-stat-card {
+    border: none;
+    color: white;
     transition: var(--transition);
 }
 
 .dashboard-stat-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-hover);
 }
 
+/* Gradients for Stat Cards */
+.dashboard-stat-card.bg-primary { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important; }
+.dashboard-stat-card.bg-success { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important; }
+.dashboard-stat-card.bg-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; }
+.dashboard-stat-card.bg-info { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important; }
+
 .dashboard-stat-card .card-footer {
-    background-color: rgba(0, 0, 0, 0.15);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s ease;
+}
+
+.dashboard-stat-card .card-footer:hover {
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-stat-card a {
     text-decoration: none;
-}
-
-.dashboard-stat-card a:hover {
-    text-decoration: underline;
+    color: white;
 }
 
 .dashboard-stat-card .text-white-75 {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 .dashboard-stat-card .text-lg {
-    font-size: 1.75rem;
+    font-size: 2rem;
 }
+
+/* --- Institution Profile --- */
+.institution-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px; /* Rounded square for institution */
+    background: linear-gradient(135deg, var(--success-color) 0%, var(--primary-color) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-soft);
+    border: 4px solid #fff;
+    color: white;
+    font-size: 3.5rem;
+}
+
+/* --- List Items (Doctors, Patients) --- */
+.doctor-list-item,
+.patient-list-item {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.doctor-list-item:hover,
+.patient-list-item:hover {
+    box-shadow: var(--shadow-soft);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* --------------------------------------------------------------------------
+   4. Utility & Responsive Styles
+   -------------------------------------------------------------------------- */
 
 /* --- institution/doctors.html & patients.html --- */
 .actions-cell button {
@@ -232,10 +300,6 @@ h1 {
 .actions-cell button:last-child {
     margin-right: 0;
 }
-
-/* --------------------------------------------------------------------------
-   4. Utility & Responsive Styles
-   -------------------------------------------------------------------------- */
 
 @media (max-width: 768px) {
     h1 {

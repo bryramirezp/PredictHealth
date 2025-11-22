@@ -49,6 +49,24 @@ La tecnología actual permite recopilar, procesar y analizar grandes volúmenes 
 - Proporcione recomendaciones preventivas activas y adaptativas
 - Evolucione con el comportamiento diario del usuario
 
+## 🚀 Inicialización del Proyecto
+
+Para inicializar el proyecto, sigue estos pasos:
+
+1. Construye y levanta los servicios con Docker Compose:
+
+   ```bash
+   docker-compose up --build
+   ```
+
+2. Desde la raíz del proyecto, ejecuta el siguiente comando para poblar la base de datos con usuarios:
+
+   ```powershell
+   Get-Content populate.sql | docker exec -i predicthealth-postgres psql -U predictHealth_user -d predicthealth_db
+   ```
+
+   > **Nota**: Algunos usuarios podrían no haberse creado en el script de inicialización debido a errores de caracteres, ya que la creación de ese populate fue hecho con un script Python.
+
 ## 🎯 Objetivos del Proyecto
 
 ### Objetivo Principal

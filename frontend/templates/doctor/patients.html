@@ -47,4 +47,29 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para mostrar el expediente médico del paciente -->
+<div class="modal fade" id="patientMedicalRecordModal" tabindex="-1" aria-labelledby="patientMedicalRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="patientMedicalRecordModalLabel">
+                    <i class="fas fa-file-medical me-2"></i>Expediente Médico
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="medicalRecordContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando expediente médico...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -6,48 +6,59 @@
    1. Global Styles & Variables
    -------------------------------------------------------------------------- */
 :root {
-    /* Colores y Gradientes Principales */
+    /* Core Colors - Preserving Doctor Identity */
     --primary-color: #667eea;
     --primary-dark: #5a67d8;
-    --success-color: #38a169; /* Bootstrap's Green */
-    --info-color: #4299e1;    /* Bootstrap's Blue */
-    --danger-color: #e53e3e;   /* Bootstrap's Red */
+    --primary-light: #e0e7ff; /* Light purple for backgrounds/hovers */
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-    /* Fondos */
-    --bg-primary: #f7fafc;
-    --bg-secondary: #edf2f7;
-    --bg-card: rgba(255, 255, 255, 0.85);
-    --border-color: rgba(255, 255, 255, 0.18);
-
-    /* Textos */
-    --text-primary: #2d3748;
-    --text-secondary: #4a5568;
-    --text-on-primary-bg: #ffffff;
-
-    /* Diseño */
-    --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    --shadow-hover: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
-    --border-radius: 16px;
-    --border-radius-sm: 8px;
     
-    /* Transiciones */
-    --transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    /* Functional Colors */
+    --success-color: #38a169;
+    --info-color: #4299e1;
+    --danger-color: #e53e3e;
+    --warning-color: #ed8936;
+
+    /* Text Colors */
+    --text-primary: #1f2937;   /* Matching Patient */
+    --text-secondary: #5a6472; /* Matching Patient */
+    --text-light: #f8fafc;
+
+    /* Backgrounds */
+    --bg-primary: #f7fafc;     /* Matching Patient */
+    --bg-secondary: #edf2f7;   /* Matching Patient */
+    --bg-card: #ffffff;        /* Solid white for cleaner look */
+
+    /* Layout & Effects - Matching Patient */
+    --border-radius: 12px;
+    --border-color: #e5e7eb;
+    --shadow-soft: 0 8px 24px rgba(102, 126, 234, 0.08); /* Purple-tinted shadow */
+    --shadow-hover: 0 12px 32px rgba(102, 126, 234, 0.15);
+
+    --transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --- Reset & Base --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-family);
     background-color: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
-h1, h2, h5 {
+h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     color: var(--text-primary);
 }
 
-/* --- A11Y: Estado de foco visible --- */
+/* --- A11Y: Focus States --- */
 *:focus-visible {
     outline: 3px solid var(--primary-dark);
     outline-offset: 2px;
@@ -68,13 +79,12 @@ h1, h2, h5 {
    2. Component Overrides (Bootstrap)
    -------------------------------------------------------------------------- */
 
-/* --- Card (Estilo "Glassmorphism") --- */
+/* --- Card (Clean Style) --- */
 .card {
     background: var(--bg-card);
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(10px);
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
     transition: var(--transition);
 }
 
@@ -84,7 +94,7 @@ h1, h2, h5 {
 }
 
 .card-header {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
     padding: 1.25rem 1.5rem;
@@ -101,30 +111,55 @@ h1, h2, h5 {
 
 /* --- Buttons --- */
 .btn {
-    border-radius: var(--border-radius-sm);
+    border-radius: 8px;
     font-weight: 600;
-    padding: 0.75rem 1.5rem;
+    padding: 0.65rem 1.5rem;
     transition: var(--transition);
     border: none;
-    box-shadow: var(--shadow-soft);
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
 }
 
 .btn-primary {
     background: var(--primary-gradient);
-    color: var(--text-on-primary-bg);
+    color: var(--text-light);
 }
 .btn-primary:hover {
-    color: var(--text-on-primary-bg);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    color: var(--text-light);
 }
 
-.btn-info { background-color: var(--info-color); }
-.btn-success { background-color: var(--success-color); }
-.btn-danger { background-color: var(--danger-color); }
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--text-light);
+}
+.btn-success:hover {
+    background-color: #2f855a;
+    color: var(--text-light);
+    box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+}
+
+.btn-info {
+    background-color: var(--info-color);
+    color: var(--text-light);
+}
+.btn-info:hover {
+    background-color: #3182ce;
+    color: var(--text-light);
+    box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: var(--text-light);
+}
+.btn-danger:hover {
+    background-color: #c53030;
+    color: var(--text-light);
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+}
 
 .btn-sm {
     padding: 0.4rem 0.8rem;
@@ -138,33 +173,52 @@ h1, h2, h5 {
 }
 
 .form-control {
-    border-radius: var(--border-radius-sm);
+    border-radius: 8px;
     border: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
-    background-color: var(--bg-primary);
+    padding: 0.65rem 1rem;
 }
 
 .form-control:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
 }
 
-/* --- Tables --- */
-.table-light {
-    --bs-table-bg: var(--bg-secondary);
-    --bs-table-border-color: var(--border-color);
+.form-control[readonly] {
+    background-color: var(--bg-secondary);
 }
 
-.table-hover > tbody > tr {
+/* --- Tables (Modernized) --- */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-hover tbody tr {
     transition: var(--transition);
 }
 
-.table-hover > tbody > tr:hover {
-    --bs-table-accent-bg: white;
-    transform: scale(1.02);
-    box-shadow: var(--shadow-hover);
-    cursor: pointer;
-    border-radius: var(--border-radius-sm);
+.table-hover tbody tr:hover {
+    background-color: var(--primary-light);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-soft);
+    z-index: 1;
+    position: relative;
 }
 
 /* --- Navigation Tabs --- */
@@ -174,6 +228,7 @@ h1, h2, h5 {
     border: none;
     border-bottom: 3px solid transparent;
     transition: var(--transition);
+    border-radius: 8px 8px 0 0;
 }
 
 .nav-tabs .nav-link.active,
@@ -185,71 +240,104 @@ h1, h2, h5 {
 
 .nav-tabs .nav-link:hover:not(.active) {
     color: var(--primary-dark);
-    border-color: rgba(102, 126, 234, 0.3);
+    background-color: var(--primary-light);
 }
 
 /* --- List Group --- */
 .list-group-item {
-    background-color: transparent; /* Para que se vea el fondo de la tarjeta */
+    background-color: transparent;
     border-color: var(--border-color);
-    padding: 1rem 0; /* Espaciado vertical, sin padding lateral para que se alinee */
+    padding: 1rem 0;
 }
 
 /* --------------------------------------------------------------------------
    3. Page-Specific Styles
    -------------------------------------------------------------------------- */
 
-/* --- doctor/dashboard.html --- */
-.card.bg-primary { background: var(--primary-gradient) !important; }
-.card.bg-success { background-color: var(--success-color) !important; }
-.card.bg-info { background-color: var(--info-color) !important; }
-
+/* --- Dashboard Stat Cards --- */
 .dashboard-stat-card {
+    border: none;
+    color: white;
     transition: var(--transition);
 }
 
 .dashboard-stat-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-hover);
 }
 
+/* Gradients for Stat Cards */
+.dashboard-stat-card.bg-primary { background: var(--primary-gradient) !important; }
+.dashboard-stat-card.bg-success { background: linear-gradient(135deg, #38a169 0%, #2f855a 100%) !important; }
+.dashboard-stat-card.bg-warning { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important; }
+.dashboard-stat-card.bg-info { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%) !important; }
+
 .dashboard-stat-card .card-footer {
-    background-color: rgba(0, 0, 0, 0.15);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s ease;
+}
+
+.dashboard-stat-card .card-footer:hover {
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-stat-card a {
     text-decoration: none;
-}
-
-.dashboard-stat-card a:hover {
-    text-decoration: underline;
+    color: white;
 }
 
 .dashboard-stat-card .text-white-75 {
-    color: rgba(255, 255, 255, 0.75) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
 .dashboard-stat-card .text-lg {
-    font-size: 1.75rem;
+    font-size: 2rem;
 }
 
-/* --- doctor/my-institution.html --- */
-.card-header.bg-primary {
-    background: var(--primary-gradient) !important;
+/* --- Doctor Profile --- */
+.doctor-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-soft);
+    border: 4px solid #fff;
+    color: white;
+    font-size: 3.5rem;
+}
+
+/* --- List Items (Patients, Appointments) --- */
+.patient-list-item,
+.appointment-item {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.patient-list-item:hover,
+.appointment-item:hover {
+    box-shadow: var(--shadow-soft);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 /* --------------------------------------------------------------------------
    4. Utility & Responsive Styles
    -------------------------------------------------------------------------- */
-
 @media (max-width: 768px) {
-    h1 {
-        font-size: 1.75rem;
-    }
+    h1 { font-size: 1.75rem; }
+    .card-body { padding: 1.25rem; }
     
-    .card-body {
-        padding: 1.25rem;
+    .dashboard-stat-card {
+        margin-bottom: 1rem;
     }
 
     .nav-tabs {

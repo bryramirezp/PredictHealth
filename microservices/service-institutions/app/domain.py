@@ -34,7 +34,7 @@ class InstitutionResponse(InstitutionBase):
     id: UUID_type
     is_active: bool
     is_verified: bool
-    contact_email: Optional[EmailStr] = None # Se poblará en la lógica
+    contact_email: Optional[EmailStr] = None
 
     class Config:
         from_attributes = True

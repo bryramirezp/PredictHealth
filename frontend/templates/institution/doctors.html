@@ -3,6 +3,11 @@
 
 {% block title %}Gestionar Doctores - PredictHealth{% endblock %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/institution/institution-core.js') }}"></script>
+<script src="{{ url_for('static', filename='js/institution/institution-doctors.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -16,7 +21,7 @@
         <div class="card-body">
             <h5 class="card-title">Listado del Personal Médico</h5>
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover" id="doctors-list-table">
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Nombre</th>
@@ -26,35 +31,13 @@
                             <th scope="col">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- Fila de ejemplo 1 -->
+                    <tbody id="doctors-list-table-body">
                         <tr>
-                            <td>Dr. Nombre Apellido 1 (Próximamente)</td>
-                            <td>Cardiología (Próximamente)</td>
-                            <td>doctor1@example.com (Próximamente)</td>
-                            <td><span class="badge bg-success">Activo</span></td>
-                            <td class="actions-cell">
-                                <button class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        <!-- Fila de ejemplo 2 -->
-                        <tr>
-                            <td>Dr. Nombre Apellido 2 (Próximamente)</td>
-                            <td>Neurología (Próximamente)</td>
-                            <td>doctor2@example.com (Próximamente)</td>
-                            <td><span class="badge bg-secondary">Inactivo</span></td>
-                            <td class="actions-cell">
-                                <button class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success">
-                                    <i class="fas fa-check"></i>
-                                </button>
+                            <td colspan="5" class="text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Cargando doctores...</span>
+                                </div>
                             </td>
                         </tr>
                     </tbody>

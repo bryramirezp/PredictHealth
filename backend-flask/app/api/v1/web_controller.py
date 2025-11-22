@@ -155,8 +155,11 @@ def generic_login():
                 httponly=True,
                 secure=False,  # True en producción con HTTPS
                 samesite='Lax',  # ← LA CLAVE! 'Strict' fallará con cross-origin
+                path='/',  # ← Asegurar que la cookie esté disponible en todo el sitio
                 max_age=expires_in  # Usar expires_in del servicio JWT
             )
+            
+            logger.info(f"✅ Cookie set with path=/, max_age={expires_in}, token length={len(access_token)}")
 
             logger.info(f"✅ Login successful, session cookie set and token stored in Redis")
             return resp
@@ -554,56 +557,109 @@ def patient_profile():
         return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
 
 @web_bp.route('/doctor/dashboard', methods=['GET'])
+@require_auth(required_user_type='doctor')
 def doctor_dashboard():
-    """Dashboard para doctores"""
+    """Dashboard para doctores - Obtiene datos del microservicio service-doctors"""
     try:
-        # Obtener usuario actual (comentado para testing)
-        # current_user = get_current_user()
-        # user_id = current_user['user_id']
-        user_id = "test-user-id"  # Mock para testing
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
         
-        # Obtener datos del doctor por email
-        doctor_response = web_controller.proxy_service.call_doctors_service(
-            "GET", f"/api/v1/doctors/", headers={"Authorization": f"Bearer {request.headers.get('Authorization', '').split(' ')[1]}"}
+        logger.info(f"📊 Solicitando dashboard para doctor: {current_user.get('email')}")
+
+        # Llamar al microservicio service-doctors para obtener datos del dashboard
+        dashboard_response = web_controller.proxy_service.call_doctors_service(
+            "GET", "/api/v1/doctors/me/dashboard",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
         )
-        
-        # Filtrar por email del usuario actual (mock para testing)
-        doctor_data = None
-        if doctor_response.get('status_code') == 200:
-            doctors = doctor_response['data'].get('doctors', [])
-            user_email = "test@example.com"  # Mock email para testing
-            doctor_data = next((doctor for doctor in doctors if doctor.get('email') == user_email), None)
-        
-        if doctor_data:
-            # Preparar datos para respuesta
-            dashboard_data = {
-                "doctor": doctor_data,
-                "patients": [],
-                "appointments": [],
-                "reviews": [],
-                "statistics": {
-                    "total_patients": 0,
-                    "total_appointments": 0,
-                    "total_reviews": 0,
-                    "available_hours": 8
-                }
-            }
-            
-            # Devolver JSON
+
+        if dashboard_response.get('status_code') == 200:
+            # Devolver respuesta del microservicio directamente
+            logger.info("✅ Dashboard del doctor obtenido exitosamente")
             return jsonify({
                 "status": "success",
                 "message": "Dashboard del doctor",
-                "data": dashboard_data
+                "data": dashboard_response['data']
             }), 200
         else:
+            logger.error(f"❌ Error del microservicio service-doctors: {dashboard_response}")
             return web_controller._handle_auth_error(
-                "Doctor no encontrado para el usuario actual",
-                404
+                dashboard_response.get('data', {}).get('detail', 'Error obteniendo dashboard'),
+                dashboard_response.get('status_code', 500)
             )
-            
+
     except Exception as e:
-        logger.error(f"Error en doctor_dashboard: {str(e)}")
-        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+        logger.error(f"❌ Error en doctor_dashboard: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+
+@web_bp.route('/doctor/patients', methods=['GET'])
+@require_auth(required_user_type='doctor')
+def doctor_patients():
+    """Lista de pacientes del doctor - Obtiene datos del microservicio service-doctors"""
+    try:
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        
+        logger.info(f"👥 Solicitando lista de pacientes para doctor: {current_user.get('email')}")
+
+        # Llamar al microservicio service-doctors para obtener la lista de pacientes
+        patients_response = web_controller.proxy_service.call_doctors_service(
+            "GET", "/api/v1/doctors/me/patients",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
+        )
+
+        if patients_response.get('status_code') == 200:
+            # Devolver respuesta del microservicio directamente
+            logger.info("✅ Lista de pacientes del doctor obtenida exitosamente")
+            return jsonify({
+                "status": "success",
+                "message": "Lista de pacientes del doctor",
+                "data": patients_response['data']
+            }), 200
+        else:
+            logger.error(f"❌ Error del microservicio service-doctors: {patients_response}")
+            return web_controller._handle_auth_error(
+                patients_response.get('data', {}).get('detail', 'Error obteniendo lista de pacientes'),
+                patients_response.get('status_code', 500)
+            )
+
+    except Exception as e:
+        logger.error(f"❌ Error en doctor_patients: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+
+@web_bp.route('/doctor/patients/<patient_id>/medical-record', methods=['GET'])
+@require_auth(required_user_type='doctor')
+def doctor_patient_medical_record(patient_id):
+    """Expediente médico completo del paciente - Obtiene datos del microservicio service-doctors"""
+    try:
+        # Obtener usuario actual autenticado
+        current_user = get_current_user()
+        
+        logger.info(f"📋 Solicitando expediente médico para paciente {patient_id} del doctor: {current_user.get('email')}")
+
+        # Llamar al microservicio service-doctors para obtener el expediente médico
+        medical_record_response = web_controller.proxy_service.call_doctors_service(
+            "GET", f"/api/v1/doctors/me/patients/{patient_id}/medical-record",
+            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
+        )
+
+        if medical_record_response.get('status_code') == 200:
+            # Devolver respuesta del microservicio directamente
+            logger.info("✅ Expediente médico del paciente obtenido exitosamente")
+            return jsonify({
+                "status": "success",
+                "message": "Expediente médico del paciente",
+                "data": medical_record_response['data']
+            }), 200
+        else:
+            logger.error(f"❌ Error del microservicio service-doctors: {medical_record_response}")
+            return web_controller._handle_auth_error(
+                medical_record_response.get('data', {}).get('detail', 'Error obteniendo expediente médico'),
+                medical_record_response.get('status_code', 500)
+            )
+
+    except Exception as e:
+        logger.error(f"❌ Error en doctor_patient_medical_record: {str(e)}")
+        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
 
 @web_bp.route('/institution/dashboard', methods=['GET'])
 @require_auth(required_user_type='institution')

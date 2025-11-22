@@ -243,14 +243,71 @@ h1, h2, h3, h4, h5, h6 {
 .dashboard-card .fa-user-md { color: var(--success-color); }
 .dashboard-card .fa-user-cog { color: var(--info-color); }
 
+/* --- Dashboard Summary Card --- */
+.summary-card {
+    background: #fff;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    background-color: rgba(16, 185, 129, 0.1); /* Light green */
+    color: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    transition: var(--transition);
+}
+
+.summary-card:hover .avatar-circle {
+    transform: scale(1.05);
+    background-color: rgba(16, 185, 129, 0.2);
+}
+
 /* --- patient/my-care-team.html --- */
 .bg-primary.card-header {
-    background-color: var(--primary-color) !important;
+    background-color: #00897b !important; /* Teal for Doctor */
 }
 
 .bg-success.card-header {
-    background-color: var(--success-color) !important;
+    background-color: #009688 !important; /* Lighter Teal for Institution */
 }
+
+/* --- Doctor & Institution Profiles --- */
+.doctor-profile,
+.institution-profile {
+    padding: 1rem;
+}
+
+.doctor-avatar,
+.institution-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #f0fdf4; /* Very light green */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: var(--shadow-soft);
+    border: 4px solid #fff;
+}
+
+.institution-avatar {
+    border-radius: 16px; /* Rounded square for institution */
+}
+
+.doctor-avatar .fas,
+.institution-avatar .fas {
+    font-size: 3rem;
+}
+
+.doctor-avatar .fas { color: #00897b; }
+.institution-avatar .fas { color: #009688; }
 
 /* --- patient/medical-record.html --- */
 .nav-tabs .nav-link i {
@@ -259,6 +316,27 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-tabs .nav-link:hover i {
     transform: scale(1.1);
+}
+
+/* --- Medical Record Items --- */
+.condition-item,
+.medication-item,
+.allergy-item,
+.family-history-item {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    margin-bottom: 1rem;
+}
+
+.condition-item:hover,
+.medication-item:hover,
+.allergy-item:hover,
+.family-history-item:hover {
+    box-shadow: var(--shadow-soft);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 /* --------------------------------------------------------------------------

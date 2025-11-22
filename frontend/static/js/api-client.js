@@ -126,28 +126,35 @@ const PredictHealthAPI = {
     institutions: {
         /** Obtiene los detalles de la institución autenticada. */
         getDetails: function() {
-            // CORREGIDO: Apunta a una ruta /me de institución (asumiendo que existirá)
-            return PredictHealthAPI._request('/api/v1/institutions/me');
+            return PredictHealthAPI._request('/api/web/institution/dashboard');
+        },
+        /** Obtiene el dashboard/KPIs de la institución. */
+        getDashboardData: function() {
+            return PredictHealthAPI._request('/api/web/institution/dashboard');
         },
         /** Obtiene las analíticas/KPIs de la institución. */
         getAnalytics: function() {
-            // CORREGIDO: Apunta a una ruta /me de institución
-            return PredictHealthAPI._request('/api/v1/institutions/me/analytics');
+            return PredictHealthAPI._request('/api/web/institution/dashboard');
         },
         /** Lista los doctores de la institución. */
         listDoctors: function() {
-            // CORREGIDO: Apunta a una ruta /me de institución
-            return PredictHealthAPI._request('/api/v1/institutions/me/doctors');
+            return PredictHealthAPI._request('/api/web/institution/doctors');
         },
-        /** Crea un doctor en la institución (ruta de admin de institución). */
+        /** Obtiene los doctores de la institución (alias para compatibilidad). */
+        getDoctors: function() {
+            return PredictHealthAPI._request('/api/web/institution/doctors');
+        },
+        /** Crea un doctor en la institución. */
         createDoctor: function(doctorData) {
-            // CORREGIDO: Apunta a la ruta de admin /api/v1/doctors (que ya creamos)
-            return PredictHealthAPI._request('/api/v1/doctors', 'POST', doctorData);
+            return PredictHealthAPI._request('/api/web/institution/doctors', 'POST', doctorData);
         },
         /** Lista los pacientes de la institución. */
         listPatients: function() {
-            // CORREGIDO: Apunta a una ruta /me de institución
-            return PredictHealthAPI._request('/api/v1/institutions/me/patients');
+            return PredictHealthAPI._request('/api/web/institution/patients');
+        },
+        /** Obtiene los pacientes de la institución (alias para compatibilidad). */
+        getPatients: function() {
+            return PredictHealthAPI._request('/api/web/institution/patients');
         }
     }
 };
