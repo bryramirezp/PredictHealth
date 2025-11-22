@@ -88,20 +88,69 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🚀</span>
-                Despliegue ML
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🚀</span>
+                Despliegue de Modelos ML
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                <strong>Estado:</strong> El despliegue de modelos ML no está implementado en el MVP actual, pero está planeado para implementación futura.
+            </p>
+
+            <div class="tech-section">
+                <h2>Estado Actual</h2>
+                <p>
+                    El despliegue e integración de modelos ML no forma parte del MVP actual. Esta funcionalidad será desarrollada en futuras versiones de la plataforma.
+                </p>
+
+                <h2>Despliegue Planeado</h2>
+                <p>
+                    El despliegue contemplará:
+                </p>
+
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4><i class="fas fa-box" style="color: #4dd9d6;"></i> Containerización</h4>
+                        <p>Modelos empaquetados en contenedores Docker para despliegue consistente.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-plug" style="color: #667eea;"></i> API de Predicción</h4>
+                        <p>Endpoints REST para invocación de modelos desde microservicios.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-code-branch" style="color: #f59e0b;"></i> Versionado</h4>
+                        <p>Sistema de versionado de modelos para A/B testing y rollback.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-expand-arrows-alt" style="color: #8b5cf6;"></i> Escalabilidad</h4>
+                        <p>Despliegue horizontal para manejar carga de predicciones.</p>
+                    </div>
+                </div>
+
+                <h2>Integración con Servicios</h2>
+                <p>
+                    Los modelos se integrarán mediante microservicio dedicado, integración con service-patients, API Gateway para enrutamiento y almacenamiento de resultados en PostgreSQL.
+                </p>
+
+                <h2>Pipeline de Predicción</h2>
+                <p>
+                    El pipeline incluirá extracción de datos, preprocesamiento, invocación del modelo, post-procesamiento y almacenamiento de predicciones.
+                </p>
+
+                <h2>Monitoreo de Modelos</h2>
+                <p>
+                    El monitoreo incluirá métricas de rendimiento en producción, detección de drift de datos, logging de predicciones y alertas para degradación.
+                </p>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
-            </div>
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                El despliegue de modelos ML será documentado en detalle cuando se implemente en futuras versiones de la plataforma.
+            </p>
         </main>
     </div>
 </body>

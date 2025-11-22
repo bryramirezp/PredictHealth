@@ -80,6 +80,28 @@ class SessionMiddleware:
 # Instancia global
 jwt_middleware = SessionMiddleware()
 
+def extract_token_from_request():
+    """
+    Extraer token JWT del request.
+    Prioridad: 1) Header Authorization Bearer, 2) Cookie predicthealth_jwt
+    Retorna el token o None si no se encuentra
+    """
+    # Primero intentar obtener del header Authorization (para apps de escritorio)
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header and auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1]
+        logger.debug("🔑 Token extraído del header Authorization")
+        return token
+    
+    # Fallback a cookie (para navegadores web)
+    token = request.cookies.get('predicthealth_jwt')
+    if token:
+        logger.debug("🍪 Token extraído de cookie")
+        return token
+    
+    logger.debug("⚠️ No se encontró token en header ni cookie")
+    return None
+
 def store_jwt_token(jwt_token: str, expiration_seconds: int = 900) -> bool:
     """Store JWT token in Redis with expiration"""
     try:
@@ -97,14 +119,14 @@ def store_jwt_token(jwt_token: str, expiration_seconds: int = 900) -> bool:
         return False
 
 def require_session(f=None, *, allowed_roles=None):
-    """Decorador para requerir token_id válido en cookie con roles opcionales"""
+    """Decorador para requerir token válido (header o cookie) con roles opcionales"""
     def decorator(func):
         @wraps(func)
         def decorated_function(*args, **kwargs):
-            token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+            token_id = extract_token_from_request()
 
             if not token_id:
-                logger.warning("⚠️ No session cookie provided")
+                logger.warning("⚠️ No token provided (header or cookie)")
                 return jsonify({
                     "error": "Sesión requerida",
                     "message": "Debe iniciar sesión"
@@ -113,7 +135,7 @@ def require_session(f=None, *, allowed_roles=None):
             # Validar token_id y obtener datos de sesión
             session_data = jwt_middleware.validate_session(token_id)
             if not session_data:
-                logger.warning("⚠️ Invalid token_id")
+                logger.warning("⚠️ Invalid token")
                 return jsonify({
                     "error": "Token inválido",
                     "message": "El token ha expirado o es inválido"
@@ -143,10 +165,10 @@ def require_session(f=None, *, allowed_roles=None):
     return decorator
 
 def optional_session(f):
-    """Decorador opcional para token_id"""
+    """Decorador opcional para token (header o cookie)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+        token_id = extract_token_from_request()
 
         if token_id:
             session_data = jwt_middleware.validate_session(token_id)
@@ -159,11 +181,11 @@ def optional_session(f):
     return decorated_function
 
 def require_auth(required_user_type=None):
-    """Decorador para requerir autenticación con tipo de usuario opcional"""
+    """Decorador para requerir autenticación con tipo de usuario opcional (header o cookie)"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            token_id = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+            token_id = extract_token_from_request()
 
             if not token_id:
                 return jsonify({

@@ -88,20 +88,75 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🤖</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🤖</span>
                 Modelos Predictivos
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                <strong>Estado:</strong> Los modelos predictivos de machine learning no están implementados en el MVP actual, pero están planeados para implementación futura como parte del Nivel 1: Análisis Básico de la plataforma.
+            </p>
+
+            <div class="tech-section">
+                <h2>Estado Actual</h2>
+                <p>
+                    Los modelos predictivos de IA no forman parte del MVP actual. El sistema se enfoca en la gestión de datos de salud, autenticación y dashboards.
+                </p>
+
+                <h2>Objetivo Futuro</h2>
+                <p>
+                    La plataforma está diseñada para generar predicciones de riesgo de enfermedades crónicas utilizando datos históricos del paciente:
+                </p>
+
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4><i class="fas fa-file-medical" style="color: #4dd9d6;"></i> Expedientes Médicos</h4>
+                        <p>Historial clínico, diagnósticos previos, medicaciones y tratamientos.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-running" style="color: #667eea;"></i> Estilo de Vida</h4>
+                        <p>Actividad física, alimentación, consumo de sustancias, hábitos diarios.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-dna" style="color: #f59e0b;"></i> Genética</h4>
+                        <p>Antecedentes familiares y factores genéticos predisponentes.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-heartbeat" style="color: #8b5cf6;"></i> Mediciones Biométricas</h4>
+                        <p>Presión arterial, glucosa, peso, altura, frecuencia cardíaca.</p>
+                    </div>
+                </div>
+
+                <h2>Enfermedades Objetivo</h2>
+                <p>
+                    Los modelos predictivos estarán diseñados para predecir riesgo de:
+                </p>
+
+                <ul>
+                    <li><strong>Diabetes:</strong> Probabilidad de desarrollar diabetes tipo 2</li>
+                    <li><strong>Hipertensión:</strong> Riesgo de desarrollar hipertensión arterial</li>
+                    <li><strong>Enfermedades Cardiovasculares:</strong> Factores de riesgo cardiovascular</li>
+                </ul>
+
+                <h2>Perfil de Riesgo</h2>
+                <p>
+                    Con los datos recopilados, la plataforma generará un <strong>perfil de riesgo inicial</strong> que identifica la probabilidad de desarrollar condiciones crónicas específicas. Este perfil será la base para recomendaciones preventivas personalizadas.
+                </p>
+
+                <h2>Arquitectura Planeada</h2>
+                <p>
+                    Los modelos ML se integrarán con la arquitectura de microservicios existente, utilizando los datos almacenados en PostgreSQL y procesamiento en tiempo real cuando sea necesario.
+                </p>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
-            </div>
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                La implementación de modelos predictivos será documentada cuando se desarrolle en futuras versiones de la plataforma.
+            </p>
         </main>
     </div>
 </body>

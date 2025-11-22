@@ -76,6 +76,76 @@ def docs_arquitectura():
     """Página de arquitectura del sistema."""
     return render_template('docs/arquitectura.html')
 
+# Backend
+@app.route('/docs/backend/flask')
+def docs_backend_flask():
+    return render_template('docs/backend/flask.html')
+
+@app.route('/docs/backend/microservicios')
+def docs_backend_microservicios():
+    return render_template('docs/backend/microservicios.html')
+
+@app.route('/docs/backend/autenticacion')
+def docs_backend_autenticacion():
+    return render_template('docs/backend/autenticacion.html')
+
+# Frontend
+@app.route('/docs/frontend/estructura')
+def docs_frontend_estructura():
+    return render_template('docs/frontend/estructura.html')
+
+@app.route('/docs/frontend/componentes')
+def docs_frontend_componentes():
+    return render_template('docs/frontend/componentes.html')
+
+@app.route('/docs/frontend/estilos')
+def docs_frontend_estilos():
+    return render_template('docs/frontend/estilos.html')
+
+# Base de Datos
+@app.route('/docs/database/postgresql')
+def docs_database_postgresql():
+    return render_template('docs/database/postgresql.html')
+
+@app.route('/docs/database/redis')
+def docs_database_redis():
+    return render_template('docs/database/redis.html')
+
+@app.route('/docs/database/firebase')
+def docs_database_firebase():
+    return render_template('docs/database/firebase.html')
+
+# Machine Learning
+@app.route('/docs/ml/modelos')
+def docs_ml_modelos():
+    return render_template('docs/ml/modelos.html')
+
+@app.route('/docs/ml/entrenamiento')
+def docs_ml_entrenamiento():
+    return render_template('docs/ml/entrenamiento.html')
+
+@app.route('/docs/ml/deployment')
+def docs_ml_deployment():
+    return render_template('docs/ml/deployment.html')
+
+# Dispositivos
+@app.route('/docs/devices/mobile')
+def docs_devices_mobile():
+    return render_template('docs/devices/mobile.html')
+
+@app.route('/docs/devices/leap-motion')
+def docs_devices_leap_motion():
+    return render_template('docs/devices/leap-motion.html')
+
+# Deployment
+@app.route('/docs/deploy/docker')
+def docs_deploy_docker():
+    return render_template('docs/deploy/docker.html')
+
+@app.route('/docs/deploy/produccion')
+def docs_deploy_produccion():
+    return render_template('docs/deploy/produccion.html')
+
 # --- Health endpoint for docker-compose healthcheck ---
 @app.route('/health')
 def health():

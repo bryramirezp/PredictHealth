@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // El botón de cerrar se re-asigna en los listeners globales
     }
 
-    /** Muestra el formulario de contacto (placeholder) */
+    /** Muestra el formulario de contacto */
     function showContactForm() {
         if (!modal) return;
 
@@ -62,27 +62,178 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (modalTitle) modalTitle.style.display = 'none';
 
-        // Formulario de contacto simplificado
+        // Formulario de contacto completo
         modalContentDiv.innerHTML = `
-            <h2 class="modal-title" style="display: none;">${originalModalTitle}</h2>
-            <div class="contact-form" style="text-align: center; padding: 2rem;">
-                <h3 style="color: #2d3748; margin-bottom: 1rem;">¡Gracias por tu interés!</h3>
-                <p style="color: #718096; margin-bottom: 2rem; line-height: 1.6;">
-                    Estamos trabajando en mejorar PredictHealth. Pronto podrás contactarnos directamente desde aquí.
-                </p>
-                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <a href="mailto:contact@predicthealth.com" class="btn btn-primary" style="text-decoration: none;">
-                        <i class="fas fa-envelope"></i> Email
-                    </a>
-                    <a href="tel:+1234567890" class="btn btn-secondary" style="text-decoration: none;">
-                        <i class="fas fa-phone"></i> Teléfono
-                    </a>
-                </div>
+            <h2 class="modal-title" style="display: block; margin-bottom: 1.5rem;">Contáctanos</h2>
+            <div class="contact-form" style="max-width: 500px; margin: 0 auto; padding: 1rem;">
+                <form id="contactForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <label for="contactName" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">
+                            <i class="fas fa-user me-2"></i>Nombre
+                        </label>
+                        <input 
+                            type="text" 
+                            id="contactName" 
+                            name="name" 
+                            required 
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+                            placeholder="Tu nombre completo"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="contactEmail" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">
+                            <i class="fas fa-envelope me-2"></i>Email
+                        </label>
+                        <input 
+                            type="email" 
+                            id="contactEmail" 
+                            name="email" 
+                            required 
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+                            placeholder="tu@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="contactPhone" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">
+                            <i class="fas fa-phone me-2"></i>Número de Teléfono
+                        </label>
+                        <input 
+                            type="tel" 
+                            id="contactPhone" 
+                            name="phone" 
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"
+                            placeholder="+1 234 567 8900"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="contactMessage" style="display: block; margin-bottom: 0.5rem; color: #2d3748; font-weight: 500;">
+                            <i class="fas fa-comment me-2"></i>Comentario
+                        </label>
+                        <textarea 
+                            id="contactMessage" 
+                            name="message" 
+                            required 
+                            rows="4"
+                            style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;"
+                            placeholder="Escribe tu mensaje aquí..."
+                        ></textarea>
+                    </div>
+                    
+                    <div id="contactFormMessage" style="display: none; padding: 0.75rem; border-radius: 8px; margin-top: 0.5rem;"></div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+                        <button 
+                            type="button" 
+                            onclick="closeModal()" 
+                            class="btn btn-secondary"
+                            style="padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; background: #e2e8f0; color: #2d3748;"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            type="submit" 
+                            id="contactSubmitBtn"
+                            class="btn btn-primary"
+                            style="padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; background: #3182ce; color: white;"
+                        >
+                            <i class="fas fa-paper-plane me-2"></i>Enviar
+                        </button>
+                    </div>
+                </form>
             </div>
         `;
 
+        // Agregar event listener al formulario
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', handleContactSubmit);
+        }
+
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Bloquear scroll
+    }
+
+    /** Maneja el envío del formulario de contacto */
+    async function handleContactSubmit(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const submitBtn = document.getElementById('contactSubmitBtn');
+        const messageDiv = document.getElementById('contactFormMessage');
+        
+        // Obtener datos del formulario
+        const formData = new FormData(form);
+        const contactData = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone') || '',
+            message: formData.get('message'),
+            timestamp: Date.now()
+        };
+
+        // Validación básica
+        if (!contactData.name || !contactData.email || !contactData.message) {
+            showContactMessage('Por favor completa todos los campos requeridos.', 'error');
+            return;
+        }
+
+        // Deshabilitar botón y mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+        messageDiv.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/web/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(contactData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showContactMessage('¡Mensaje enviado exitosamente! Te responderemos pronto.', 'success');
+                form.reset();
+                // Cerrar modal después de 2 segundos
+                setTimeout(() => {
+                    closeModal();
+                }, 2000);
+            } else {
+                showContactMessage(result.message || 'Error al enviar el mensaje. Por favor intenta nuevamente.', 'error');
+            }
+        } catch (error) {
+            console.error('Error al enviar formulario de contacto:', error);
+            showContactMessage('Error de conexión. Por favor verifica tu conexión e intenta nuevamente.', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar';
+        }
+    }
+
+    /** Muestra mensaje en el formulario de contacto */
+    function showContactMessage(message, type) {
+        const messageDiv = document.getElementById('contactFormMessage');
+        if (!messageDiv) return;
+
+        messageDiv.style.display = 'block';
+        messageDiv.textContent = message;
+        messageDiv.style.padding = '0.75rem';
+        messageDiv.style.borderRadius = '8px';
+        
+        if (type === 'success') {
+            messageDiv.style.backgroundColor = '#c6f6d5';
+            messageDiv.style.color = '#22543d';
+            messageDiv.style.border = '1px solid #9ae6b4';
+        } else {
+            messageDiv.style.backgroundColor = '#fed7d7';
+            messageDiv.style.color = '#742a2a';
+            messageDiv.style.border = '1px solid #fc8181';
+        }
     }
 
     /** Cierra el modal (Login o Contacto) */

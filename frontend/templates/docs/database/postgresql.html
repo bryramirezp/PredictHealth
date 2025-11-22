@@ -88,20 +88,219 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🐘</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🐘</span>
                 PostgreSQL
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Base de datos PostgreSQL 15 para almacenamiento persistente de datos de salud. Esquema normalizado en Tercera Forma Normal (3NF) con procedimientos almacenados, vistas materializadas y optimizaciones de rendimiento.
+            </p>
+
+            <h2>Configuración</h2>
+            <div>
+                <span class="badge">PostgreSQL 15</span>
+                <span class="badge">Base de datos: predicthealth_db</span>
+                <span class="badge">Usuario: predictHealth_user</span>
+                <span class="badge">Puerto: 5432</span>
+                <span class="badge">uuid-ossp</span>
+                <span class="badge">pgcrypto</span>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Esquema de Base de Datos</h2>
+            <p>
+                Esquema normalizado 3NF con separación clara de responsabilidades:
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-users" style="color: #4dd9d6;"></i> Autenticación</h4>
+                    <p>Tabla <code>users</code> centralizada con referencia polimórfica mediante <code>user_type</code> y <code>reference_id</code>.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-user-md" style="color: #667eea;"></i> Entidades Médicas</h4>
+                    <p><code>doctors</code>, <code>patients</code>, <code>medical_institutions</code>, <code>health_profiles</code>, <code>doctor_specialties</code>.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-envelope" style="color: #f59e0b;"></i> Contacto Normalizado</h4>
+                    <p><code>emails</code>, <code>phones</code>, <code>addresses</code> con soporte polimórfico para múltiples entidades.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-book-medical" style="color: #8b5cf6;"></i> Datos Médicos</h4>
+                    <p><code>medical_conditions</code>, <code>medications</code>, <code>allergies</code> con relaciones many-to-many.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-shield-alt" style="color: #10b981;"></i> Sistema CMS</h4>
+                    <p><code>cms_users</code>, <code>cms_roles</code>, <code>cms_permissions</code> para control de acceso basado en roles.</p>
+                </div>
             </div>
+
+            <h2>Relaciones Clave</h2>
+            <div class="tech-section">
+                <h3>Estructura de Relaciones</h3>
+                <ul>
+                    <li><code>users (1) ──── (1)</code> entidades de dominio (patients/doctors/institutions)</li>
+                    <li><code>patients (N) ──── (1) doctors</code> - Asociación médica obligatoria</li>
+                    <li><code>patients (N) ──── (1) medical_institutions</code> - Asociación institucional obligatoria</li>
+                    <li><code>patients (1) ──── (1) health_profiles</code> - Perfil de salud único por paciente</li>
+                    <li><code>doctors (N) ──── (1) medical_institutions</code> - Doctores vinculados a institución</li>
+                    <li><code>doctors (N) ──── (1) doctor_specialties</code> - Especialidades médicas</li>
+                </ul>
+
+                <h3>Constraints de Negocio</h3>
+                <ul>
+                    <li>Pacientes deben tener doctor E institución (constraint obligatorio)</li>
+                    <li>Doctores deben estar vinculados a una institución (constraint obligatorio)</li>
+                    <li>Perfiles de salud son 1:1 con pacientes (constraint único)</li>
+                    <li>Validación de contacto de emergencia</li>
+                    <li>Validación de lógica de consumo de tabaco/alcohol</li>
+                </ul>
+            </div>
+
+            <h2>Funcionalidades de Base de Datos</h2>
+
+            <div class="tech-section">
+                <h3>Procedimientos Almacenados</h3>
+                <ul>
+                    <li><code>sp_create_patient_with_profile</code> - Registro atómico de paciente con creación de perfil de salud</li>
+                    <li><code>sp_get_patient_stats_by_month</code> - Reportes KPI de métricas de pacientes</li>
+                    <li><code>sp_get_doctor_performance_stats</code> - Métricas de rendimiento de doctores</li>
+                    <li><code>sp_get_institution_analytics</code> - Análisis y estadísticas a nivel de institución</li>
+                </ul>
+
+                <h3>Funciones Helper</h3>
+                <ul>
+                    <li><code>get_primary_email(entity_type, entity_id)</code> - Obtiene email primario</li>
+                    <li><code>add_entity_email(entity_type, entity_id, email, is_primary)</code> - Agrega email</li>
+                    <li><code>get_primary_phone(entity_type, entity_id)</code> - Obtiene teléfono primario</li>
+                    <li><code>add_entity_phone(entity_type, entity_id, phone, is_primary)</code> - Agrega teléfono</li>
+                    <li><code>get_primary_address(entity_type, entity_id)</code> - Obtiene dirección primaria</li>
+                    <li><code>add_entity_address(entity_type, entity_id, address_data)</code> - Agrega dirección</li>
+                </ul>
+
+                <h3>Vistas Materializadas</h3>
+                <ul>
+                    <li><code>vw_patient_demographics</code> - Datos demográficos con asociaciones</li>
+                    <li><code>vw_doctor_performance</code> - Métricas de rendimiento de doctores</li>
+                    <li><code>vw_monthly_registrations</code> - Análisis de registros mensuales</li>
+                    <li><code>vw_health_condition_stats</code> - Estadísticas de salud poblacional</li>
+                    <li><code>vw_dashboard_overview</code> - Métricas de resumen general</li>
+                    <li><code>vw_doctor_specialty_distribution</code> - Distribución de especialidades</li>
+                    <li><code>vw_geographic_distribution</code> - Distribución geográfica</li>
+                    <li><code>vw_health_condition_prevalence</code> - Prevalencia de condiciones</li>
+                    <li><code>vw_patient_validation_status</code> - Estado de validación de pacientes</li>
+                    <li><code>vw_relationship_integrity</code> - Monitoreo de integridad de relaciones</li>
+                </ul>
+            </div>
+
+            <h2>Optimización de Rendimiento</h2>
+            <p>
+                Estrategias de optimización implementadas:
+            </p>
+
+            <div class="tech-section">
+                <h3>Índices Estratégicos</h3>
+                <ul>
+                    <li>Índices parciales en registros activos para tablas consultadas frecuentemente</li>
+                    <li>Índices compuestos para operaciones de join complejas</li>
+                    <li>Índices de claves foráneas para rendimiento de integridad referencial</li>
+                    <li>Índices especializados para filtrado de condiciones de salud</li>
+                </ul>
+
+                <h3>Planes de Consulta</h3>
+                <ul>
+                    <li>Optimización mediante índices estratégicos</li>
+                    <li>Vistas materializadas para consultas frecuentes</li>
+                    <li>Procedimientos almacenados para operaciones complejas</li>
+                </ul>
+            </div>
+
+            <h2>Integridad de Datos</h2>
+            <div class="tech-section">
+                <h3>Constraints de Lógica de Negocio</h3>
+                <ul>
+                    <li>Validación de asociación de paciente (doctor E institución)</li>
+                    <li>Validación de consistencia de contacto de emergencia</li>
+                    <li>Validación de lógica de consumo de tabaco/alcohol</li>
+                    <li>Constraints de validación de edad y formato</li>
+                </ul>
+
+                <h3>Integridad Referencial</h3>
+                <ul>
+                    <li>Claves foráneas suaves para asociaciones flexibles</li>
+                    <li>Operaciones en cascada para datos dependientes</li>
+                    <li>Constraints únicos en campos críticos de negocio</li>
+                </ul>
+            </div>
+
+            <h2>Triggers Automatizados</h2>
+            <p>
+                Función <code>trigger_set_timestamp()</code> actualiza automáticamente <code>updated_at</code> en todas las tablas relevantes:
+            </p>
+
+            <div class="tech-section">
+                <h3>Tablas con Triggers</h3>
+                <ul>
+                    <li><code>patients</code>, <code>doctors</code>, <code>medical_institutions</code></li>
+                    <li><code>health_profiles</code>, <code>users</code>, <code>cms_users</code></li>
+                    <li><code>emails</code>, <code>phones</code>, <code>addresses</code></li>
+                    <li><code>countries</code>, <code>regions</code></li>
+                    <li><code>medical_conditions</code>, <code>medications</code>, <code>allergies</code></li>
+                </ul>
+            </div>
+
+            <h2>Inicialización</h2>
+            <p>
+                Script <code>init.sql</code> se ejecuta automáticamente al iniciar el contenedor:
+            </p>
+
+            <div class="tech-section">
+                <h3>Proceso de Inicialización</h3>
+                <ol>
+                    <li>Creación de extensiones (uuid-ossp, pgcrypto)</li>
+                    <li>Creación de esquema normalizado 3NF completo</li>
+                    <li>Constraints y validación de lógica de negocio</li>
+                    <li>Índices estratégicos para optimización</li>
+                    <li>Triggers automatizados para gestión de timestamps</li>
+                    <li>Procedimientos almacenados y funciones helper</li>
+                    <li>Vistas materializadas para reportes</li>
+                    <li>Datos de semilla (especialidades, roles, usuarios de prueba)</li>
+                </ol>
+            </div>
+
+            <h2>Integración con Microservicios</h2>
+            <p>
+                La base de datos sirve a múltiples microservicios con patrones de acceso optimizados:
+            </p>
+
+            <div class="tech-section">
+                <h3>Servicios que Utilizan PostgreSQL</h3>
+                <ul>
+                    <li><strong>auth-jwt-service:</strong> Gestión de tokens y autenticación mediante tabla <code>users</code></li>
+                    <li><strong>service-patients:</strong> Gestión del ciclo de vida de pacientes con perfiles de salud</li>
+                    <li><strong>service-doctors:</strong> Perfiles de doctores, especialidades y análisis de rendimiento</li>
+                    <li><strong>service-institutions:</strong> Gestión de instituciones médicas y análisis geográfico</li>
+                    <li><strong>cms-backend:</strong> Funciones administrativas con permisos basados en roles</li>
+                    <li><strong>backend-flask:</strong> API Gateway que orquesta acceso a todos los servicios</li>
+                </ul>
+
+                <h3>Connection Pooling</h3>
+                <ul>
+                    <li>SimpleConnectionPool con 1-10 conexiones por servicio</li>
+                    <li>Context Managers para gestión automática de conexiones</li>
+                    <li>DictCursor para resultados como diccionarios</li>
+                </ul>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                El esquema PostgreSQL está diseñado para alta disponibilidad, integridad de datos y rendimiento mediante normalización, índices estratégicos y vistas materializadas.
+            </p>
         </main>
     </div>
 </body>

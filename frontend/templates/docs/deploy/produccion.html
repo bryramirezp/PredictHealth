@@ -88,20 +88,180 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🚀</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🚀</span>
                 Producción
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Configuración y mejores prácticas para despliegue de PredictHealth en producción. Incluye seguridad, monitoreo, escalabilidad y mantenimiento.
+            </p>
+
+            <h2>Configuración de Producción</h2>
+            <p>
+                Variables de entorno críticas para producción:
+            </p>
+
+            <div class="tech-section">
+                <h3>Seguridad</h3>
+                <ul>
+                    <li><code>SECRET_KEY</code> - Clave secreta fuerte generada aleatoriamente</li>
+                    <li><code>JWT_SECRET_KEY</code> - Clave secreta para firmar tokens JWT</li>
+                    <li><code>FLASK_ENV=production</code> - Modo producción (debug deshabilitado)</li>
+                    <li><code>DEBUG=False</code> - Deshabilitar modo debug</li>
+                </ul>
+
+                <h3>Base de Datos</h3>
+                <ul>
+                    <li><code>DATABASE_URL</code> - Cadena de conexión PostgreSQL con credenciales seguras</li>
+                    <li><code>REDIS_URL</code> - Cadena de conexión Redis</li>
+                    <li>Credenciales de base de datos almacenadas en secretos (no en código)</li>
+                </ul>
+
+                <h3>CORS</h3>
+                <ul>
+                    <li><code>CORS_ORIGINS</code> - Orígenes permitidos restringidos a dominios de producción</li>
+                    <li>No usar <code>*</code> en producción</li>
+                </ul>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Seguridad en Producción</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-lock" style="color: #4dd9d6;"></i> HTTPS</h4>
+                    <p>Habilitar cifrado SSL/TLS con certificados válidos. Cookies Secure=True con HTTPS.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-key" style="color: #667eea;"></i> Secretos</h4>
+                    <p>Nunca comprometer datos sensibles. Usar gestores de secretos (AWS Secrets Manager, HashiCorp Vault).</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-shield-alt" style="color: #f59e0b;"></i> Autenticación</h4>
+                    <p>JWT stateless tokens, validación Redis, hashing bcrypt, control de acceso basado en roles.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-ban" style="color: #8b5cf6;"></i> Protección API</h4>
+                    <p>CORS restrictivo, validación de entrada, cookies HttpOnly/SameSite, validación JWT en cada request.</p>
+                </div>
             </div>
+
+            <h2>Monitoreo y Logging</h2>
+            <div class="tech-section">
+                <h3>Health Checks</h3>
+                <p>
+                    Todos los servicios exponen endpoints de health check:
+                </p>
+                <ul>
+                    <li><code>GET /health</code> - Estado de salud del servicio</li>
+                    <li><code>GET /api/v1/health</code> - Estado de salud de API</li>
+                </ul>
+
+                <h3>Logging</h3>
+                <p>
+                    Configuración de logging en producción:
+                </p>
+                <ul>
+                    <li><code>LOG_LEVEL=INFO</code> o <code>WARNING</code> (no DEBUG en producción)</li>
+                    <li>Logging estructurado con formato JSON</li>
+                    <li>Registro de acciones de usuario, eventos de seguridad y errores del sistema</li>
+                    <li>Integración con sistemas de logging centralizados (ELK, CloudWatch, etc.)</li>
+                </ul>
+
+                <h3>Métricas</h3>
+                <ul>
+                    <li>Tiempos de respuesta de servicios</li>
+                    <li>Tasas de error y éxito</li>
+                    <li>Uso de recursos (CPU, memoria)</li>
+                    <li>Conectividad de base de datos y Redis</li>
+                </ul>
+            </div>
+
+            <h2>Escalabilidad</h2>
+            <div class="tech-section">
+                <h3>Escalado Horizontal</h3>
+                <p>
+                    La arquitectura de microservicios permite escalado horizontal:
+                </p>
+                <ul>
+                    <li>Múltiples instancias de microservicios detrás de load balancer</li>
+                    <li>API Gateway puede escalar independientemente</li>
+                    <li>PostgreSQL con read replicas para consultas de solo lectura</li>
+                    <li>Redis cluster para alta disponibilidad</li>
+                </ul>
+
+                <h3>Optimización de Base de Datos</h3>
+                <ul>
+                    <li>Connection pooling configurado apropiadamente</li>
+                    <li>Índices estratégicos para consultas frecuentes</li>
+                    <li>Vistas materializadas para reportes</li>
+                    <li>Query optimization y análisis de planes de ejecución</li>
+                </ul>
+            </div>
+
+            <h2>Backup y Recuperación</h2>
+            <div class="tech-section">
+                <h3>Backup de Base de Datos</h3>
+                <ul>
+                    <li>Backups automáticos regulares de PostgreSQL</li>
+                    <li>Retención de backups según políticas de negocio</li>
+                    <li>Backups incrementales y completos</li>
+                    <li>Pruebas regulares de restauración</li>
+                </ul>
+
+                <h3>Backup de Configuración</h3>
+                <ul>
+                    <li>Versionado de variables de entorno</li>
+                    <li>Documentación de configuraciones</li>
+                    <li>Backup de secretos en gestores seguros</li>
+                </ul>
+            </div>
+
+            <h2>Mejores Prácticas</h2>
+            <div class="tech-section">
+                <h3>Despliegue</h3>
+                <ul>
+                    <li>Actualizaciones regulares de dependencias</li>
+                    <li>Despliegues con zero-downtime (blue-green, canary)</li>
+                    <li>Rollback plan documentado</li>
+                    <li>Testing en staging antes de producción</li>
+                </ul>
+
+                <h3>Mantenimiento</h3>
+                <ul>
+                    <li>Monitoreo continuo de salud del sistema</li>
+                    <li>Auditoría de acceso y acciones de usuario</li>
+                    <li>Revisión regular de logs de seguridad</li>
+                    <li>Actualizaciones de seguridad aplicadas oportunamente</li>
+                </ul>
+
+                <h3>Cumplimiento</h3>
+                <ul>
+                    <li>Estándares de datos de salud (HIPAA, GDPR donde aplique)</li>
+                    <li>Privacidad del paciente y acceso autorizado</li>
+                    <li>Registro de auditoría para regulaciones</li>
+                    <li>Encriptación de datos sensibles en tránsito y reposo</li>
+                </ul>
+            </div>
+
+            <h2>Configuración de Servicios</h2>
+            <div>
+                <span class="badge">FLASK_ENV=production</span>
+                <span class="badge">DEBUG=False</span>
+                <span class="badge">HTTPS habilitado</span>
+                <span class="badge">Logging estructurado</span>
+                <span class="badge">Health checks</span>
+                <span class="badge">Backups automáticos</span>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                El despliegue en producción requiere configuración cuidadosa de seguridad, monitoreo y escalabilidad para garantizar disponibilidad y protección de datos de salud.
+            </p>
         </main>
     </div>
 </body>

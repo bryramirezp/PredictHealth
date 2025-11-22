@@ -88,20 +88,246 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🐍</span>
-                Flask API
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🐍</span>
+                Flask API Gateway
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Flask-based API Gateway y web server que actúa como punto de entrada único para todas las peticiones del frontend. Maneja renderizado de páginas HTML, enrutamiento a microservicios y autenticación JWT.
+            </p>
+
+            <h2>Componentes Principales</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-route" style="color: #4dd9d6;"></i> API Gateway</h4>
+                    <p>Enrutamiento HTTP a microservicios con inyección automática de tokens JWT en headers.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-globe" style="color: #667eea;"></i> Web Server</h4>
+                    <p>Servidor de páginas HTML, templates Jinja2 y archivos estáticos (CSS, JS, imágenes).</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-shield-alt" style="color: #f59e0b;"></i> JWT Middleware</h4>
+                    <p>Validación de autenticación JWT con Redis para gestión de sesiones y tokens.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-exchange-alt" style="color: #8b5cf6;"></i> Proxy Service</h4>
+                    <p>Proxy inteligente con lógica de reintentos (backoff exponencial, 3 intentos, 1s base delay).</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-user-shield" style="color: #10b981;"></i> Frontend Controller</h4>
+                    <p>Renderizado server-side de páginas con control de acceso basado en roles.</p>
+                </div>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Stack Tecnológico</h2>
+            <div>
+                <span class="badge">Flask 2.3.3</span>
+                <span class="badge">JWT</span>
+                <span class="badge">Redis</span>
+                <span class="badge">Flask-CORS</span>
+                <span class="badge">Jinja2</span>
+                <span class="badge">PyJWT 2.8.0</span>
+                <span class="badge">requests 2.31.0</span>
             </div>
+
+            <h2>Estructura del Proyecto</h2>
+            <p>
+                Organización modular con separación de responsabilidades:
+            </p>
+
+            <div class="folders-section">
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-folder" style="color: #4dd9d6;"></i>
+                        <strong>app/core/</strong>
+                    </div>
+                    <p class="folder-description">Configuración centralizada (config.py).</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-folder" style="color: #667eea;"></i>
+                        <strong>app/api/v1/</strong>
+                    </div>
+                    <p class="folder-description">Blueprints de API: gateway.py (proxy), auth.py, web_controller.py, main.py.</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-folder" style="color: #f59e0b;"></i>
+                        <strong>app/middleware/</strong>
+                    </div>
+                    <p class="folder-description">JWT middleware con validación Redis (jwt_middleware.py).</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-folder" style="color: #8b5cf6;"></i>
+                        <strong>app/services/</strong>
+                    </div>
+                    <p class="folder-description">Proxy service, health service, logging service.</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-folder" style="color: #10b981;"></i>
+                        <strong>app/controllers/</strong>
+                    </div>
+                    <p class="folder-description">Frontend controller para rutas de dashboards.</p>
+                </div>
+            </div>
+
+            <h2>API Gateway</h2>
+            <p>
+                Enrutamiento automático a microservicios basado en patrones de URL:
+            </p>
+
+            <div class="tech-section">
+                <h3>Configuración de Microservicios</h3>
+                <pre><code>MICROSERVICES = {
+    'jwt': 'http://servicio-auth-jwt:8003',
+    'doctors': 'http://servicio-doctores:8000',
+    'patients': 'http://servicio-pacientes:8004',
+    'institutions': 'http://servicio-instituciones:8002',
+    'admins': 'http://servicio-admins:8006'
+}</code></pre>
+
+                <h3>Características</h3>
+                <ul>
+                    <li>Enrutamiento automático según URL pattern</li>
+                    <li>Inyección de JWT Bearer token en headers Authorization</li>
+                    <li>Reintentos con backoff exponencial (3 intentos, 1s base delay)</li>
+                    <li>Timeouts configurables (10s default)</li>
+                    <li>Manejo automático del prefijo <code>/api/v1</code> para servicios de dominio</li>
+                </ul>
+            </div>
+
+            <h2>Endpoints Principales</h2>
+
+            <div class="tech-section">
+                <h3>API Gateway (<code>/api/v1/</code>)</h3>
+                <ul>
+                    <li><code>GET/POST/PUT/DELETE /api/v1/auth/&lt;path&gt;</code> - Proxy a servicio de autenticación</li>
+                    <li><code>GET/POST/PUT/DELETE /api/v1/patients/&lt;path&gt;</code> - Proxy a servicio de pacientes (protegido)</li>
+                    <li><code>GET/POST/PUT/DELETE /api/v1/doctors/&lt;path&gt;</code> - Proxy a servicio de doctores (protegido)</li>
+                    <li><code>GET/POST/PUT/DELETE /api/v1/institutions/&lt;path&gt;</code> - Proxy a servicio de instituciones (protegido)</li>
+                </ul>
+
+                <h3>Web API (<code>/api/web/</code>)</h3>
+                <ul>
+                    <li><code>POST /api/web/auth/login</code> - Login genérico (auto-detecta tipo de usuario)</li>
+                    <li><code>POST /api/web/auth/logout</code> - Logout y revocación de token</li>
+                    <li><code>GET /api/web/auth/session/validate</code> - Validar sesión activa</li>
+                    <li><code>GET /api/web/patient/dashboard</code> - Dashboard de paciente (protegido)</li>
+                    <li><code>GET /api/web/doctor/dashboard</code> - Dashboard de doctor (protegido)</li>
+                    <li><code>GET /api/web/institution/dashboard</code> - Dashboard de institución (protegido)</li>
+                </ul>
+
+                <h3>Páginas Web</h3>
+                <ul>
+                    <li><code>GET /</code> - Landing page</li>
+                    <li><code>GET /patient/dashboard</code> - Dashboard de paciente (protegido, rol patient)</li>
+                    <li><code>GET /doctor/dashboard</code> - Dashboard de doctor (protegido, rol doctor)</li>
+                    <li><code>GET /institution/dashboard</code> - Dashboard de institución (protegido, rol institution)</li>
+                    <li><code>GET /docs</code> - Documentación</li>
+                </ul>
+            </div>
+
+            <h2>JWT Middleware</h2>
+            <p>
+                Sistema de autenticación basado en tokens JWT con validación contra Redis:
+            </p>
+
+            <div class="tech-section">
+                <h3>Decoradores</h3>
+                <pre><code>from app.middleware.jwt_middleware import require_session, require_auth
+
+@require_session
+def protected_route():
+    user = g.current_user
+    return jsonify(user)
+
+@require_auth(required_user_type='doctor')
+def doctor_only_route():
+    return jsonify({'message': 'Doctor access'})</code></pre>
+
+                <h3>Almacenamiento de Sesiones</h3>
+                <ul>
+                    <li>Tokens almacenados en Redis con formato: <code>access_token:{jwt_token}</code></li>
+                    <li>TTL: 15 minutos (900 segundos) por defecto</li>
+                    <li>Cookie HTTP-only: <code>predicthealth_jwt</code></li>
+                    <li>Configuración: HttpOnly, SameSite=Lax, Path=/</li>
+                </ul>
+            </div>
+
+            <h2>Proxy Service</h2>
+            <p>
+                Servicio de proxy inteligente con manejo de errores y reintentos:
+            </p>
+
+            <div class="tech-section">
+                <h3>Características</h3>
+                <ul>
+                    <li>Manejo automático del prefijo <code>/api/v1</code> para servicios de dominio</li>
+                    <li>Inyección de JWT Bearer token en todos los requests (desde <code>g.token</code> o cookie)</li>
+                    <li>Backoff exponencial en reintentos (3 intentos, 1s base delay)</li>
+                    <li>Timeouts configurables (10s default)</li>
+                    <li>Manejo completo de errores con logging</li>
+                </ul>
+
+                <h3>Uso</h3>
+                <pre><code>from app.services.proxy_service import proxy_service
+
+# Proxy genérico
+response = proxy_service.proxy_get('doctors', '/api/v1/doctors/')
+response = proxy_service.proxy_post('patients', '/api/v1/patients/', data)
+
+# Métodos específicos por servicio
+response = proxy_service.call_doctors_service('GET', '/api/v1/doctors/')
+response = proxy_service.call_patients_service('POST', '/api/v1/patients/', data)</code></pre>
+            </div>
+
+            <h2>Configuración</h2>
+            <p>
+                Variables de entorno principales:
+            </p>
+
+            <div class="tech-section">
+                <h3>JWT y Autenticación</h3>
+                <ul>
+                    <li><code>JWT_SECRET_KEY</code> - Clave secreta para firmar tokens</li>
+                    <li><code>JWT_ALGORITHM</code> - Algoritmo de firma (HS256)</li>
+                    <li><code>REDIS_URL</code> - URL de conexión a Redis</li>
+                </ul>
+
+                <h3>Microservicios</h3>
+                <ul>
+                    <li><code>JWT_SERVICE_URL</code> - URL del servicio de autenticación</li>
+                    <li><code>DOCTOR_SERVICE_URL</code> - URL del servicio de doctores</li>
+                    <li><code>PATIENT_SERVICE_URL</code> - URL del servicio de pacientes</li>
+                    <li><code>INSTITUTION_SERVICE_URL</code> - URL del servicio de instituciones</li>
+                </ul>
+
+                <h3>Flask</h3>
+                <ul>
+                    <li><code>SECRET_KEY</code> - Clave secreta de Flask</li>
+                    <li><code>FLASK_ENV</code> - Entorno (development/production)</li>
+                    <li><code>CORS_ORIGINS</code> - Orígenes permitidos para CORS</li>
+                </ul>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                El API Gateway proporciona un punto de entrada único que simplifica la comunicación del frontend con los microservicios y centraliza la autenticación.
+            </p>
         </main>
     </div>
 </body>

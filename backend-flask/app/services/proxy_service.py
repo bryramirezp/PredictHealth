@@ -68,9 +68,25 @@ class ProxyService:
         headers = {}
 
         # JWT token como Bearer en TODAS las solicitudes
-        if hasattr(g, 'token') and g.token:
-            headers['Authorization'] = f'Bearer {g.token}'
+        # Buscar token en g.token_id (usado por middleware) o g.token (compatibilidad)
+        token = None
+        if hasattr(g, 'token_id') and g.token_id:
+            token = g.token_id
+        elif hasattr(g, 'token') and g.token:
+            token = g.token
+        
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
             logger.info("🔑 JWT Bearer token agregado a headers")
+            # Verificar contenido del token antes de enviarlo
+            try:
+                payload = self._decode_jwt_token(token)
+                if payload:
+                    logger.debug(f"   Token payload - user_type: {payload.get('user_type')}, metadata: {payload.get('metadata')}")
+                else:
+                    logger.warning("   ⚠️ No se pudo decodificar token para verificación")
+            except Exception as e:
+                logger.warning(f"   ⚠️ Error decodificando token para verificación: {e}")
         else:
             logger.warning("⚠️ No hay token JWT disponible para autenticación")
 
@@ -190,6 +206,20 @@ class ProxyService:
             headers.setdefault('User-Agent', 'PredictHealth-API-Gateway/1.0')
             
             logger.info(f"🔄 Proxy {method} request a {service}: {url}")
+            
+            # Logging adicional para debugging de autenticación
+            if 'Authorization' in headers:
+                auth_header = headers['Authorization']
+                if auth_header.startswith('Bearer '):
+                    token = auth_header.split(' ', 1)[1]
+                    try:
+                        payload = self._decode_jwt_token(token)
+                        if payload:
+                            logger.debug(f"   🔍 Token payload enviado - user_type: {payload.get('user_type')}, metadata: {payload.get('metadata')}")
+                        else:
+                            logger.warning(f"   ⚠️ No se pudo decodificar token para verificación")
+                    except Exception as e:
+                        logger.warning(f"   ⚠️ Error decodificando token para verificación: {e}")
             
             # Hacer request con reintentos
             last_exception = None

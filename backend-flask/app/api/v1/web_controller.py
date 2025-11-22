@@ -175,10 +175,11 @@ def generic_login():
 
 @web_bp.route('/auth/session/validate', methods=['GET'])
 def validate_session():
-    """Validar sesión JWT activa"""
+    """Validar sesión JWT activa (acepta token en header Authorization o cookie)"""
     try:
-        # Obtener token de la cookie
-        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+        # Obtener token del header Authorization o cookie
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request()
 
         if not token:
             return web_controller._handle_auth_error("No active session", 401)
@@ -210,7 +211,8 @@ def get_token():
     try:
         # El token ya está validado por el decorador @require_auth()
         current_user = get_current_user()
-        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request()
 
         if not token:
             return web_controller._handle_auth_error("No token found", 401)
@@ -230,10 +232,11 @@ def get_token():
 
 @web_bp.route('/auth/logout', methods=['POST'])
 def generic_logout():
-    """Endpoint genérico para cerrar sesión."""
+    """Endpoint genérico para cerrar sesión (acepta token en header Authorization o cookie)"""
     try:
-        # Get token from cookie before clearing it
-        token = request.cookies.get('predicthealth_jwt')  # ← FIXED: match frontend
+        # Get token from header or cookie before clearing it
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request()
 
         # Remove token from Redis if it exists
         if token and jwt_middleware.redis_client:
@@ -246,16 +249,12 @@ def generic_logout():
 
         from flask import make_response
         resp = make_response(web_controller._handle_success({}, "Logout exitoso"))
-        # Instruye al navegador para que elimine la cookie
-        resp.set_cookie('predicthealth_jwt', '', expires=0, httponly=True, samesite='Lax')  # ← FIXED: match frontend
-        logger.info("✅ Logout successful, session cookie cleared and token removed from Redis")
+        # Instruye al navegador para que elimine la cookie (si existe)
+        resp.set_cookie('predicthealth_jwt', '', expires=0, httponly=True, samesite='Lax')
+        logger.info("✅ Logout successful, token removed from Redis")
         return resp
     except Exception as e:
         logger.error(f"Error en generic_logout: {str(e)}")
-        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
-
-    except Exception as e:
-        logger.error(f"Error en generic_login: {str(e)}")
         return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
 
 
@@ -415,10 +414,14 @@ def patient_dashboard():
 
         logger.info(f"📊 Solicitando dashboard para paciente: {patient_id}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-patients para obtener datos del dashboard
         dashboard_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/patients/{patient_id}/dashboard",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
+            "GET", f"/api/v1/patients/{patient_id}/dashboard",
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if dashboard_response.get('status_code') == 200:
@@ -451,10 +454,14 @@ def patient_medical_record():
 
         logger.info(f"📋 Solicitando expediente médico para paciente: {patient_id}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-patients
         medical_record_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/patients/{patient_id}/medical-record",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
+            "GET", f"/api/v1/patients/{patient_id}/medical-record",
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if medical_record_response.get('status_code') == 200:
@@ -486,10 +493,14 @@ def patient_care_team():
 
         logger.info(f"👨‍⚕️ Solicitando equipo médico para paciente: {patient_id}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-patients
         care_team_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/patients/{patient_id}/care-team",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
+            "GET", f"/api/v1/patients/{patient_id}/care-team",
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if care_team_response.get('status_code') == 200:
@@ -521,29 +532,26 @@ def patient_profile():
 
         logger.info(f"👤 Solicitando perfil para paciente: {patient_id}")
 
-        # Obtener información básica del paciente
-        basic_info_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/patients/{patient_id}/basic-info",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}  # ← FIXED: match frontend
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
+        # Obtener perfil completo del paciente desde el microservicio
+        profile_response = web_controller.proxy_service.call_patients_service(
+            "GET", f"/api/v1/patients/{patient_id}/profile",
+            headers={"Authorization": f"Bearer {token}"}
         )
 
-        if basic_info_response.get('status_code') != 200:
-            logger.error(f"❌ Error obteniendo información básica: {basic_info_response}")
+        if profile_response.get('status_code') != 200:
+            logger.error(f"❌ Error obteniendo perfil: {profile_response}")
             return web_controller._handle_auth_error(
-                basic_info_response.get('data', {}).get('detail', 'Error obteniendo perfil'),
-                basic_info_response.get('status_code', 500)
+                profile_response.get('data', {}).get('detail', 'Error obteniendo perfil'),
+                profile_response.get('status_code', 500)
             )
 
-        # Aquí podríamos agregar más llamadas para obtener emails, teléfonos, direcciones
-        # Por ahora devolvemos la información básica
-        profile_data = {
-            "basic_info": basic_info_response['data'],
-            "contact_info": {
-                "emails": [],  # TODO: Implementar cuando tengamos tabla de emails normalizada
-                "phones": [],  # TODO: Implementar cuando tengamos tabla de phones normalizada
-                "addresses": []  # TODO: Implementar cuando tengamos tabla de addresses normalizada
-            }
-        }
+        # Pasar la respuesta del microservicio directamente sin transformar
+        # El microservicio retorna: {personal_info, emails, phones, addresses}
+        profile_data = profile_response['data']
 
         logger.info("✅ Perfil del paciente obtenido exitosamente")
         return jsonify({
@@ -566,10 +574,14 @@ def doctor_dashboard():
         
         logger.info(f"📊 Solicitando dashboard para doctor: {current_user.get('email')}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-doctors para obtener datos del dashboard
         dashboard_response = web_controller.proxy_service.call_doctors_service(
             "GET", "/api/v1/doctors/me/dashboard",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if dashboard_response.get('status_code') == 200:
@@ -601,10 +613,14 @@ def doctor_patients():
         
         logger.info(f"👥 Solicitando lista de pacientes para doctor: {current_user.get('email')}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-doctors para obtener la lista de pacientes
         patients_response = web_controller.proxy_service.call_doctors_service(
             "GET", "/api/v1/doctors/me/patients",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if patients_response.get('status_code') == 200:
@@ -636,10 +652,14 @@ def doctor_patient_medical_record(patient_id):
         
         logger.info(f"📋 Solicitando expediente médico para paciente {patient_id} del doctor: {current_user.get('email')}")
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Llamar al microservicio service-doctors para obtener el expediente médico
         medical_record_response = web_controller.proxy_service.call_doctors_service(
             "GET", f"/api/v1/doctors/me/patients/{patient_id}/medical-record",
-            headers={"Authorization": f"Bearer {request.cookies.get('predicthealth_jwt', '')}"}
+            headers={"Authorization": f"Bearer {token}"}
         )
 
         if medical_record_response.get('status_code') == 200:
@@ -664,36 +684,89 @@ def doctor_patient_medical_record(patient_id):
 @web_bp.route('/institution/dashboard', methods=['GET'])
 @require_auth(required_user_type='institution')
 def institution_dashboard():
-    """Dashboard para instituciones - Ahora usa proxy a service-institutions"""
+    """Dashboard para instituciones - Construye dashboard usando datos de otros endpoints"""
     try:
         # Obtener usuario actual
         current_user = get_current_user()
-        user_id = current_user['user_id']
+        
+        logger.info(f"📊 Solicitando dashboard para institución: {current_user.get('email')}")
 
-        # Log headers para debugging
-        accept_header = request.headers.get('Accept', '')
-        content_type = request.headers.get('Content-Type', '')
-        logger.info(f"🔍 Dashboard request - Accept: '{accept_header}', Content-Type: '{content_type}'")
+        # Verificar que el token tenga reference_id (necesario para el microservicio)
+        metadata = current_user.get('metadata', {})
+        reference_id = metadata.get('reference_id') if isinstance(metadata, dict) else None
+        if not reference_id:
+            reference_id = current_user.get('reference_id')
+        
+        if not reference_id:
+            logger.error(f"❌ Token sin reference_id para institución: {current_user.get('email')}")
+            logger.error(f"   Token metadata: {metadata}")
+            return jsonify({
+                "status": "error",
+                "message": "Token inválido: no se pudo identificar la institución. Por favor, inicie sesión nuevamente."
+            }), 403
 
-        # Usar proxy service para llamar al microservicio de instituciones
-        dashboard_response = web_controller.proxy_service.call_institutions_service(
-            "GET", f"/api/v1/institutions/dashboard",
-            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+        # El proxy service ya agrega automáticamente el token JWT desde g.token_id
+        # Funciona tanto para cookies web como Bearer token de Tkinter
+        
+        # Obtener doctores de la institución
+        doctors_response = web_controller.proxy_service.call_institutions_service(
+            "GET", "/api/v1/institutions/doctors"
         )
-
-        if dashboard_response.get('status_code') == 200:
-            # Devolver respuesta del microservicio
-            logger.info("📤 Devolviendo respuesta del microservicio institutions")
-            return jsonify(dashboard_response['data']), 200
-        else:
-            return web_controller._handle_auth_error(
-                dashboard_response.get('data', {}).get('error', 'Error en microservicio'),
-                dashboard_response.get('status_code', 500)
-            )
+        
+        # Obtener pacientes de la institución
+        patients_response = web_controller.proxy_service.call_institutions_service(
+            "GET", "/api/v1/institutions/patients"
+        )
+        
+        # Manejar errores de los microservicios
+        if doctors_response.get('status_code') not in [200, None]:
+            error_detail = doctors_response.get('data', {})
+            error_message = error_detail.get('detail') or error_detail.get('error', 'Error obteniendo doctores')
+            logger.error(f"❌ Error obteniendo doctores: {error_message}")
+        
+        if patients_response.get('status_code') not in [200, None]:
+            error_detail = patients_response.get('data', {})
+            error_message = error_detail.get('detail') or error_detail.get('error', 'Error obteniendo pacientes')
+            logger.error(f"❌ Error obteniendo pacientes: {error_message}")
+        
+        # Construir dashboard con los datos obtenidos (usar datos vacíos si hay error)
+        doctors_data = []
+        patients_data = []
+        
+        if doctors_response.get('status_code') == 200:
+            doctors_data = doctors_response.get('data', {}).get('doctors', [])
+        
+        if patients_response.get('status_code') == 200:
+            patients_data = patients_response.get('data', {}).get('patients', [])
+        
+        # Calcular estadísticas
+        total_doctors = len(doctors_data)
+        active_doctors = len([d for d in doctors_data if d.get('is_active', True)])
+        total_patients = len(patients_data)
+        verified_patients = len([p for p in patients_data if p.get('is_verified', False)])
+        
+        dashboard_data = {
+            "total_doctors": total_doctors,
+            "active_doctors": active_doctors,
+            "total_patients": total_patients,
+            "verified_patients": verified_patients,
+            "recent_doctors": doctors_data[:5] if doctors_data else [],
+            "recent_patients": patients_data[:5] if patients_data else []
+        }
+        
+        logger.info("✅ Dashboard de institución construido exitosamente")
+        return jsonify({
+            "status": "success",
+            "message": "Dashboard de la institución",
+            "data": dashboard_data
+        }), 200
 
     except Exception as e:
-        logger.error(f"Error en institution_dashboard: {str(e)}")
-        return web_controller._handle_auth_error(f"Error interno: {str(e)}", 500)
+        logger.error(f"❌ Error en institution_dashboard: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "message": f"Error interno del servidor: {str(e)}"
+        }), 500
 
 
 
@@ -711,25 +784,85 @@ def institution_get_doctors():
     try:
         # Obtener usuario actual autenticado
         current_user = get_current_user()
-        user_id = current_user['user_id']
+        
+        logger.info(f"👨‍⚕️ Solicitando doctores para institución: {current_user.get('email')}")
+        
+        # Verificar que el token tenga user_type correcto
+        user_type = current_user.get('user_type')
+        if user_type != 'institution':
+            logger.error(f"❌ user_type incorrecto en token: {user_type}, esperado: institution")
+            logger.error(f"   Token completo: {current_user}")
+            return jsonify({
+                "status": "error",
+                "message": f"Token inválido: tipo de usuario incorrecto ({user_type})"
+            }), 403
 
-        # Usar proxy service para llamar al microservicio de instituciones
+        # Verificar que el token tenga reference_id
+        metadata = current_user.get('metadata', {})
+        reference_id = metadata.get('reference_id') if isinstance(metadata, dict) else None
+        if not reference_id:
+            reference_id = current_user.get('reference_id')
+        
+        if not reference_id:
+            logger.error(f"❌ Token sin reference_id para institución: {current_user.get('email')}")
+            return jsonify({
+                "status": "error",
+                "message": "Token inválido: no se pudo identificar la institución"
+            }), 403
+        
+        logger.info(f"   Token validado - user_type: {user_type}, reference_id: {reference_id}")
+
+        # Decodificar token para verificar su contenido antes de enviarlo
+        import jwt
+        import os
+        token = g.get('token_id')
+        if token:
+            try:
+                jwt_secret = os.getenv('JWT_SECRET_KEY', 'UDEM')
+                jwt_algorithm = os.getenv('JWT_ALGORITHM', 'HS256')
+                decoded_token = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
+                logger.info(f"   Token decodificado - user_type: {decoded_token.get('user_type')}, metadata: {decoded_token.get('metadata')}")
+            except Exception as e:
+                logger.warning(f"   No se pudo decodificar token para verificación: {e}")
+
+        # El proxy service ya agrega automáticamente el token JWT desde g.token_id
+        # Funciona tanto para cookies web como Bearer token de Tkinter
+        # El token JWT generado en login ya incluye metadata.reference_id
         doctors_response = web_controller.proxy_service.call_institutions_service(
-            "GET", f"/api/v1/institutions/doctors",
-            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+            "GET", "/api/v1/institutions/doctors"
         )
 
         if doctors_response.get('status_code') == 200:
-            return jsonify(doctors_response['data']), 200
+            # El microservicio retorna {"doctors": [...]}
+            # Formatear respuesta para el frontend (web y Tkinter)
+            logger.info("✅ Doctores obtenidos exitosamente")
+            return jsonify({
+                "status": "success",
+                "message": "Doctores obtenidos exitosamente",
+                "data": doctors_response.get('data', {})
+            }), 200
         else:
-            return web_controller._handle_auth_error(
-                doctors_response.get('data', {}).get('error', 'Error en microservicio'),
-                doctors_response.get('status_code', 500)
-            )
+            # Manejo de errores mejorado
+            error_detail = doctors_response.get('data', {})
+            error_message = error_detail.get('detail') or error_detail.get('error', 'Error en microservicio')
+            
+            # Si el error es 400/403, probablemente falta reference_id en el token
+            status_code = doctors_response.get('status_code', 500)
+            if status_code in [400, 403]:
+                logger.error(f"❌ Error de autenticación/autorización: {error_message}")
+                logger.error(f"   Token metadata: {current_user.get('metadata', {})}")
+            
+            return jsonify({
+                "status": "error",
+                "message": error_message
+            }), status_code
 
     except Exception as e:
-        logger.error(f"Error en institution_get_doctors: {str(e)}")
-        return web_controller._handle_auth_error(f"Error interno del servidor: {str(e)}", 500)
+        logger.error(f"❌ Error en institution_get_doctors: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"Error interno del servidor: {str(e)}"
+        }), 500
 
 @web_bp.route('/institution/doctors', methods=['POST'])
 @require_auth(required_user_type='institution')
@@ -828,18 +961,29 @@ def institution_get_patients():
         current_user = get_current_user()
         user_id = current_user['user_id']
 
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
         # Usar proxy service para llamar al microservicio de instituciones
+        # El proxy service ya agrega automáticamente el token JWT en Authorization header
         patients_response = web_controller.proxy_service.call_institutions_service(
-            "GET", f"/api/v1/institutions/patients",
-            headers={"X-User-ID": user_id, "X-User-Type": "institution"}
+            "GET", f"/api/v1/institutions/patients"
         )
 
         if patients_response.get('status_code') == 200:
-            return jsonify(patients_response['data']), 200
+            # El microservicio retorna {"patients": [...]}
+            # Formatear respuesta para el frontend
+            return jsonify({
+                "status": "success",
+                "message": "Pacientes obtenidos exitosamente",
+                "data": patients_response.get('data', {})
+            }), 200
         else:
+            logger.error(f"❌ Error del microservicio service-institutions: {patients_response}")
             return jsonify({
                 "status": "error",
-                "message": patients_response.get('data', {}).get('error', 'Error en microservicio')
+                "message": patients_response.get('data', {}).get('detail', patients_response.get('data', {}).get('error', 'Error en microservicio'))
             }), patients_response.get('status_code', 500)
 
     except Exception as e:
@@ -856,13 +1000,18 @@ def institution_get_patient_stats():
         current_user = get_current_user()
         user_id = current_user['user_id']
         
-        # Obtener pacientes de la institución
-        patients_response = web_controller.proxy_service.call_patients_service(
-            "GET", f"/api/v1/pacientes?id_institucion={user_id}",
-            headers={"Authorization": f"Bearer {request.headers.get('Authorization', '').split(' ')[1]}"}
+        # Obtener token del header o cookie para pasarlo a microservicio
+        from app.middleware.jwt_middleware import extract_token_from_request
+        token = extract_token_from_request() or g.get('token_id', '')
+        
+        # Usar el endpoint de service-institutions que ya obtiene pacientes filtrados por institución
+        # El proxy service ya agrega automáticamente el token JWT en Authorization header
+        patients_response = web_controller.proxy_service.call_institutions_service(
+            "GET", f"/api/v1/institutions/patients"
         )
         
         if patients_response.get('status_code') == 200:
+            # El microservicio retorna {"patients": [...]}
             patients_data = patients_response.get('data', {}).get('patients', [])
             
             # Calcular estadísticas

@@ -1,22 +1,23 @@
 # Backend Flask - API Gateway
 
-Flask-based API Gateway and web server for PredictHealth microservices architecture. Acts as the single entry point for frontend requests, handling both HTML page rendering and intelligent routing of API calls to specialized microservices.
+Flask-based API Gateway and web server for PredictHealth microservices architecture. Single entry point for frontend requests handling HTML page rendering and API routing to specialized microservices.
 
 ## Architecture
 
 ### Core Components
 
-- **API Gateway**: Routes HTTP requests to specific microservices
+- **API Gateway**: Routes HTTP requests to specific microservices with JWT token injection
 - **Web Server**: Serves HTML pages, Jinja2 templates, and static files
-- **Session Manager**: Handles JWT authentication with Redis storage
-- **Proxy Service**: Intelligent communication with retries and error handling
+- **JWT Middleware**: Handles JWT authentication with Redis session validation
+- **Proxy Service**: Intelligent proxy with exponential backoff retry logic
+- **Frontend Controller**: Server-side rendered pages with role-based access
 
 ### Technology Stack
 
 - **Framework**: Flask 2.3.3
-- **Authentication**: JWT with custom middleware
-- **Proxy**: Intelligent proxy service with automatic retries
-- **Sessions**: Redis for JWT token storage
+- **Authentication**: JWT with Redis-backed session storage
+- **Proxy**: HTTP proxy with retry logic (3 attempts, exponential backoff)
+- **Sessions**: Redis for JWT token storage and validation
 - **CORS**: Flask-CORS for frontend integration
 - **Templates**: Jinja2 for HTML rendering
 
@@ -33,21 +34,22 @@ backend-flask/
 │   ├── api/
 │   │   └── v1/
 │   │       ├── __init__.py  # API v1 blueprint
-│   │       ├── gateway.py   # Gateway routing
+│   │       ├── gateway.py   # Gateway routing (proxy to microservices)
 │   │       ├── auth.py      # Authentication endpoints
-│   │       ├── health_controller.py  # Health checks
-│   │       ├── main.py      # Main endpoints
-│   │       └── web_controller.py  # Web API endpoints
+│   │       ├── health_controller.py  # Health data endpoints
+│   │       ├── main.py      # Main API endpoints
+│   │       └── web_controller.py  # Web API endpoints (/api/web)
 │   ├── middleware/
+│   │   ├── __init__.py      # Middleware exports
 │   │   └── jwt_middleware.py  # JWT middleware with Redis
 │   ├── services/
 │   │   ├── proxy_service.py  # Intelligent proxy service
-│   │   ├── health_service.py # Health services
+│   │   ├── health_service.py # Health data services
 │   │   └── logging_service.py # Logging services
 │   ├── controllers/
-│   │   └── frontend_controller.py  # Frontend routes
+│   │   └── frontend_controller.py  # Frontend routes (dashboards)
 │   └── utils/
-│       └── client_detector.py # Client detection
+│       └── client_detector.py # Client detection (web/mobile)
 └── frontend/                # Frontend files (copied in build)
     ├── templates/           # Jinja2 templates
     └── static/              # CSS, JS, images
@@ -57,12 +59,13 @@ backend-flask/
 
 ### API Gateway
 
-- Automatic service detection based on URL and user type
-- Automatic JWT Bearer token injection in headers
-- Exponential backoff retry logic for temporary failures
-- Configurable timeouts per service
+- Automatic routing to microservices based on URL pattern
+- JWT Bearer token injection in Authorization headers
+- Exponential backoff retry logic (3 attempts, 1s base delay)
+- Configurable timeouts (10s default)
+- Automatic `/api/v1` prefix handling for domain services
 
-### Microservices
+### Microservices Configuration
 
 ```python
 MICROSERVICES = {
@@ -76,38 +79,70 @@ MICROSERVICES = {
 
 ### Web Server
 
-- Landing page
-- User-specific dashboards
-- Registration and login forms
+- Landing page with login modal
+- Role-based dashboards (patient, doctor, institution)
+- Protected routes with JWT middleware
 - Documentation pages
 
 ### JWT Authentication
 
-- Token validation against Redis
+- Token validation against Redis (`access_token:{jwt_token}`)
+- Cookie-based session management (`predicthealth_jwt`)
+- Secure cookies: HttpOnly, SameSite=Lax
 - Automatic token renewal on usage
-- Secure cookies: HttpOnly, Secure, SameSite
 - Secure logout with Redis token removal
 
 ## Endpoints
 
-### API Endpoints (`/api/v1/`)
+### API Gateway (`/api/v1/`)
+
+#### Gateway Proxy
+- `GET/POST/PUT/DELETE /api/v1/auth/<path>` - Proxy to auth service
+- `GET/POST/PUT/DELETE /api/v1/patients/<path>` - Proxy to patients service (protected)
+- `GET/POST/PUT/DELETE /api/v1/doctors/<path>` - Proxy to doctors service (protected)
+- `GET/POST/PUT/DELETE /api/v1/institutions/<path>` - Proxy to institutions service (protected)
+
+#### Authentication (`/api/v1/auth/`)
+- `POST /api/v1/auth/login` - Generic login with session creation
+- `POST /api/v1/auth/logout` - Logout and token revocation
+- `GET /api/v1/auth/session/validate` - Validate active session
+- `GET /api/v1/auth/jwt/health` - JWT service health check
+
+#### Health (`/api/v1/health`)
+- `GET /api/v1/health` - API Gateway health check
+
+### Web API (`/api/web/`)
 
 #### Authentication
-- `POST /api/v1/auth/login` - Generic login
-- `GET /api/v1/auth/validate` - Validate session
-
-#### Web Controller (`/api/web/`)
+- `POST /api/web/auth/login` - Generic login (auto-detects user type)
 - `POST /api/web/auth/patient/login` - Patient login
 - `POST /api/web/auth/doctor/login` - Doctor login
 - `POST /api/web/auth/institution/login` - Institution login
-- `GET /api/web/patient/dashboard` - Patient dashboard
-- `GET /api/web/doctor/dashboard` - Doctor dashboard
-- `GET /api/web/institution/dashboard` - Institution dashboard
+- `POST /api/web/auth/logout` - Logout
+- `GET /api/web/auth/session/validate` - Validate session
+- `GET /api/web/auth/token` - Get current token (protected)
 
-#### Gateway
-- `GET/POST /api/v1/doctors/*` - Proxy to doctors service
-- `GET/POST /api/v1/patients/*` - Proxy to patients service
-- `GET/POST /api/v1/institutions/*` - Proxy to institutions service
+#### Patient Endpoints (Protected)
+- `GET /api/web/patient/dashboard` - Patient dashboard data
+- `GET /api/web/patient/medical-record` - Medical record
+- `GET /api/web/patient/care-team` - Care team (doctor & institution)
+- `GET /api/web/patient/profile` - Patient profile
+
+#### Doctor Endpoints (Protected)
+- `GET /api/web/doctor/dashboard` - Doctor dashboard data
+- `GET /api/web/doctor/patients` - Doctor's patient list
+- `GET /api/web/doctor/patients/<patient_id>/medical-record` - Patient medical record
+
+#### Institution Endpoints (Protected)
+- `GET /api/web/institution/dashboard` - Institution dashboard
+- `GET /api/web/institution/doctors` - Institution doctors list
+- `POST /api/web/institution/doctors` - Create new doctor
+- `DELETE /api/web/institution/doctors/<doctor_id>` - Delete doctor
+- `GET /api/web/institution/patients` - Institution patients list
+- `GET /api/web/institution/patients/stats` - Patient statistics
+
+#### Contact
+- `POST /api/web/contact` - Contact form submission
 
 ### Web Pages
 
@@ -117,10 +152,20 @@ MICROSERVICES = {
 - `GET /docs` - Documentation
 - `GET /docs/arquitectura` - Architecture documentation
 
-#### Protected
+#### Protected (Role-based)
 - `GET /patient/dashboard` - Patient dashboard
+- `GET /patient/medical-record` - Patient medical record
+- `GET /patient/my-care-team` - Patient care team
+- `GET /patient/profile` - Patient profile
 - `GET /doctor/dashboard` - Doctor dashboard
+- `GET /doctor/patients` - Doctor patient list
+- `GET /doctor/patient-detail/<patient_id>` - Patient detail
+- `GET /doctor/my-institution` - Doctor institution
+- `GET /doctor/profile` - Doctor profile
 - `GET /institution/dashboard` - Institution dashboard
+- `GET /institution/doctors` - Institution doctors
+- `GET /institution/patients` - Institution patients
+- `GET /institution/profile` - Institution profile
 
 ### Health
 - `GET /health` - Service health check
@@ -164,7 +209,7 @@ CORS_ORIGINS=http://localhost:5000,http://localhost:3000
 # Install dependencies
 pip install -r requirements.txt
 
-# Set environment variables (create .env file)
+# Set environment variables
 cp .env.example .env
 
 # Run application
@@ -204,8 +249,8 @@ services:
 
 ### Features
 
-- Automatic `/api/v1` prefix handling for domain services
-- JWT Bearer token injection in all requests
+- Automatic `/api/v1` prefix handling for domain microservices
+- JWT Bearer token injection in all requests (from `g.token_id` set by middleware)
 - Exponential backoff retry (3 attempts, 1s base delay)
 - Configurable timeouts (10s default)
 - Comprehensive error handling
@@ -215,15 +260,18 @@ services:
 ```python
 from app.services.proxy_service import proxy_service
 
-# Proxy GET request
+# Generic proxy methods
 response = proxy_service.proxy_get('doctors', '/api/v1/doctors/')
-
-# Proxy POST request
 response = proxy_service.proxy_post('patients', '/api/v1/patients/', data={'name': 'John'})
 
 # Service-specific methods
 response = proxy_service.call_doctors_service('GET', '/api/v1/doctors/')
 response = proxy_service.call_patients_service('POST', '/api/v1/patients/', data)
+response = proxy_service.call_institutions_service('GET', '/api/v1/institutions/dashboard')
+response = proxy_service.call_jwt_service('POST', '/auth/login', data)
+
+# Domain service routing
+response = proxy_service.call_domain_service('doctor', 'GET', '/api/v1/doctors/me')
 ```
 
 ## JWT Middleware
@@ -233,7 +281,7 @@ response = proxy_service.call_patients_service('POST', '/api/v1/patients/', data
 ```python
 from app.middleware.jwt_middleware import require_session, require_auth, optional_session
 
-# Require valid session
+# Require valid session (from cookie)
 @require_session
 def protected_route():
     user = g.current_user
@@ -254,18 +302,57 @@ def public_route():
 
 ### Session Storage
 
-Tokens are stored in Redis with the format:
-- `access_token:{jwt_token}` - Access token (15 min default)
+Tokens are stored in Redis with format:
+- Key: `access_token:{jwt_token}`
+- Value: JWT token (string)
+- TTL: 15 minutes (900 seconds) default
+
+### Cookie Configuration
+
+- Name: `predicthealth_jwt`
+- HttpOnly: Yes
+- Secure: False (True in production with HTTPS)
+- SameSite: Lax
+- Path: `/`
+- Max-Age: 900 seconds (15 minutes)
+
+## Frontend Controller
+
+### Role-based Routes
+
+Protected routes use `login_required(role=None)` decorator:
+
+```python
+@frontend_bp.route('/patient/dashboard')
+@login_required(role='patient')
+def patient_dashboard():
+    return render_template('patient/dashboard.html', user=g.user)
+```
+
+Routes automatically redirect to landing page if unauthenticated or wrong role.
+
+## Client Detection
+
+Utility for detecting client type (web/mobile):
+
+```python
+from app.utils.client_detector import detect_client_type, is_mobile_client
+
+client_type = detect_client_type()  # 'web', 'mobile', or 'unknown'
+if is_mobile_client():
+    # Mobile-specific logic
+    pass
+```
 
 ## Security
 
 ### Authentication
 - JWT stateless tokens
 - Redis session validation
-- Password hashing with bcrypt
+- Password hashing with bcrypt (handled by auth service)
 
 ### Authorization
-- Role-based access control
+- Role-based access control (patient, doctor, institution)
 - Route protection decorators
 - Secure session management
 
@@ -273,6 +360,7 @@ Tokens are stored in Redis with the format:
 - CORS with restrictive origin configuration
 - Input validation
 - Secure cookie settings (HttpOnly, SameSite)
+- JWT token validation on every protected request
 
 ## Monitoring
 
@@ -288,11 +376,17 @@ curl http://localhost:5000/api/v1/health
 
 ### Logging
 
-Logging levels are configurable via `LOG_LEVEL` environment variable:
+Logging levels configurable via `LOG_LEVEL`:
 - `DEBUG`: Detailed debug information
 - `INFO`: General informational messages
 - `WARNING`: Warning messages
 - `ERROR`: Error messages
+
+Logging includes:
+- User actions
+- Security events
+- System errors
+- Medical data access
 
 ## Troubleshooting
 

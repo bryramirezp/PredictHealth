@@ -88,20 +88,152 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🏗️</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🏗️</span>
                 Arquitectura del Sistema
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                PredictHealth implementa una arquitectura de microservicios escalable y modular, diseñada para alta disponibilidad y rendimiento. El sistema separa responsabilidades en capas especializadas que se comunican mediante APIs REST.
+            </p>
+
+            <h2>Componentes Principales</h2>
+            <p>
+                La arquitectura se compone de cuatro capas principales: presentación, API Gateway, servicios de dominio y persistencia.
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-desktop" style="color: #4dd9d6;"></i> Frontend Web</h4>
+                    <p>HTML5/CSS3/JavaScript con Bootstrap 5.3 y templates Jinja2. Interfaz multi-usuario con dashboards por rol.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-server" style="color: #667eea;"></i> API Gateway</h4>
+                    <p>Flask 2.3.3 como punto de entrada único. Enrutamiento, proxy a microservicios, middleware JWT y web server.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-cogs" style="color: #f59e0b;"></i> Microservicios</h4>
+                    <p>FastAPI 0.104.1 para servicios especializados: autenticación, doctores, pacientes e instituciones.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-database" style="color: #8b5cf6;"></i> Base de Datos</h4>
+                    <p>PostgreSQL 15 con esquema normalizado 3NF, procedimientos almacenados y vistas materializadas.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-bolt" style="color: #10b981;"></i> Redis Cache</h4>
+                    <p>Almacenamiento de tokens JWT, gestión de sesiones y capa de caché para alto rendimiento.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-shield-alt" style="color: #ef4444;"></i> CMS Backend</h4>
+                    <p>Panel administrativo Flask con control de acceso basado en roles para gestión de entidades.</p>
+                </div>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Servicios y Puertos</h2>
+            <p>
+                Cada componente expone servicios en puertos específicos dentro de la red Docker:
+            </p>
+
+            <div class="tech-section">
+                <h3>Servicios de Aplicación</h3>
+                <ul>
+                    <li><strong>Frontend/API Gateway</strong> (5000): Interfaz web y punto de entrada único</li>
+                    <li><strong>CMS Backend</strong> (5001): Panel administrativo con control de acceso basado en roles</li>
+                    <li><strong>Auth JWT Service</strong> (8003): Autenticación y gestión de tokens JWT</li>
+                    <li><strong>Doctors Service</strong> (8000): Gestión de perfiles de doctores y especialidades</li>
+                    <li><strong>Patients Service</strong> (8004): Gestión de pacientes y perfiles de salud</li>
+                    <li><strong>Institutions Service</strong> (8002): Gestión de instituciones médicas</li>
+                </ul>
+
+                <h3>Servicios de Infraestructura</h3>
+                <ul>
+                    <li><strong>PostgreSQL</strong> (5432): Base de datos principal con esquema normalizado</li>
+                    <li><strong>Redis</strong> (6379): Caché y almacenamiento de sesiones</li>
+                </ul>
             </div>
+
+            <h2>Flujo de Datos</h2>
+            <p>
+                El flujo de datos sigue un patrón de tres capas con separación clara de responsabilidades:
+            </p>
+
+            <ol>
+                <li><strong>Capa de Presentación:</strong> Frontend web renderiza templates Jinja2 y maneja interacciones de usuario</li>
+                <li><strong>Capa de Lógica de Negocio:</strong> API Gateway enruta requests a microservicios especializados con validación JWT</li>
+                <li><strong>Capa de Datos:</strong> PostgreSQL para persistencia, Redis para caché y sesiones</li>
+            </ol>
+
+            <h2>Patrón API Gateway</h2>
+            <p>
+                El Backend Flask actúa como API Gateway único, proporcionando:
+            </p>
+
+            <div class="tech-section">
+                <h3>Enrutamiento Inteligente</h3>
+                <p>
+                    Proxy automático a microservicios según patrones de URL. Requests a <code>/api/v1/doctors/*</code> se enrutan al servicio de doctores, <code>/api/v1/patients/*</code> al servicio de pacientes.
+                </p>
+
+                <h3>Inyección de JWT</h3>
+                <p>
+                    Tokens Bearer se inyectan automáticamente en headers de requests a microservicios. El token se obtiene de cookies HTTP-only o del contexto de la aplicación.
+                </p>
+
+                <h3>Retry Logic</h3>
+                <p>
+                    Reintentos automáticos con backoff exponencial: 3 intentos con delay base de 1 segundo. Timeouts configurables (10s default).
+                </p>
+
+                <h3>Middleware JWT</h3>
+                <p>
+                    Validación de sesiones contra Redis en cada request protegido. Tokens almacenados con formato <code>access_token:{jwt_token}</code> y TTL de 15 minutos.
+                </p>
+            </div>
+
+            <h2>Comunicación entre Servicios</h2>
+            <p>
+                Los microservicios se comunican mediante APIs REST sobre HTTP. El API Gateway maneja el enrutamiento y la inyección de autenticación.
+            </p>
+
+            <div class="tech-section">
+                <h3>Autenticación Inter-Servicios</h3>
+                <p>
+                    El servicio de autenticación (auth-jwt-service) proporciona tokens JWT que otros servicios validan. Los tokens contienen <code>reference_id</code> para acceso a entidades de dominio.
+                </p>
+
+                <h3>Base de Datos Compartida</h3>
+                <p>
+                    Todos los microservicios se conectan a la misma instancia PostgreSQL con esquema normalizado. Cada servicio gestiona sus tablas de dominio específicas.
+                </p>
+
+                <h3>Redis Compartido</h3>
+                <p>
+                    Redis se utiliza para almacenamiento de tokens JWT, gestión de sesiones y caché temporal. Política de evicción LRU con límite de 1GB.
+                </p>
+            </div>
+
+            <h2>Stack Tecnológico</h2>
+            <div>
+                <span class="badge">Flask 2.3.3</span>
+                <span class="badge">FastAPI 0.104.1</span>
+                <span class="badge">PostgreSQL 15</span>
+                <span class="badge">Redis</span>
+                <span class="badge">Docker</span>
+                <span class="badge">JWT</span>
+                <span class="badge">SQLAlchemy</span>
+                <span class="badge">Pydantic</span>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                La arquitectura está diseñada para escalabilidad horizontal mediante containerización Docker y comunicación por red interna.
+            </p>
         </main>
     </div>
 </body>

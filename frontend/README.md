@@ -1,106 +1,110 @@
 # PredictHealth Frontend
 
-Frontend web application for the PredictHealth platform, providing user interfaces for patients, doctors, institutions, and administrators.
+Frontend web application para la plataforma PredictHealth, proporcionando interfaces de usuario para pacientes, doctores, instituciones y administradores.
 
-## Table of Contents
+## Tabla de Contenidos
 
 1. [Overview](#overview)
-2. [Technologies](#technologies)
-3. [Project Structure](#project-structure)
-4. [User Types & Features](#user-types--features)
-5. [Core Components](#core-components)
-6. [Authentication System](#authentication-system)
-7. [API Integration](#api-integration)
-8. [Styling & Theming](#styling--theming)
-9. [Development](#development)
-10. [Architecture](#architecture)
+2. [Tecnologías](#tecnologías)
+3. [Estructura del Proyecto](#estructura-del-proyecto)
+4. [Tipos de Usuario y Funcionalidades](#tipos-de-usuario-y-funcionalidades)
+5. [Componentes Principales](#componentes-principales)
+6. [Sistema de Autenticación](#sistema-de-autenticación)
+7. [Integración con API](#integración-con-api)
+8. [Estilos y Temas](#estilos-y-temas)
+9. [Desarrollo](#desarrollo)
+10. [Arquitectura](#arquitectura)
 
 ## Overview
 
-The PredictHealth frontend is a multi-user web application built with vanilla JavaScript, HTML5, and CSS3. It provides role-based interfaces for different user types, each with specialized features and dashboards.
+El frontend de PredictHealth es una aplicación web multi-usuario construida con JavaScript vanilla, HTML5 y CSS3. Proporciona interfaces basadas en roles para diferentes tipos de usuarios, cada una con funcionalidades y dashboards especializados.
 
-### Key Features
+### Características Principales
 
-- **Multi-User Support**: Separate interfaces for patients, doctors, institutions, and administrators
-- **JWT Authentication**: Secure token-based authentication with cookie storage
-- **Responsive Design**: Mobile-first design using Bootstrap 5.3
-- **Modular Architecture**: Component-based JavaScript modules for maintainability
-- **Real-time Updates**: Dynamic data loading and UI updates
-- **Error Handling**: Comprehensive error handling with user-friendly notifications
+- **Soporte Multi-Usuario**: Interfaces separadas para pacientes, doctores, instituciones y administradores
+- **Autenticación por Sesión**: Autenticación basada en cookies HTTP-only con JWT
+- **Diseño Responsivo**: Diseño mobile-first usando Bootstrap 5.3
+- **Arquitectura Modular**: Módulos JavaScript basados en componentes para mantenibilidad
+- **Actualizaciones en Tiempo Real**: Carga dinámica de datos y actualizaciones de UI
+- **Manejo de Errores**: Manejo de errores con notificaciones amigables al usuario
 
-## Technologies
+## Tecnologías
 
-### Core Stack
+### Stack Principal
 
-- **HTML5**: Semantic markup and structure
-- **CSS3**: Custom stylesheets with role-based theming
-- **JavaScript ES6+**: Modern JavaScript with async/await patterns
-- **Bootstrap 5.3**: Responsive UI framework
-- **Font Awesome 6.0**: Icon library
-- **WebGL**: Advanced visual effects for landing page
+- **HTML5**: Marcado semántico y estructura
+- **CSS3**: Hojas de estilo personalizadas con temas basados en roles
+- **JavaScript ES6+**: JavaScript moderno con patrones async/await
+- **Bootstrap 5.3**: Framework de UI responsivo
+- **Font Awesome 6.0**: Librería de iconos
+- **WebGL**: Efectos visuales avanzados para la landing page
 
-### External Libraries
+### Librerías Externas
 
-- **Chart.js**: Data visualization (where applicable)
-- **Bootstrap Icons**: Additional icon support
+- **Chart.js**: Visualización de datos (donde aplique)
+- **Bootstrap Icons**: Soporte adicional de iconos
 
-## Project Structure
+## Estructura del Proyecto
 
 ```
 frontend/
 ├── static/
 │   ├── css/
-│   │   ├── landing.css          # Landing page styles
-│   │   ├── patient.css          # Patient-specific styles
-│   │   ├── doctor.css           # Doctor-specific styles
-│   │   ├── institution.css      # Institution-specific styles
-│   │   └── docs.css             # Documentation styles
+│   │   ├── landing.css          # Estilos de la landing page
+│   │   ├── patient.css          # Estilos específicos de paciente
+│   │   ├── doctor.css           # Estilos específicos de doctor
+│   │   ├── institution.css      # Estilos específicos de institución
+│   │   └── docs.css             # Estilos de documentación
 │   ├── images/
-│   │   └── logo.jpg             # Application logo
+│   │   └── logo.jpg             # Logo de la aplicación
 │   └── js/
-│       ├── api-client.js        # Centralized API client
-│       ├── auth-manager.js      # JWT authentication manager
-│       ├── auth-forms.js        # Authentication form handlers
-│       ├── landing.js           # Landing page functionality
-│       ├── patient/             # Patient modules
-│       │   ├── patient-core.js  # Patient core utilities
-│       │   ├── dashboard.js     # Patient dashboard
-│       │   ├── medical-record.js # Medical record management
-│       │   ├── care-team.js     # Care team management
-│       │   └── profile.js       # Profile management
-│       ├── doctor/              # Doctor modules
-│       │   ├── doctor-core.js   # Doctor core utilities
+│       ├── api-client.js        # Cliente API centralizado
+│       ├── auth-manager.js      # Gestor de autenticación JWT
+│       ├── auth-forms.js        # Manejadores de formularios de autenticación
+│       ├── landing.js           # Funcionalidad de la landing page
+│       ├── patient/             # Módulos de paciente
+│       │   ├── patient-core.js  # Utilidades core de paciente
+│       │   ├── dashboard.js     # Dashboard de paciente
+│       │   ├── medical-record.js # Gestión de expediente médico
+│       │   ├── care-team.js     # Gestión de equipo de cuidado
+│       │   └── profile.js       # Gestión de perfil
+│       ├── doctor/              # Módulos de doctor
+│       │   ├── doctor-core.js   # Utilidades core de doctor
 │       │   ├── doctor-dashboard.js
 │       │   ├── doctor-patients.js
 │       │   ├── doctor-patient-detail.js
 │       │   ├── doctor-institution.js
 │       │   └── doctor-profile.js
-│       └── institution/         # Institution modules
-│           └── institution.js   # Institution core
+│       └── institution/         # Módulos de institución
+│           ├── institution-core.js # Utilidades core de institución
+│           ├── institution-dashboard.js
+│           ├── institution-doctors.js
+│           ├── institution-patients.js
+│           └── institution.js
 ├── templates/
-│   ├── base.html                # Base template
+│   ├── base.html                # Template base
 │   ├── index.html               # Landing page
-│   ├── 404.html                 # Error pages
+│   ├── 404.html                 # Páginas de error
 │   ├── 500.html
 │   ├── includes/
-│   │   └── app-header.html      # Shared header component
-│   ├── patient/                 # Patient templates
+│   │   └── app-header.html      # Componente de header compartido
+│   ├── patient/                 # Templates de paciente
 │   │   ├── dashboard.html
 │   │   ├── medical-record.html
 │   │   ├── my-care-team.html
 │   │   └── profile.html
-│   ├── doctor/                  # Doctor templates
+│   ├── doctor/                  # Templates de doctor
 │   │   ├── dashboard.html
 │   │   ├── patients.html
 │   │   ├── patient-detail.html
 │   │   ├── my-institution.html
 │   │   └── profile.html
-│   ├── institution/             # Institution templates
+│   ├── institution/             # Templates de institución
 │   │   ├── dashboard.html
 │   │   ├── doctors.html
 │   │   ├── patients.html
 │   │   └── profile.html
-│   └── docs/                    # Documentation pages
+│   └── docs/                    # Páginas de documentación
 │       ├── docs.html
 │       ├── arquitectura.html
 │       ├── frontend/
@@ -109,124 +113,140 @@ frontend/
 │       ├── deploy/
 │       ├── devices/
 │       └── ml/
-└── README.md                    # This file
+└── README.md                    # Este archivo
 ```
 
-## User Types & Features
+## Tipos de Usuario y Funcionalidades
 
-### Patient Interface
+### Interfaz de Paciente
 
 **Templates**: `templates/patient/`
 **JavaScript**: `static/js/patient/`
 
-#### Features
+#### Funcionalidades
 
-- **Dashboard**: Health metrics, medications, conditions overview
-- **Medical Record**: Complete health profile, conditions, medications, allergies, family history
-- **Care Team**: Primary doctor and institution information
-- **Profile**: Personal information, contact details (emails, phones, addresses), password management
+- **Dashboard**: Métricas de salud, medicamentos, resumen de condiciones
+- **Expediente Médico**: Perfil de salud completo, condiciones, medicamentos, alergias, historial familiar
+- **Equipo de Cuidado**: Información del doctor primario e institución
+- **Perfil**: Información personal, detalles de contacto (emails, teléfonos, direcciones), gestión de contraseña
 
-#### Key Modules
+#### Módulos Clave
 
-- `patient-core.js`: Core utilities and API endpoints
-- `dashboard.js`: Dashboard initialization and rendering
-- `medical-record.js`: Medical record data management
-- `care-team.js`: Care team information display
-- `profile.js`: Profile management with form handlers
+- `patient-core.js`: Utilidades core y endpoints de API
+- `dashboard.js`: Inicialización y renderizado del dashboard
+- `medical-record.js`: Gestión de datos del expediente médico
+- `care-team.js`: Visualización de información del equipo de cuidado
+- `profile.js`: Gestión de perfil con manejadores de formularios
 
-### Doctor Interface
+### Interfaz de Doctor
 
 **Templates**: `templates/doctor/`
 **JavaScript**: `static/js/doctor/`
 
-#### Features
+#### Funcionalidades
 
-- **Dashboard**: Patient overview and statistics
-- **Patients**: List of assigned patients
-- **Patient Detail**: Detailed patient information and medical records
-- **My Institution**: Institution association and details
-- **Profile**: Professional profile management
+- **Dashboard**: Resumen de pacientes y estadísticas
+- **Pacientes**: Lista de pacientes asignados
+- **Detalle de Paciente**: Información detallada del paciente y expedientes médicos
+- **Mi Institución**: Asociación y detalles de la institución
+- **Perfil**: Gestión de perfil profesional
 
-#### Key Modules
+#### Módulos Clave
 
-- `doctor-core.js`: Doctor-specific utilities
-- `doctor-dashboard.js`: Doctor dashboard
-- `doctor-patients.js`: Patient list management
-- `doctor-patient-detail.js`: Individual patient details
-- `doctor-institution.js`: Institution management
-- `doctor-profile.js`: Profile management
+- `doctor-core.js`: Utilidades específicas de doctor
+- `doctor-dashboard.js`: Dashboard del doctor
+- `doctor-patients.js`: Gestión de lista de pacientes
+- `doctor-patient-detail.js`: Detalles individuales de pacientes
+- `doctor-institution.js`: Gestión de institución
+- `doctor-profile.js`: Gestión de perfil
 
-### Institution Interface
+### Interfaz de Institución
 
 **Templates**: `templates/institution/`
 **JavaScript**: `static/js/institution/`
 
-#### Features
+#### Funcionalidades
 
-- **Dashboard**: Institutional overview and metrics
-- **Doctors**: Doctor management and assignments
-- **Patients**: Patient registry and management
-- **Profile**: Institution profile and settings
+- **Dashboard**: Resumen institucional y métricas
+- **Doctores**: Gestión de doctores y asignaciones
+- **Pacientes**: Registro y gestión de pacientes
+- **Perfil**: Perfil y configuraciones de la institución
+
+#### Módulos Clave
+
+- `institution-core.js`: Utilidades core de institución
+- `institution-dashboard.js`: Dashboard de institución
+- `institution-doctors.js`: Gestión de doctores
+- `institution-patients.js`: Gestión de pacientes
 
 ### Landing Page
 
 **Template**: `templates/index.html`
 **JavaScript**: `static/js/landing.js`
 
-Features:
-- WebGL animated background
-- Login modal integration
-- Responsive hero section
-- Call-to-action buttons
+Características:
+- Fondo animado con WebGL
+- Integración de modal de login
+- Sección hero responsiva
+- Botones de llamada a la acción
 
-## Core Components
+## Componentes Principales
 
-### API Client (`api-client.js`)
+### Cliente API (`api-client.js`)
 
-Centralized API communication module providing:
+Módulo centralizado de comunicación con la API que proporciona:
 
-- Unified request handling
-- Automatic authentication header injection
-- Error handling and response parsing
-- Session-based authentication support
-
-```javascript
-// Example usage
-const data = await PredictHealthAPI.get('/api/v1/patients/123/dashboard');
-```
-
-### Auth Manager (`auth-manager.js`)
-
-JWT token management and user authentication:
-
-- Token storage in secure cookies
-- Token validation and expiration checking
-- User information retrieval
-- Login/logout functionality
+- Manejo unificado de peticiones
+- Inyección automática de autenticación por cookies
+- Manejo de errores y parsing de respuestas
+- Soporte de autenticación basada en sesión
 
 ```javascript
-// Check authentication
-const isLoggedIn = await AuthManager.isLoggedIn();
-
-// Get user info
-const userInfo = await AuthManager.getUserInfo();
+// Ejemplo de uso
+const data = await PredictHealthAPI.auth.getCurrentUser();
+const patientData = await PredictHealthAPI.patients.getDetails(patientId);
 ```
+
+### Gestor de Autenticación (`auth-manager.js`)
+
+Gestión de tokens JWT y autenticación de usuarios:
+
+- Almacenamiento de tokens en cookies de sesión
+- Validación de tokens y verificación de expiración
+- Obtención de información del usuario
+- Funcionalidad de login/logout
+
+```javascript
+// Verificar autenticación
+const isLoggedIn = AuthManager.isLoggedIn();
+
+// Obtener información del usuario
+const userInfo = AuthManager.getUserInfo();
+```
+
+### Manejador de Formularios de Autenticación (`auth-forms.js`)
+
+Integración de `AuthManager` con formularios de login:
+
+- Configuración automática de formularios de login
+- Manejo de eventos de autenticación
+- Actualización de UI según estado de autenticación
+- Redirección automática según tipo de usuario
 
 ### Patient Core (`patient-core.js`)
 
-Shared utilities for patient modules:
+Utilidades compartidas para módulos de paciente:
 
-- Endpoint definitions
-- Authentication checks
-- API request wrapper
-- Error notification system
-- Mock data fallback for development
+- Definiciones de endpoints
+- Verificaciones de autenticación
+- Wrapper de peticiones API
+- Sistema de notificaciones de errores
 
 ```javascript
-// Check auth and get user
+// Verificar auth y obtener usuario
 const userInfo = await PatientCore.checkAuth();
 
-// Make API request
+// Realizar petición API
 const data = await PatientCore.apiRequest(
     PatientCore.ENDPOINTS.DASHBOARD(patientId)
 );
@@ -234,27 +254,31 @@ const data = await PatientCore.apiRequest(
 
 ### Doctor Core (`doctor-core.js`)
 
-Similar structure to Patient Core, providing doctor-specific utilities and endpoints.
+Estructura similar a Patient Core, proporcionando utilidades y endpoints específicos de doctor.
 
-## Authentication System
+### Institution Core (`institution-core.js`)
 
-### JWT Token Flow
+Estructura similar a Patient Core y Doctor Core, proporcionando utilidades y endpoints específicos de institución.
 
-1. User logs in through landing page modal
-2. Backend validates credentials and returns JWT token
-3. Token stored in secure cookie (`predicthealth_jwt`)
-4. All subsequent requests include token in Authorization header
-5. Token validated on each request by backend
+## Sistema de Autenticación
 
-### Token Storage
+### Flujo de Tokens JWT
 
-- **Method**: Secure HTTP-only cookies
-- **Cookie Name**: `predicthealth_jwt`
-- **Security**: SameSite=Lax, HttpOnly (handled by backend)
+1. El usuario inicia sesión a través del modal de la landing page
+2. El backend valida credenciales y retorna token JWT
+3. El token se almacena en cookie segura (`predicthealth_jwt`)
+4. Todas las peticiones subsecuentes incluyen la cookie automáticamente
+5. El token se valida en cada petición por el backend
 
-### Authentication Check Pattern
+### Almacenamiento de Tokens
 
-All protected pages follow this pattern:
+- **Método**: Cookies HTTP-only seguras
+- **Nombre de Cookie**: `predicthealth_jwt`
+- **Seguridad**: SameSite=Lax, HttpOnly (manejado por backend)
+
+### Patrón de Verificación de Autenticación
+
+Todas las páginas protegidas siguen este patrón:
 
 ```javascript
 document.addEventListener('DOMContentLoaded', async () => {
@@ -263,56 +287,74 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = '/';
         return;
     }
-    // Initialize page
+    // Inicializar página
 });
 ```
 
-## API Integration
+## Integración con API
 
-### Endpoint Structure
+### Estructura de Endpoints
 
-All API calls go through the Flask API Gateway:
+Las llamadas API van a través del Flask API Gateway:
 
 ```
-/api/v1/gateway/{resource}/{id}/{action}
+/api/v1/patients/{id}/{action}          # Endpoints de pacientes
+/api/v1/doctors/me/{action}             # Endpoints de doctores (autenticado)
+/api/web/institution/{action}           # Endpoints de instituciones
+/api/web/auth/{userType}/login          # Autenticación
 ```
 
-### Patient Endpoints
+### Endpoints de Paciente
 
-- `GET /api/v1/gateway/patients/{id}/dashboard`
-- `GET /api/v1/gateway/patients/{id}/medical-record`
-- `GET /api/v1/gateway/patients/{id}/care-team`
-- `GET /api/v1/gateway/patients/{id}/profile`
+- `GET /api/v1/patients/{id}/dashboard`
+- `GET /api/v1/patients/{id}/medical-record`
+- `GET /api/v1/patients/{id}/care-team`
+- `GET /api/v1/patients/{id}/profile`
 - `POST /api/web/patient/emails`
 - `POST /api/web/patient/phones`
 - `POST /api/web/patient/addresses`
 - `POST /api/web/auth/change-password`
 
-### Request Pattern
+### Endpoints de Doctor
+
+- `GET /api/v1/doctors/me/dashboard`
+- `GET /api/v1/doctors/me/profile`
+- `GET /api/v1/doctors/me/institution`
+- `GET /api/v1/doctors/me/patients`
+- `GET /api/v1/doctors/me/patients/{id}/medical-record`
+
+### Endpoints de Institución
+
+- `GET /api/web/institution/dashboard`
+- `GET /api/web/institution/doctors`
+- `POST /api/web/institution/doctors`
+- `DELETE /api/web/institution/doctors/{id}`
+- `GET /api/web/institution/patients`
+
+### Patrón de Petición
 
 ```javascript
-const response = await fetch('/api/v1/gateway/endpoint', {
+const response = await fetch('/api/v1/endpoint', {
     method: 'GET',
-    credentials: 'include',
+    credentials: 'include', // Envía cookies automáticamente
     headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
     }
 });
 ```
 
-### Error Handling
+### Manejo de Errores
 
-- Network errors: Fallback to mock data (development mode)
-- 401 Unauthorized: Redirect to login
-- 400/500 errors: Display user-friendly error messages
-- All errors logged to console for debugging
+- Errores de red: Lanzan excepciones con mensajes descriptivos
+- 401 No autorizado: Redirige a login
+- Errores 400/500: Muestra mensajes de error amigables al usuario
+- Todos los errores se registran en consola para debugging
 
-## Styling & Theming
+## Estilos y Temas
 
-### Role-Based CSS
+### CSS Basado en Roles
 
-The application loads different stylesheets based on user type:
+La aplicación carga diferentes hojas de estilo según el tipo de usuario:
 
 ```html
 {% if user and user.user_type == 'patient' %}
@@ -324,58 +366,58 @@ The application loads different stylesheets based on user type:
 {% endif %}
 ```
 
-### CSS Files
+### Archivos CSS
 
-- `landing.css`: Landing page styles with WebGL integration
-- `patient.css`: Patient interface theme
-- `doctor.css`: Doctor interface theme
-- `institution.css`: Institution interface theme
-- `docs.css`: Documentation pages styling
+- `landing.css`: Estilos de la landing page con integración WebGL
+- `patient.css`: Tema de la interfaz de paciente
+- `doctor.css`: Tema de la interfaz de doctor
+- `institution.css`: Tema de la interfaz de institución
+- `docs.css`: Estilos de páginas de documentación
 
-### Design System
+### Sistema de Diseño
 
-- **Font**: Inter (Google Fonts)
-- **Icons**: Font Awesome 6.0
+- **Fuente**: Inter (Google Fonts)
+- **Iconos**: Font Awesome 6.0
 - **Framework**: Bootstrap 5.3
-- **Color Scheme**: Role-specific themes
-- **Responsive**: Mobile-first approach
+- **Esquema de Colores**: Temas específicos por rol
+- **Responsivo**: Enfoque mobile-first
 
-## Development
+## Desarrollo
 
-### Local Development
+### Desarrollo Local
 
-1. Ensure backend services are running (Flask API Gateway, microservices)
-2. Serve frontend through Flask backend (port 5000)
-3. Access at `http://localhost:5000`
+1. Asegurar que los servicios backend estén ejecutándose (Flask API Gateway, microservicios)
+2. Servir el frontend a través del backend Flask (puerto 5000)
+3. Acceder en `http://localhost:5000`
 
-### Template Engine
+### Motor de Templates
 
-Uses Jinja2 templating (Flask):
+Usa Jinja2 templating (Flask):
 
-- Base template inheritance
-- Block-based content injection
-- User data injection via template variables
-- Static file URL generation
+- Herencia de templates base
+- Inyección de contenido basada en bloques
+- Inyección de datos de usuario vía variables de template
+- Generación de URLs de archivos estáticos
 
-### JavaScript Module Loading
+### Carga de Módulos JavaScript
 
-Modules are loaded in specific order:
+Los módulos se cargan en un orden específico:
 
-1. `api-client.js` - Base API client
-2. `auth-manager.js` - Authentication
-3. `auth-forms.js` - Form handlers
-4. Role-specific core (e.g., `patient-core.js`)
-5. Page-specific modules (e.g., `dashboard.js`)
+1. `api-client.js` - Cliente API base
+2. `auth-manager.js` - Autenticación
+3. `auth-forms.js` - Manejadores de formularios
+4. Core específico de rol (ej., `patient-core.js`)
+5. Módulos específicos de página (ej., `dashboard.js`)
 
-### Development Patterns
+### Patrones de Desarrollo
 
-#### Module Initialization
+#### Inicialización de Módulos
 
 ```javascript
 document.addEventListener('DOMContentLoaded', async () => {
     if (window.location.pathname.includes('/patient/dashboard')) {
         if (!window.PatientCore) {
-            console.error("Error: patient-core.js not loaded");
+            console.error("Error: patient-core.js no cargado");
             return;
         }
         
@@ -387,7 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 ```
 
-#### Form Submission Pattern
+#### Patrón de Envío de Formularios
 
 ```javascript
 async function handleFormSubmit() {
@@ -396,107 +438,106 @@ async function handleFormSubmit() {
     
     try {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Processing...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Procesando...';
         
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
         const response = await fetch('/api/endpoint', {
             method: 'POST',
-            credentials: 'same-origin',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
         
         if (response.ok) {
-            // Success handling
-            PatientCore.showSuccessMessage('Operation successful');
+            PatientCore.showSuccessMessage('Operación exitosa');
         } else {
-            throw new Error('Request failed');
+            throw new Error('Petición fallida');
         }
     } catch (error) {
         PatientCore.showErrorMessage(error.message);
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Submit';
+        submitBtn.innerHTML = 'Enviar';
     }
 }
 ```
 
 ### Debugging
 
-- Console logging for all API requests
-- Error messages displayed to users via notification system
-- Network tab for API request inspection
-- Template variables exposed to `window.PatientUserData`
+- Logging en consola para todas las peticiones API
+- Mensajes de error mostrados a usuarios vía sistema de notificaciones
+- Pestaña Network para inspección de peticiones API
+- Variables de template expuestas a `window.PatientUserData`
 
-## Architecture
+## Arquitectura
 
-### Data Flow
+### Flujo de Datos
 
 ```
-User Interaction
+Interacción del Usuario
     ↓
-JavaScript Module
+Módulo JavaScript
     ↓
-PatientCore/DoctorCore (API wrapper)
+PatientCore/DoctorCore/InstitutionCore (wrapper API)
     ↓
-API Client (auth headers)
+Cliente API (auth por cookies)
     ↓
 Flask API Gateway
     ↓
-Microservices
+Microservicios
     ↓
-PostgreSQL Database
+Base de Datos PostgreSQL
 ```
 
-### Module Communication
+### Comunicación entre Módulos
 
-- **Shared Utilities**: Core modules provide shared functionality
-- **Event-Driven**: DOM events trigger module functions
-- **Async/Await**: All API calls are asynchronous
-- **Error Boundaries**: Try-catch blocks at module level
+- **Utilidades Compartidas**: Los módulos core proporcionan funcionalidad compartida
+- **Basado en Eventos**: Eventos DOM disparan funciones de módulos
+- **Async/Await**: Todas las llamadas API son asíncronas
+- **Límites de Error**: Bloques try-catch a nivel de módulo
 
-### State Management
+### Gestión de Estado
 
-- **No Global State**: Each module manages its own state
-- **Template Variables**: User data injected from backend
-- **Cookie Storage**: Authentication tokens in cookies
-- **DOM as State**: UI reflects current data state
+- **Sin Estado Global**: Cada módulo gestiona su propio estado
+- **Variables de Template**: Datos de usuario inyectados desde backend
+- **Almacenamiento en Cookies**: Tokens de autenticación en cookies
+- **DOM como Estado**: La UI refleja el estado actual de los datos
 
-### Security Considerations
+### Consideraciones de Seguridad
 
-- **XSS Prevention**: Template escaping via Jinja2
-- **CSRF Protection**: SameSite cookies
-- **Token Validation**: JWT validation on every request
-- **Input Sanitization**: Form data validation before submission
+- **Prevención XSS**: Escapado de templates vía Jinja2
+- **Protección CSRF**: Cookies SameSite
+- **Validación de Tokens**: Validación JWT en cada petición
+- **Sanitización de Entrada**: Validación de datos de formularios antes del envío
 
-## File Organization Principles
+## Principios de Organización de Archivos
 
-1. **Separation by Role**: Each user type has dedicated directories
-2. **Shared Components**: Common utilities in root `js/` directory
-3. **Template Inheritance**: Base template for common structure
-4. **CSS Modularity**: Role-specific stylesheets
-5. **Module Dependencies**: Clear loading order and dependencies
+1. **Separación por Rol**: Cada tipo de usuario tiene directorios dedicados
+2. **Componentes Compartidos**: Utilidades comunes en directorio raíz `js/`
+3. **Herencia de Templates**: Template base para estructura común
+4. **Modularidad CSS**: Hojas de estilo específicas por rol
+5. **Dependencias de Módulos**: Orden de carga claro y dependencias
 
-## Browser Support
+## Soporte de Navegadores
 
-- **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
-- **ES6+ Features**: Async/await, arrow functions, template literals
+- **Navegadores Modernos**: Chrome, Firefox, Safari, Edge (últimas versiones)
+- **Características ES6+**: Async/await, arrow functions, template literals
 - **CSS3**: Flexbox, Grid, custom properties
 - **APIs**: Fetch API, LocalStorage, Cookies
 
-## Performance Considerations
+## Consideraciones de Rendimiento
 
-- **Lazy Loading**: Scripts loaded per page
-- **Minimal Dependencies**: Vanilla JavaScript where possible
-- **Efficient Rendering**: DOM manipulation only when needed
-- **API Caching**: Consider implementing client-side caching for static data
+- **Carga Perezosa**: Scripts cargados por página
+- **Dependencias Mínimas**: JavaScript vanilla donde sea posible
+- **Renderizado Eficiente**: Manipulación DOM solo cuando es necesario
+- **Caché de API**: Considerar implementar caché del lado del cliente para datos estáticos
 
-## Future Enhancements
+## Mejoras Futuras
 
-- Progressive Web App (PWA) support
-- Service Worker for offline functionality
-- Client-side routing for SPA-like experience
-- Component library standardization
-- TypeScript migration for type safety
+- Soporte de Progressive Web App (PWA)
+- Service Worker para funcionalidad offline
+- Enrutamiento del lado del cliente para experiencia tipo SPA
+- Estandarización de librería de componentes
+- Migración a TypeScript para seguridad de tipos

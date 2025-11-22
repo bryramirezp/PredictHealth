@@ -55,7 +55,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Base de Datos</div>
                 <ul class="sidebar-links">
-                    <li><a href="/docs/database/schema" class="sidebar-link">Esquema</a></li>
+                    <li><a href="/docs/database/postgresql" class="sidebar-link">PostgreSQL</a></li>
                     <li><a href="/docs/database/redis" class="sidebar-link">Redis Cache</a></li>
                     <li><a href="/docs/database/firebase" class="sidebar-link active">Firebase</a></li>
                 </ul>
@@ -88,20 +88,56 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🔥</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🔥</span>
                 Firebase
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                <strong>Estado:</strong> Firebase no está implementado en el MVP actual, pero está planeado para implementación futura como base de datos adicional para datos en tiempo real.
+            </p>
+
+            <div class="tech-section">
+                <h2>Estado Actual</h2>
+                <p>
+                    Firebase no forma parte de la arquitectura actual del MVP. El sistema utiliza PostgreSQL para almacenamiento persistente y Redis para caché y sesiones.
+                </p>
+
+                <h2>Planeado para Futuro</h2>
+                <p>
+                    La integración de Firebase está contemplada para futuras versiones de la plataforma, con los siguientes objetivos:
+                </p>
+
+                <ul>
+                    <li><strong>Datos en Tiempo Real:</strong> Sincronización en tiempo real de datos de salud y métricas</li>
+                    <li><strong>Notificaciones Push:</strong> Sistema de notificaciones para alertas y recordatorios médicos</li>
+                    <li><strong>Almacenamiento de Archivos:</strong> Gestión de imágenes médicas y documentos</li>
+                    <li><strong>Analytics:</strong> Análisis de comportamiento de usuarios y métricas de uso</li>
+                </ul>
+
+                <h2>Arquitectura Actual</h2>
+                <p>
+                    El MVP utiliza:
+                </p>
+
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4><i class="fas fa-database" style="color: #4dd9d6;"></i> PostgreSQL</h4>
+                        <p>Base de datos principal para almacenamiento persistente de datos estructurados.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-bolt" style="color: #667eea;"></i> Redis</h4>
+                        <p>Caché y almacenamiento de sesiones para alto rendimiento.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
-            </div>
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                La integración de Firebase será evaluada y documentada cuando se implemente en futuras versiones de la plataforma.
+            </p>
         </main>
     </div>
 </body>

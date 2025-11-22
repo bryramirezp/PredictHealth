@@ -88,20 +88,200 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🔐</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🔐</span>
                 Autenticación JWT
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Sistema de autenticación basado en tokens JWT (JSON Web Tokens) con validación contra Redis. Proporciona autenticación stateless con gestión de sesiones mediante cookies HTTP-only y almacenamiento de tokens en caché.
+            </p>
+
+            <h2>Flujo de Autenticación</h2>
+            <p>
+                El flujo completo de autenticación sigue estos pasos:
+            </p>
+
+            <ol>
+                <li>Usuario inicia sesión vía API Gateway (<code>/api/web/auth/login</code>)</li>
+                <li>API Gateway delega autenticación a <code>auth-jwt-service</code></li>
+                <li>Token JWT se genera y almacena en Redis con formato <code>access_token:{jwt_token}</code></li>
+                <li>Cookie HTTP-only (<code>predicthealth_jwt</code>) se establece en el cliente</li>
+                <li>Requests subsecuentes incluyen cookie automáticamente</li>
+                <li>Middleware JWT valida token contra Redis en cada request protegido</li>
+            </ol>
+
+            <h2>Almacenamiento de Tokens</h2>
+            <p>
+                Los tokens JWT se almacenan en Redis para validación rápida y gestión de sesiones:
+            </p>
+
+            <div class="tech-section">
+                <h3>Formato en Redis</h3>
+                <ul>
+                    <li><strong>Key:</strong> <code>access_token:{jwt_token}</code></li>
+                    <li><strong>Value:</strong> JWT token (string)</li>
+                    <li><strong>TTL:</strong> 15 minutos (900 segundos) por defecto</li>
+                </ul>
+
+                <h3>Configuración de Cookie</h3>
+                <ul>
+                    <li><strong>Nombre:</strong> <code>predicthealth_jwt</code></li>
+                    <li><strong>HttpOnly:</strong> Sí (protección XSS)</li>
+                    <li><strong>Secure:</strong> False (True en producción con HTTPS)</li>
+                    <li><strong>SameSite:</strong> Lax</li>
+                    <li><strong>Path:</strong> <code>/</code></li>
+                    <li><strong>Max-Age:</strong> 900 segundos (15 minutos)</li>
+                </ul>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>JWT Middleware</h2>
+            <p>
+                El middleware JWT proporciona decoradores para proteger rutas y validar sesiones:
+            </p>
+
+            <div class="tech-section">
+                <h3>Decoradores Disponibles</h3>
+                <pre><code>from app.middleware.jwt_middleware import require_session, require_auth, optional_session
+
+# Requiere sesión válida (desde cookie)
+@require_session
+def protected_route():
+    user = g.current_user
+    return jsonify(user)
+
+# Requiere tipo de usuario específico
+@require_auth(required_user_type='doctor')
+def doctor_only_route():
+    return jsonify({'message': 'Doctor access'})
+
+# Sesión opcional
+@optional_session
+def public_route():
+    if is_authenticated():
+        return jsonify(g.current_user)
+    return jsonify({'message': 'Public'})</code></pre>
+
+                <h3>Funcionalidad</h3>
+                <ul>
+                    <li>Validación de token contra Redis en cada request</li>
+                    <li>Extracción de información de usuario desde token JWT</li>
+                    <li>Inyección de <code>g.current_user</code> y <code>g.token</code> en contexto</li>
+                    <li>Renovación automática de token en uso</li>
+                    <li>Logout seguro con eliminación de token en Redis</li>
+                </ul>
             </div>
+
+            <h2>Endpoints de Autenticación</h2>
+
+            <div class="tech-section">
+                <h3>API Gateway (<code>/api/v1/auth/</code>)</h3>
+                <ul>
+                    <li><code>POST /api/v1/auth/login</code> - Login genérico con creación de sesión</li>
+                    <li><code>POST /api/v1/auth/logout</code> - Logout y revocación de token</li>
+                    <li><code>GET /api/v1/auth/session/validate</code> - Validar sesión activa</li>
+                    <li><code>GET /api/v1/auth/jwt/health</code> - Health check del servicio JWT</li>
+                </ul>
+
+                <h3>Web API (<code>/api/web/auth/</code>)</h3>
+                <ul>
+                    <li><code>POST /api/web/auth/login</code> - Login genérico (auto-detecta tipo de usuario)</li>
+                    <li><code>POST /api/web/auth/patient/login</code> - Login específico de paciente</li>
+                    <li><code>POST /api/web/auth/doctor/login</code> - Login específico de doctor</li>
+                    <li><code>POST /api/web/auth/institution/login</code> - Login específico de institución</li>
+                    <li><code>POST /api/web/auth/logout</code> - Logout</li>
+                    <li><code>GET /api/web/auth/session/validate</code> - Validar sesión</li>
+                    <li><code>GET /api/web/auth/token</code> - Obtener token actual (protegido)</li>
+                </ul>
+            </div>
+
+            <h2>Seguridad de Contraseñas</h2>
+            <p>
+                Las contraseñas se hashean usando bcrypt antes de almacenarse:
+            </p>
+
+            <div class="tech-section">
+                <h3>Hashing con bcrypt</h3>
+                <ul>
+                    <li>Algoritmo: bcrypt con salt automático</li>
+                    <li>Rounds: Configurables (default: 12)</li>
+                    <li>Validación: Comparación segura contra hash almacenado</li>
+                    <li>Implementación: Manejada por auth-jwt-service</li>
+                </ul>
+
+                <h3>Protección de Cuentas</h3>
+                <ul>
+                    <li>Seguimiento de intentos fallidos de login</li>
+                    <li>Políticas de bloqueo configurables</li>
+                    <li>Registro de eventos de autenticación en tabla <code>users</code></li>
+                </ul>
+            </div>
+
+            <h2>Validación de Sesiones</h2>
+            <p>
+                Cada request protegido valida el token JWT contra Redis:
+            </p>
+
+            <div class="tech-section">
+                <h3>Proceso de Validación</h3>
+                <ol>
+                    <li>Extracción de token desde cookie <code>predicthealth_jwt</code> o header Authorization</li>
+                    <li>Búsqueda en Redis con key <code>access_token:{jwt_token}</code></li>
+                    <li>Decodificación y verificación de firma del token JWT</li>
+                    <li>Validación de expiración y claims del token</li>
+                    <li>Inyección de información de usuario en contexto Flask (<code>g.current_user</code>)</li>
+                </ol>
+
+                <h3>Información del Token</h3>
+                <p>
+                    Los tokens JWT contienen:
+                </p>
+                <ul>
+                    <li><code>user_id</code> - ID del usuario</li>
+                    <li><code>user_type</code> - Tipo de usuario (patient, doctor, institution)</li>
+                    <li><code>reference_id</code> - ID de la entidad de dominio asociada</li>
+                    <li><code>exp</code> - Timestamp de expiración</li>
+                    <li><code>iat</code> - Timestamp de emisión</li>
+                </ul>
+            </div>
+
+            <h2>Autenticación Inter-Servicios</h2>
+            <p>
+                Los microservicios validan tokens JWT para comunicación entre servicios:
+            </p>
+
+            <div class="tech-section">
+                <h3>Flujo</h3>
+                <ol>
+                    <li>Microservicio recibe request con token JWT en header Authorization</li>
+                    <li>Token se valida vía auth-jwt-service o decodificación local</li>
+                    <li><code>reference_id</code> se extrae del token para acceso a entidades</li>
+                    <li>Request se procesa con contexto de usuario autenticado</li>
+                </ol>
+
+                <h3>Cliente Auth Compartido</h3>
+                <p>
+                    Módulo <code>shared/auth_client.py</code> proporciona creación estandarizada de usuarios:
+                </p>
+                <pre><code>from microservices.shared.auth_client import create_user
+
+create_user(email, password, user_type, reference_id)</code></pre>
+            </div>
+
+            <h2>Configuración</h2>
+            <div>
+                <span class="badge">JWT_SECRET_KEY</span>
+                <span class="badge">JWT_ALGORITHM (HS256)</span>
+                <span class="badge">REDIS_URL</span>
+                <span class="badge">PyJWT 2.8.0</span>
+                <span class="badge">bcrypt 4.2.0</span>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                El sistema de autenticación JWT proporciona seguridad stateless con validación rápida mediante Redis, permitiendo escalabilidad horizontal sin dependencia de sesiones en servidor.
+            </p>
         </main>
     </div>
 </body>

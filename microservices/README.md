@@ -2,490 +2,510 @@
 
 ## Overview
 
-The PredictHealth microservices architecture provides a scalable, modular approach to healthcare data management. This directory contains four specialized microservices that handle different aspects of the health platform, communicating through well-defined APIs and sharing a common PostgreSQL database with Redis caching.
+Arquitectura de microservicios escalable y modular para gestión de datos de salud. Cuatro microservicios especializados que manejan diferentes aspectos de la plataforma, comunicándose mediante APIs REST y compartiendo una base de datos PostgreSQL con Redis para caché.
 
-## Architecture Summary
+## Arquitectura
 
-### Technology Stack
+### Stack Tecnológico
 
-- **Framework**: FastAPI (high-performance async web framework)
-- **Database**: PostgreSQL with psycopg2 (connection pooling)
-- **Cache**: Redis for session management and caching
-- **Containerization**: Docker with health checks
-- **API Documentation**: Automatic OpenAPI/Swagger documentation
-- **Validation**: Pydantic for request/response validation
-- **Authentication**: JWT tokens with bcrypt password hashing
+- **Framework**: FastAPI 0.104.1 (async web framework)
+- **Base de Datos**: PostgreSQL con psycopg2-binary 2.9.9 (connection pooling)
+- **Caché**: Redis 5.0.1 para sesiones y caché
+- **Containerización**: Docker con health checks
+- **Documentación API**: OpenAPI/Swagger automática
+- **Validación**: Pydantic 2.5.0 para request/response
+- **Autenticación**: JWT (PyJWT 2.8.0) con bcrypt 4.2.0 para hashing
 
-### Service Architecture
+### Arquitectura de Servicios
 
 ```
 PredictHealth Microservices
-├── auth-jwt-service (Port: 8003)
-│   ├── JWT token management
-│   ├── Authentication endpoints
-│   └── Redis-based token storage
-├── service-doctors (Port: 8000)
-│   ├── Doctor profile management
-│   ├── Specialty associations
-│   └── Medical license validation
-├── service-institutions (Port: 8002)
-│   ├── Medical institution management
-│   ├── Geographic organization
-│   └── License verification
-└── service-patients (Port: 8004)
-    ├── Patient data management
-    ├── Health profile tracking
-    └── Validation workflows
+├── auth-jwt-service (Puerto: 8003)
+│   ├── Gestión de tokens JWT
+│   ├── Endpoints de autenticación
+│   ├── Creación de usuarios
+│   └── Almacenamiento en Redis
+├── service-doctors (Puerto: 8000)
+│   ├── Gestión de perfiles de doctores
+│   ├── Asociaciones con especialidades
+│   ├── Validación de licencias médicas
+│   └── Endpoints para frontend de doctores
+├── service-institutions (Puerto: 8002)
+│   ├── Gestión de instituciones médicas
+│   ├── Organización geográfica
+│   └── Verificación de licencias
+└── service-patients (Puerto: 8004)
+    ├── Gestión de datos de pacientes
+    ├── Seguimiento de perfiles de salud
+    └── Flujos de validación
 ```
 
-## Individual Services
+## Servicios Individuales
 
 ### 1. Auth-JWT Service (`auth-jwt-service/`)
 
-**Purpose**: Centralized authentication and JWT token management service
+**Propósito**: Servicio centralizado de autenticación y gestión de tokens JWT
 
-**Key Features**:
-- JWT token creation, verification, and refresh
-- Redis-based token storage and revocation
-- Device fingerprinting and session tracking
-- Inter-service authentication support
-- User account creation and management
+**Características**:
+- Creación, verificación y validación de tokens JWT
+- Almacenamiento de tokens en Redis
+- Creación y gestión de cuentas de usuario
+- Soporte para autenticación inter-servicios
+- Hashing de contraseñas con bcrypt
 
-**Main Endpoints**:
-- `POST /auth/login` - User authentication
-- `POST /auth/verify-token` - Verify token validity
-- `POST /auth/session/validate` - Validate JWT session
-- `POST /auth/logout` - User logout
-- `POST /users/create` - Create new user account
+**Endpoints Principales**:
+- `POST /auth/login` - Autenticación de usuario
+- `POST /auth/verify-token` - Verificar validez de token
+- `POST /auth/session/validate` - Validar sesión JWT
+- `POST /auth/logout` - Cerrar sesión
+- `POST /users/create` - Crear nueva cuenta de usuario
+- `GET /health` - Health check
 
-**Technical Highlights**:
-- Pure token management (no database dependency for tokens)
-- Device information extraction and tracking
-- Complete logging and monitoring
-- Health checks with Redis connectivity
-- Password hashing with bcrypt
+**Lógica Técnica**:
+- Gestión pura de tokens (sin dependencia de BD para tokens)
+- Extracción y seguimiento de información de dispositivo
+- Logging completo y monitoreo
+- Health checks con conectividad a Redis
+- Hashing de contraseñas con bcrypt
 
-**Dependencies**:
+**Dependencias**:
 - FastAPI 0.104.1
 - PyJWT 2.8.0
 - bcrypt 4.2.0
 - psycopg2-binary 2.9.9
 - redis 5.0.1
+- pydantic[email] 2.5.0
 
 ### 2. Doctors Service (`service-doctors/`)
 
-**Purpose**: Management of healthcare provider data and specialty associations
+**Propósito**: Gestión de datos de proveedores de salud y asociaciones de especialidades
 
-**Key Features**:
-- Complete doctor profile management (CRUD operations)
-- Medical specialty and institution associations
-- License validation and professional status tracking
-- Experience and consultation fee management
-- Doctor-specific endpoints for frontend integration
+**Características**:
+- Gestión completa de perfiles de doctores (operaciones CRUD)
+- Asociaciones con especialidades médicas e instituciones
+- Validación de licencias y seguimiento de estado profesional
+- Gestión de experiencia y tarifas de consulta
+- Endpoints específicos para integración con frontend de doctores
 
-**Main Endpoints**:
+**Endpoints Principales**:
 
-**Doctor-Authenticated Endpoints** (for doctor frontend):
-- `GET /api/v1/doctors/me/dashboard` - Get dashboard KPIs
-- `GET /api/v1/doctors/me/profile` - Get doctor profile
-- `PUT /api/v1/doctors/me/profile` - Update doctor profile
-- `GET /api/v1/doctors/me/institution` - Get associated institution
-- `GET /api/v1/doctors/me/patients` - List assigned patients
-- `GET /api/v1/doctors/me/patients/{patient_id}/medical-record` - Get patient medical record
+**Endpoints para Doctores Autenticados** (frontend de doctores):
+- `POST /auth/login` - Login delegado al auth-service
+- `GET /api/v1/doctors/me/dashboard` - Obtener KPIs del dashboard
+- `GET /api/v1/doctors/me/profile` - Obtener perfil del doctor
+- `PUT /api/v1/doctors/me/profile` - Actualizar perfil del doctor
+- `GET /api/v1/doctors/me/institution` - Obtener institución asociada
+- `GET /api/v1/doctors/me/patients` - Listar pacientes asignados
+- `GET /api/v1/doctors/me/patients/{patient_id}/medical-record` - Obtener expediente médico del paciente
 
-**Admin CRUD Endpoints**:
-- `GET /api/v1/doctors` - List doctors with filtering
-- `POST /api/v1/doctors` - Create new doctor
-- `GET /api/v1/doctors/{id}` - Get doctor details
-- `PUT /api/v1/doctors/{id}` - Update doctor
-- `DELETE /api/v1/doctors/{id}` - Delete doctor (soft delete)
+**Endpoints CRUD de Admin**:
+- `GET /api/v1/doctors` - Listar doctores con filtrado
+- `POST /api/v1/doctors` - Crear nuevo doctor
+- `GET /api/v1/doctors/{id}` - Obtener detalles del doctor
+- `PUT /api/v1/doctors/{id}` - Actualizar doctor
+- `DELETE /api/v1/doctors/{id}` - Eliminar doctor (soft delete)
+- `GET /health` - Health check
 
-**Business Logic**:
-- Unique email and medical license constraints
-- Foreign key relationships with specialties and institutions
-- Professional status validation (active, suspended, retired)
-- Experience years and fee range validation
-- Atomic transaction for doctor creation (includes user account)
+**Lógica de Negocio**:
+- Restricciones de email y licencia médica únicos
+- Relaciones de clave foránea con especialidades e instituciones
+- Validación de estado profesional (active, suspended, retired)
+- Validación de años de experiencia y rango de tarifas
+- Transacción atómica para creación de doctor (incluye cuenta de usuario)
 
-**Dependencies**:
+**Dependencias**:
 - FastAPI 0.104.1
 - PyJWT 2.8.0
 - psycopg2-binary 2.9.9
 - requests 2.31.0
+- pydantic[email] 2.5.0
 
 ### 3. Institutions Service (`service-institutions/`)
 
-**Purpose**: Management of medical institutions and geographic organization
+**Propósito**: Gestión de instituciones médicas y organización geográfica
 
-**Key Features**:
-- Registration and management of healthcare facilities
-- Geographic distribution and regional analysis
-- License verification and accreditation tracking
-- Institution type classification (clinic, hospital, insurer, etc.)
+**Características**:
+- Registro y gestión de instalaciones de salud
+- Distribución geográfica y análisis regional
+- Verificación de licencias y seguimiento de acreditación
+- Clasificación de tipos de institución (clínica, hospital, aseguradora, etc.)
 
-**Main Endpoints**:
-- `GET /api/v1/institutions` - List institutions with filtering
-- `POST /api/v1/institutions` - Create new institution
-- `GET /api/v1/institutions/{id}` - Get institution details
-- `PUT /api/v1/institutions/{id}` - Update institution
-- `DELETE /api/v1/institutions/{id}` - Delete institution (soft delete)
+**Endpoints Principales**:
+- `GET /api/v1/institutions` - Listar instituciones con filtrado
+- `POST /api/v1/institutions` - Crear nueva institución
+- `GET /api/v1/institutions/{id}` - Obtener detalles de institución
+- `PUT /api/v1/institutions/{id}` - Actualizar institución
+- `DELETE /api/v1/institutions/{id}` - Eliminar institución (soft delete)
+- `GET /api/v1/institutions/doctors` - Obtener doctores de la institución autenticada
+- `GET /api/v1/institutions/patients` - Obtener pacientes de la institución autenticada
+- `GET /health` - Health check
 
-**Business Logic**:
-- Institution type validation and constraints
-- Unique contact email and license number requirements
-- Geographic region and status tracking
-- Verification status management
-- Atomic transaction for institution creation (includes user account)
+**Lógica de Negocio**:
+- Validación y restricciones de tipo de institución
+- Requisitos de email de contacto y número de licencia únicos
+- Seguimiento de región geográfica y estado
+- Gestión de estado de verificación
+- Transacción atómica para creación de institución (incluye cuenta de usuario)
 
-**Dependencies**:
+**Dependencias**:
 - FastAPI 0.104.1
 - PyJWT 2.8.0
 - psycopg2-binary 2.9.9
 - requests 2.31.0
 - httpx 0.25.2
+- pydantic[email] 2.5.0
 
 ### 4. Patients Service (`service-patients/`)
 
-**Purpose**: Management of patient data and health profile tracking
+**Propósito**: Gestión de datos de pacientes y seguimiento de perfiles de salud
 
-**Key Features**:
-- Patient profile registration and management
-- Health profile creation and updates
-- Validation workflow management
-- Medical association tracking (doctor/institution)
-- Comprehensive medical record management
+**Características**:
+- Registro y gestión de perfiles de pacientes
+- Creación y actualización de perfiles de salud
+- Gestión de flujos de validación
+- Seguimiento de asociaciones médicas (doctor/institución)
+- Gestión completa de expedientes médicos
 
-**Main Endpoints**:
-- `GET /api/v1/patients` - List patients with filtering
-- `POST /api/v1/patients` - Create new patient
-- `GET /api/v1/patients/{id}` - Get patient details
-- `PUT /api/v1/patients/{id}` - Update patient
-- `DELETE /api/v1/patients/{id}` - Delete patient (soft delete)
-- `GET /api/v1/patients/{id}/dashboard` - Get patient dashboard data
-- `GET /api/v1/patients/{id}/medical-record` - Get complete medical record
-- `GET /api/v1/patients/{id}/care-team` - Get care team information
-- `GET /api/v1/patients/{id}/profile` - Get patient profile details
+**Endpoints Principales**:
+- `GET /api/v1/patients` - Listar pacientes con filtrado
+- `POST /api/v1/patients` - Crear nuevo paciente
+- `GET /api/v1/patients/{id}` - Obtener detalles del paciente
+- `PUT /api/v1/patients/{id}` - Actualizar paciente
+- `DELETE /api/v1/patients/{id}` - Eliminar paciente (soft delete)
+- `GET /api/v1/patients/{id}/dashboard` - Obtener datos del dashboard del paciente
+- `GET /api/v1/patients/{id}/medical-record` - Obtener expediente médico completo
+- `GET /api/v1/patients/{id}/care-team` - Obtener información del equipo médico
+- `GET /api/v1/patients/{id}/profile` - Obtener detalles del perfil del paciente
+- `GET /health` - Health check
 
-**Business Logic**:
-- Validation status progression (pending → validated_by_doctor → validated_by_institution → full_access)
-- Required medical association (must have doctor OR institution)
-- Emergency contact validation
-- Health profile integration
-- Atomic transaction for patient creation (includes user account and health profile)
+**Lógica de Negocio**:
+- Progresión de estado de validación (pending → validated_by_doctor → validated_by_institution → full_access)
+- Asociación médica requerida (debe tener doctor O institución)
+- Validación de contacto de emergencia
+- Integración de perfil de salud
+- Transacción atómica para creación de paciente (incluye cuenta de usuario y perfil de salud)
+- Cálculo de KPIs: health score, BMI, edad, clasificación BMI
 
-**Dependencies**:
+**Dependencias**:
 - FastAPI 0.104.1
 - PyJWT 2.8.0
 - psycopg2-binary 2.9.9
 - requests 2.31.0
+- pydantic[email] 2.5.0
 
-## Shared Components
+## Componentes Compartidos
 
 ### Auth Client (`shared/auth_client.py`)
 
-HTTP client for inter-service communication with the auth-jwt-service.
+Cliente HTTP para comunicación inter-servicios con el auth-jwt-service.
 
-**Functions**:
-- `create_user(email, password, user_type, reference_id)` - Creates user account in auth service
+**Funciones**:
+- `create_user(email, password, user_type, reference_id)` - Crea cuenta de usuario en el servicio de autenticación
 
-**Configuration**:
-- `AUTH_SERVICE_URL` - Environment variable for auth service endpoint (default: `http://servicio-auth-jwt:8003`)
+**Configuración**:
+- `AUTH_SERVICE_URL` - Variable de entorno para endpoint del servicio de autenticación (default: `http://servicio-auth-jwt:8003`)
 
-## Common Service Structure
+## Estructura Común de Servicios
 
-All microservices follow a consistent architecture:
+Todos los microservicios siguen una arquitectura consistente:
 
 ```
 service-name/
 ├── app/
-│   ├── main.py              # FastAPI application entry point
-│   ├── domain.py            # Pydantic models and schemas
-│   ├── db.py                # Database connection and utilities
+│   ├── main.py              # Punto de entrada de la aplicación FastAPI
+│   ├── domain.py            # Modelos Pydantic y esquemas
+│   ├── db.py                # Conexión a base de datos y utilidades
 │   └── __init__.py
-├── Dockerfile               # Container configuration
-├── requirements.txt         # Python dependencies
-└── .env                     # Environment configuration
+├── Dockerfile               # Configuración de contenedor
+├── requirements.txt         # Dependencias Python
+└── .env                     # Configuración de entorno
 ```
 
-## Database Integration
+## Integración con Base de Datos
 
-### Shared Database Schema
+### Esquema de Base de Datos Compartida
 
-All services connect to the same PostgreSQL database with these key tables:
+Todos los servicios se conectan a la misma base de datos PostgreSQL con estas tablas clave:
 
-- **`users`**: Central authentication table
-- **`doctors`**: Healthcare provider profiles
-- **`patients`**: Patient information and associations
-- **`medical_institutions`**: Healthcare facilities
-- **`health_profiles`**: Patient health data
-- **`doctor_specialties`**: Medical specialty definitions
-- **`emails`**: Entity email addresses (polymorphic)
-- **`phones`**: Entity phone numbers (polymorphic)
-- **`addresses`**: Entity addresses (polymorphic)
+- **`users`**: Tabla central de autenticación
+- **`doctors`**: Perfiles de proveedores de salud
+- **`patients`**: Información de pacientes y asociaciones
+- **`medical_institutions`**: Instalaciones de salud
+- **`health_profiles`**: Datos de salud de pacientes
+- **`doctor_specialties`**: Definiciones de especialidades médicas
+- **`emails`**: Direcciones de email de entidades (polimórfico)
+- **`phones`**: Números de teléfono de entidades (polimórfico)
+- **`addresses`**: Direcciones de entidades (polimórfico)
 
-### Data Consistency
+### Consistencia de Datos
 
-- **ACID Transactions**: Database-level transaction management
-- **Foreign Key Constraints**: Referential integrity enforcement
-- **Unique Constraints**: Business rule validation
-- **Triggers**: Automatic timestamp updates
+- **Transacciones ACID**: Gestión de transacciones a nivel de base de datos
+- **Restricciones de Clave Foránea**: Aplicación de integridad referencial
+- **Restricciones Únicas**: Validación de reglas de negocio
+- **Triggers**: Actualizaciones automáticas de timestamps
 
-### Database Connection
+### Conexión a Base de Datos
 
-All services use a common database connection pattern:
+Todos los servicios usan un patrón común de conexión:
 
-- **Connection Pooling**: SimpleConnectionPool with 1-10 connections
-- **Context Managers**: Automatic connection management
-- **DictCursor**: Results returned as dictionaries
-- **Error Handling**: Comprehensive logging and error management
+- **Connection Pooling**: SimpleConnectionPool con 1-10 conexiones
+- **Context Managers**: Gestión automática de conexiones
+- **DictCursor**: Resultados retornados como diccionarios
+- **Manejo de Errores**: Logging completo y gestión de errores
 
-### Cache Strategy
+### Estrategia de Caché
 
-- **Redis Integration**: Session storage and temporary caching
-- **Token Management**: JWT tokens stored in Redis for fast access
-- **Session Handling**: User session data management
+- **Integración Redis**: Almacenamiento de sesiones y caché temporal
+- **Gestión de Tokens**: Tokens JWT almacenados en Redis para acceso rápido
+- **Manejo de Sesiones**: Gestión de datos de sesión de usuario
 
-## API Design Principles
+## Principios de Diseño API
 
-### RESTful Endpoints
+### Endpoints RESTful
 
-All services follow REST conventions:
-- `GET /resource` - List resources with filtering/pagination
-- `POST /resource` - Create new resource
-- `GET /resource/{id}` - Get specific resource
-- `PUT /resource/{id}` - Update resource
-- `DELETE /resource/{id}` - Delete resource (soft delete)
+Todos los servicios siguen convenciones REST:
+- `GET /resource` - Listar recursos con filtrado/paginación
+- `POST /resource` - Crear nuevo recurso
+- `GET /resource/{id}` - Obtener recurso específico
+- `PUT /resource/{id}` - Actualizar recurso
+- `DELETE /resource/{id}` - Eliminar recurso (soft delete)
 
-### Request/Response Format
+### Formato Request/Response
 
-- **JSON**: All communication uses JSON format
-- **Pydantic Models**: Request/response validation
-- **Standard HTTP Status Codes**: Appropriate error handling
-- **Pagination**: Large result sets use cursor-based pagination
+- **JSON**: Toda la comunicación usa formato JSON
+- **Modelos Pydantic**: Validación de request/response
+- **Códigos de Estado HTTP Estándar**: Manejo apropiado de errores
+- **Paginación**: Conjuntos de resultados grandes usan paginación basada en cursor
 
-### Error Handling
+### Manejo de Errores
 
-- **Structured Error Responses**: Consistent error format
-- **HTTP Status Codes**: Appropriate codes for different scenarios
-- **Detailed Error Messages**: Informative error descriptions
-- **Logging**: Complete error logging for debugging
+- **Respuestas de Error Estructuradas**: Formato de error consistente
+- **Códigos de Estado HTTP**: Códigos apropiados para diferentes escenarios
+- **Mensajes de Error Detallados**: Descripciones informativas de errores
+- **Logging**: Logging completo de errores para depuración
 
-## Security Features
+## Características de Seguridad
 
-### Authentication and Authorization
+### Autenticación y Autorización
 
-- **JWT Tokens**: Stateless authentication with refresh tokens
-- **Password Security**: bcrypt hashing with salt
-- **Token Expiration**: Configurable token lifetimes
-- **Device Tracking**: Session fingerprinting and monitoring
-- **Role-Based Access**: User type validation (patient, doctor, institution)
+- **Tokens JWT**: Autenticación stateless con refresh tokens
+- **Seguridad de Contraseñas**: Hashing bcrypt con salt
+- **Expiración de Tokens**: Tiempos de vida de tokens configurables
+- **Seguimiento de Dispositivos**: Fingerprinting y monitoreo de sesiones
+- **Acceso Basado en Roles**: Validación de tipo de usuario (patient, doctor, institution)
 
-### Data Protection
+### Protección de Datos
 
-- **Input Validation**: Server-side validation on all inputs
-- **SQL Injection Prevention**: ORM query parameterization
-- **CORS Configuration**: Cross-origin access control
-- **Rate Limiting**: Protection against abuse (configurable)
+- **Validación de Entrada**: Validación del lado del servidor en todas las entradas
+- **Prevención de Inyección SQL**: Parametrización de consultas ORM
+- **Configuración CORS**: Control de acceso cross-origin
+- **Rate Limiting**: Protección contra abuso (configurable)
 
-## Containerization and Deployment
+## Containerización y Despliegue
 
-### Docker Configuration
+### Configuración Docker
 
-Each service includes:
-- **Multi-stage Builds**: Optimized production images
-- **Health Checks**: Automated service health monitoring
-- **Security**: Non-root user execution
-- **Dependencies**: Minimal runtime dependencies
+Cada servicio incluye:
+- **Multi-stage Builds**: Imágenes de producción optimizadas
+- **Health Checks**: Monitoreo automatizado de salud del servicio
+- **Seguridad**: Ejecución con usuario no root
+- **Dependencias**: Dependencias mínimas de runtime
 
 ### Service Discovery
 
-Services communicate through:
-- **Direct HTTP Calls**: RESTful API communication
-- **Environment Variables**: Service URL configuration
-- **Docker Networks**: Container-to-container communication
+Los servicios se comunican mediante:
+- **Llamadas HTTP Directas**: Comunicación API RESTful
+- **Variables de Entorno**: Configuración de URLs de servicios
+- **Docker Networks**: Comunicación contenedor a contenedor
 
-### Docker Compose Integration
+### Integración Docker Compose
 
-All services are defined in the root `docker-compose.yml`:
-- **Network**: `predicthealth-network` (bridge, subnet: 172.20.0.0/16)
-- **Dependencies**: Health check-based service dependencies
-- **Volumes**: Persistent data storage
-- **Ports**: Exposed service ports for external access
+Todos los servicios están definidos en el `docker-compose.yml` raíz:
+- **Red**: `predicthealth-network` (bridge, subnet: 172.20.0.0/16)
+- **Dependencias**: Dependencias de servicios basadas en health checks
+- **Volúmenes**: Almacenamiento de datos persistente
+- **Puertos**: Puertos de servicios expuestos para acceso externo
 
-## Monitoring and Observability
+**Puertos Expuestos**:
+- `servicio-auth-jwt`: 8003
+- `servicio-doctores`: 8000
+- `servicio-instituciones`: 8002
+- `servicio-pacientes`: 8004
+
+## Monitoreo y Observabilidad
 
 ### Health Endpoints
 
-Each service provides:
-- `GET /health` - Service health status
+Cada servicio proporciona:
+- `GET /health` - Estado de salud del servicio
 
 ### Logging
 
-- **Structured Logging**: JSON format with consistent fields
-- **Log Levels**: Configurable verbosity (DEBUG, INFO, WARNING, ERROR)
-- **Request Tracking**: Request ID and correlation tracking
-- **Performance Metrics**: Response times and error rates
+- **Logging Estructurado**: Formato JSON con campos consistentes
+- **Niveles de Log**: Verbosidad configurable (DEBUG, INFO, WARNING, ERROR)
+- **Seguimiento de Requests**: Request ID y seguimiento de correlación
+- **Métricas de Rendimiento**: Tiempos de respuesta y tasas de error
 
-## Development Configuration
+## Configuración de Desarrollo
 
-### Prerequisites
+### Prerrequisitos
 
 - Python 3.11+
-- PostgreSQL database
-- Redis server
-- Docker and Docker Compose
+- Base de datos PostgreSQL
+- Servidor Redis
+- Docker y Docker Compose
 
-### Local Development
+### Desarrollo Local
 
-1. **Clone and Configure**:
+1. **Clonar y Configurar**:
    ```bash
    cd microservices/service-name
-   # Environment variables are configured in .env (edit if necessary)
+   # Las variables de entorno están configuradas en .env (editar si es necesario)
    ```
 
-2. **Install Dependencies**:
+2. **Instalar Dependencias**:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Database Configuration**:
-   - Ensure PostgreSQL and Redis are running
-   - Database schema must be initialized
+3. **Configuración de Base de Datos**:
+   - Asegurar que PostgreSQL y Redis estén ejecutándose
+   - El esquema de base de datos debe estar inicializado
 
-4. **Run Service**:
+4. **Ejecutar Servicio**:
    ```bash
    python app/main.py
-   # or
+   # o
    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-### Docker Development
+### Desarrollo Docker
 
 ```bash
-# Build and run specific service
+# Construir y ejecutar servicio específico
 docker-compose up --build servicio-name
 
-# View logs
+# Ver logs
 docker-compose logs servicio-name
 
-# Access API documentation
+# Acceder a documentación API
 open http://localhost:SERVICE_PORT/docs
 ```
 
-## Inter-Service Communication
+## Comunicación Inter-Servicios
 
-### Service-to-Service Calls
+### Llamadas Servicio a Servicio
 
-Services communicate through HTTP APIs:
-- **Auth Service**: Provides authentication for other services
-- **Doctors Service**: Manages doctor data for patients and institutions
-- **Institutions Service**: Provides institution data for doctors and patients
-- **Patients Service**: Integrates with doctors and institutions services
+Los servicios se comunican mediante APIs HTTP:
+- **Auth Service**: Proporciona autenticación para otros servicios
+- **Doctors Service**: Gestiona datos de doctores para pacientes e instituciones
+- **Institutions Service**: Proporciona datos de instituciones para doctores y pacientes
+- **Patients Service**: Se integra con servicios de doctores e instituciones
 
-### Authentication Flow
+### Flujo de Autenticación
 
-1. User authenticates via `auth-jwt-service`
-2. JWT token is returned with user information
-3. Other services verify token via `auth-jwt-service` or decode locally
-4. Services extract `reference_id` from token for entity access
+1. Usuario se autentica vía `auth-jwt-service`
+2. Token JWT es retornado con información de usuario
+3. Otros servicios verifican token vía `auth-jwt-service` o decodifican localmente
+4. Servicios extraen `reference_id` del token para acceso a entidades
 
-### Shared Auth Client
+### Cliente Auth Compartido
 
-The `shared/auth_client.py` module provides:
-- Standardized user creation across services
-- Error handling and retry logic
-- Service URL configuration via environment variables
+El módulo `shared/auth_client.py` proporciona:
+- Creación de usuarios estandarizada entre servicios
+- Manejo de errores y lógica de reintento
+- Configuración de URL de servicio mediante variables de entorno
 
-## API Gateway Pattern
+## Patrón API Gateway
 
-Although not implemented in this architecture, services are designed to work with an API gateway for:
-- Request routing and load balancing
-- Authentication middleware
-- Rate limiting and security
-- Request/response transformation
+Aunque no está implementado en esta arquitectura, los servicios están diseñados para trabajar con un API gateway para:
+- Enrutamiento de requests y load balancing
+- Middleware de autenticación
+- Rate limiting y seguridad
+- Transformación de request/response
 
-## Testing Strategy
+## Estrategia de Testing
 
 ### Unit Testing
 
-- **Model Testing**: Database model validation
-- **Service Testing**: Business logic verification
-- **API Testing**: Endpoint functionality testing
+- **Testing de Modelos**: Validación de modelos de base de datos
+- **Testing de Servicios**: Verificación de lógica de negocio
+- **Testing de API**: Testing de funcionalidad de endpoints
 
 ### Integration Testing
 
-- **Database Integration**: Data persistence and retrieval
-- **Inter-Service Communication**: API calls between services
-- **Authentication Flow**: Complete authentication workflows
+- **Integración de Base de Datos**: Persistencia y recuperación de datos
+- **Comunicación Inter-Servicios**: Llamadas API entre servicios
+- **Flujo de Autenticación**: Flujos de autenticación completos
 
 ### Load Testing
 
-- **Performance Benchmarks**: Response time validation
-- **Concurrency Testing**: Multi-user scenario simulation
-- **Resource Usage**: Memory and CPU monitoring
+- **Benchmarks de Rendimiento**: Validación de tiempos de respuesta
+- **Testing de Concurrencia**: Simulación de escenarios multi-usuario
+- **Uso de Recursos**: Monitoreo de memoria y CPU
 
 ## Troubleshooting
 
-### Common Issues
+### Problemas Comunes
 
-1. **Database Connection Errors**
-   - Verify `DATABASE_URL` configuration
-   - Check PostgreSQL service status
-   - Validate connection credentials
+1. **Errores de Conexión a Base de Datos**
+   - Verificar configuración `DATABASE_URL`
+   - Verificar estado del servicio PostgreSQL
+   - Validar credenciales de conexión
 
-2. **Redis Connection Problems**
-   - Verify `REDIS_URL` configuration
-   - Check Redis service availability
-   - Validate Redis connection pool
+2. **Problemas de Conexión Redis**
+   - Verificar configuración `REDIS_URL`
+   - Verificar disponibilidad del servicio Redis
+   - Validar pool de conexiones Redis
 
-3. **Inter-Service Communication**
-   - Verify service URLs in configuration
-   - Check Docker network connectivity
-   - Validate API endpoint availability
+3. **Comunicación Inter-Servicios**
+   - Verificar URLs de servicios en configuración
+   - Verificar conectividad de red Docker
+   - Validar disponibilidad de endpoints API
 
-4. **Authentication Issues**
-   - Verify `JWT_SECRET_KEY` configuration
-   - Check token expiration settings
-   - Validate token storage in Redis
+4. **Problemas de Autenticación**
+   - Verificar configuración `JWT_SECRET_KEY`
+   - Verificar configuración de expiración de tokens
+   - Validar almacenamiento de tokens en Redis
 
-### Debug Mode
+### Modo Debug
 
-Enable detailed logging:
+Habilitar logging detallado:
 ```bash
 export LOG_LEVEL=DEBUG
 python app/main.py
 ```
 
-## Performance Optimization
+## Optimización de Rendimiento
 
-### Database Optimization
+### Optimización de Base de Datos
 
-- **Connection Pooling**: Efficient database connection management
-- **Query Optimization**: Strategic indexing and query planning
-- **Caching**: Redis-based caching for frequently accessed data
+- **Connection Pooling**: Gestión eficiente de conexiones a base de datos
+- **Optimización de Queries**: Indexación estratégica y planificación de queries
+- **Caché**: Caché basado en Redis para datos frecuentemente accedidos
 
-### Service Optimization
+### Optimización de Servicios
 
-- **Async Operations**: FastAPI async/await for concurrent processing
-- **Response Caching**: Redis caching for expensive operations
-- **Pagination**: Efficient handling of large datasets
+- **Operaciones Async**: FastAPI async/await para procesamiento concurrente
+- **Caché de Respuestas**: Caché Redis para operaciones costosas
+- **Paginación**: Manejo eficiente de datasets grandes
 
-## Future Improvements
+## Mejoras Futuras
 
-### Planned Features
+### Características Planificadas
 
-- **API Gateway**: Centralized request routing and authentication
-- **Service Mesh**: Advanced inter-service communication and observability
-- **Event-Driven Architecture**: Asynchronous event processing
-- **Multi-Region Deployment**: Geographic distribution and failover
+- **API Gateway**: Enrutamiento de requests y autenticación centralizados
+- **Service Mesh**: Comunicación inter-servicios avanzada y observabilidad
+- **Arquitectura Orientada a Eventos**: Procesamiento asíncrono de eventos
+- **Despliegue Multi-Región**: Distribución geográfica y failover
 
-### Scalability Improvements
+### Mejoras de Escalabilidad
 
-- **Horizontal Scaling**: Load balancing across multiple instances
-- **Database Sharding**: Data distribution for large-scale deployments
-- **Advanced Caching Strategies**: Redis cache patterns
-- **Monitoring Dashboard**: Centralized service monitoring
+- **Escalado Horizontal**: Load balancing entre múltiples instancias
+- **Database Sharding**: Distribución de datos para despliegues a gran escala
+- **Estrategias de Caché Avanzadas**: Patrones de caché Redis
+- **Dashboard de Monitoreo**: Monitoreo centralizado de servicios
 
 ---
 
-The PredictHealth microservices architecture provides a solid, scalable foundation for healthcare data management, with each service specializing in specific domain functionality while maintaining consistent API design and operational practices.
+La arquitectura de microservicios de PredictHealth proporciona una base sólida y escalable para la gestión de datos de salud, con cada servicio especializándose en funcionalidad de dominio específica mientras mantiene diseño de API y prácticas operacionales consistentes.

@@ -57,7 +57,7 @@
                 <ul class="sidebar-links">
                     <li><a href="/docs/database/postgresql" class="sidebar-link">PostgreSQL</a></li>
                     <li><a href="/docs/database/redis" class="sidebar-link">Redis Cache</a></li>
-                    <li><a href="/docs/database/migraciones" class="sidebar-link">Firebase</a></li>
+                    <li><a href="/docs/database/firebase" class="sidebar-link">Firebase</a></li>
                 </ul>
             </div>
 
@@ -88,20 +88,69 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">📱</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">📱</span>
                 App Móvil
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Aplicación móvil Android mencionada en la documentación del proyecto. La app móvil está planeada para proporcionar acceso móvil a la plataforma PredictHealth.
+            </p>
+
+            <div class="tech-section">
+                <h2>Estado Actual</h2>
+                <p>
+                    La aplicación móvil Android está mencionada en la documentación pero no está detallada en los READMEs del proyecto. La información disponible es limitada.
+                </p>
+
+                <h2>Plataforma</h2>
+                <p>
+                    La app móvil está planeada para Android utilizando Java, según se menciona en la documentación general del proyecto.
+                </p>
+
+                <h2>Funcionalidades Planeadas</h2>
+                <p>
+                    La aplicación móvil contemplaría:
+                </p>
+
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4><i class="fas fa-chart-pie" style="color: #4dd9d6;"></i> Dashboards</h4>
+                        <p>Acceso a dashboards de pacientes, doctores e instituciones.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-sync" style="color: #667eea;"></i> Sincronización</h4>
+                        <p>Sincronización de datos con la plataforma web.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-bell" style="color: #f59e0b;"></i> Notificaciones</h4>
+                        <p>Notificaciones push para alertas médicas.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-file-medical-alt" style="color: #8b5cf6;"></i> Expedientes</h4>
+                        <p>Acceso a expedientes médicos y perfiles de salud.</p>
+                    </div>
+
+                    <div class="tech-card">
+                        <h4><i class="fas fa-watch-fitness" style="color: #10b981;"></i> Wearables</h4>
+                        <p>Integración con dispositivos wearables (futuro).</p>
+                    </div>
+                </div>
+
+                <h2>Integración</h2>
+                <p>
+                    La app móvil se integraría con el API Gateway existente mediante las mismas APIs REST utilizadas por el frontend web, utilizando autenticación JWT.
+                </p>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
-            </div>
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                La documentación de la app móvil será expandida cuando se desarrolle en futuras versiones de la plataforma.
+            </p>
         </main>
     </div>
 </body>

@@ -55,7 +55,7 @@
             <div class="sidebar-section">
                 <div class="sidebar-title">Base de Datos</div>
                 <ul class="sidebar-links">
-                    <li><a href="/docs/database/schema" class="sidebar-link">Esquema</a></li>
+                    <li><a href="/docs/database/postgresql" class="sidebar-link">PostgreSQL</a></li>
                     <li><a href="/docs/database/redis" class="sidebar-link active">Redis Cache</a></li>
                     <li><a href="/docs/database/firebase" class="sidebar-link">Firebase</a></li>
                 </ul>
@@ -88,20 +88,150 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🔴</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🔴</span>
                 Redis Cache
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Redis Alpine-based para almacenamiento de tokens JWT, gestión de sesiones y capa de caché de alto rendimiento. Proporciona acceso rápido a datos temporales y validación de autenticación.
+            </p>
+
+            <h2>Configuración</h2>
+            <div>
+                <span class="badge">Alpine-based Redis</span>
+                <span class="badge">Puerto: 6379</span>
+                <span class="badge">Memoria máxima: 1GB</span>
+                <span class="badge">Política: allkeys-lru</span>
+                <span class="badge">AOF habilitado</span>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Uso en PredictHealth</h2>
+            <p>
+                Redis se utiliza para tres propósitos principales:
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-key" style="color: #4dd9d6;"></i> Almacenamiento de Tokens JWT</h4>
+                    <p>Tokens almacenados con formato <code>access_token:{jwt_token}</code> y TTL de 15 minutos.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-user-clock" style="color: #667eea;"></i> Gestión de Sesiones</h4>
+                    <p>Validación rápida de sesiones activas y renovación automática de tokens en uso.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-bolt" style="color: #f59e0b;"></i> Caché Temporal</h4>
+                    <p>Capa de caché para datos frecuentemente accedidos y operaciones costosas.</p>
+                </div>
             </div>
+
+            <h2>Configuración Redis</h2>
+            <p>
+                Archivo <code>database/redis/redis.conf</code>:
+            </p>
+
+            <div class="tech-section">
+                <h3>Parámetros Principales</h3>
+                <ul>
+                    <li><strong>Puerto:</strong> 6379</li>
+                    <li><strong>Memoria máxima:</strong> 1GB</li>
+                    <li><strong>Política de evicción:</strong> <code>allkeys-lru</code> (Least Recently Used)</li>
+                    <li><strong>Persistencia:</strong> AOF habilitado con fsync <code>everysec</code></li>
+                    <li><strong>Puntos de guardado:</strong> 900s (1 cambio), 300s (10 cambios), 60s (10000 cambios)</li>
+                    <li><strong>TCP keepalive:</strong> 300</li>
+                    <li><strong>Timeout:</strong> 300</li>
+                </ul>
+
+                <h3>Política de Evicción LRU</h3>
+                <p>
+                    Cuando se alcanza el límite de memoria (1GB), Redis elimina automáticamente las claves menos usadas recientemente. Esto previene agotamiento de memoria y mantiene rendimiento óptimo.
+                </p>
+
+                <h3>Persistencia AOF</h3>
+                <p>
+                    Append-Only File (AOF) habilitado con fsync cada segundo garantiza durabilidad de datos críticos (tokens JWT) mientras mantiene buen rendimiento.
+                </p>
+            </div>
+
+            <h2>Integración con Servicios</h2>
+            <p>
+                Todos los microservicios y el API Gateway se conectan a Redis:
+            </p>
+
+            <div class="tech-section">
+                <h3>Servicios que Utilizan Redis</h3>
+                <ul>
+                    <li><strong>auth-jwt-service:</strong> Almacenamiento y validación de tokens JWT</li>
+                    <li><strong>backend-flask:</strong> Validación de sesiones mediante middleware JWT</li>
+                    <li><strong>Microservicios:</strong> Caché temporal y validación de tokens inter-servicios</li>
+                </ul>
+
+                <h3>Formato de Almacenamiento</h3>
+                <pre><code># Tokens JWT
+access_token:{jwt_token} = "{jwt_token_string}"
+TTL: 900 segundos (15 minutos)
+
+# Ejemplo de key
+access_token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
+            </div>
+
+            <h2>Gestión de Memoria</h2>
+            <div class="tech-section">
+                <h3>Límite de Memoria</h3>
+                <p>
+                    Límite configurado de 1GB previene agotamiento de memoria del sistema. Cuando se alcanza, la política LRU elimina automáticamente claves menos usadas.
+                </p>
+
+                <h3>Optimización</h3>
+                <ul>
+                    <li>TTL automático en tokens JWT (15 minutos)</li>
+                    <li>Política LRU para gestión eficiente de memoria</li>
+                    <li>Persistencia AOF para durabilidad sin impacto significativo en rendimiento</li>
+                </ul>
+            </div>
+
+            <h2>Health Checks</h2>
+            <p>
+                Redis incluye health check configurado en Docker Compose:
+            </p>
+
+            <div class="tech-section">
+                <h3>Verificación de Salud</h3>
+                <pre><code>healthcheck:
+  test: ["CMD", "redis-cli", "ping"]
+  interval: 10s
+  timeout: 5s
+  retries: 5</code></pre>
+
+                <p>
+                    El health check verifica conectividad mediante comando <code>PING</code>. Si Redis no responde, Docker marca el contenedor como no saludable.
+                </p>
+            </div>
+
+            <h2>Operaciones Comunes</h2>
+            <div class="tech-section">
+                <h3>Acceso desde Contenedor</h3>
+                <pre><code># Desde el host (si redis-cli está instalado)
+redis-cli -h localhost -p 6379
+
+# Desde el contenedor
+docker exec -it predicthealth-redis redis-cli
+
+# Verificar tokens almacenados
+KEYS access_token:*
+
+# Obtener valor de token
+GET access_token:{jwt_token}</code></pre>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                Redis proporciona validación rápida de tokens JWT y gestión eficiente de sesiones, esencial para el rendimiento del sistema de autenticación.
+            </p>
         </main>
     </div>
 </body>

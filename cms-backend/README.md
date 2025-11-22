@@ -1,208 +1,250 @@
 # PredictHealth CMS Backend
 
-Content Management System backend for PredictHealth platform. Flask-based administrative interface for managing healthcare data including doctors, patients, medical institutions, and system analytics.
+Sistema de gestión de contenido (CMS) para la plataforma PredictHealth. Interfaz administrativa basada en Flask para gestionar datos de salud incluyendo doctores, pacientes, instituciones médicas y análisis del sistema.
 
-## Overview
+## Descripción General
 
-The CMS Backend provides a secure, role-based administrative interface for managing the PredictHealth healthcare platform. It integrates with the main PostgreSQL database and provides comprehensive CRUD operations, reporting capabilities, and system monitoring.
+El CMS Backend proporciona una interfaz administrativa segura con control de acceso basado en roles para gestionar la plataforma PredictHealth. Se integra con la base de datos PostgreSQL principal y proporciona operaciones CRUD completas, capacidades de reportes y monitoreo del sistema.
 
-## Architecture
+## Arquitectura
 
-### Technology Stack
+### Stack Tecnológico
 
-- **Framework**: Flask 2.3.3 with SQLAlchemy ORM
-- **Authentication**: Flask-Login with bcrypt password hashing
-- **Security**: CSRF protection (Flask-WTF) and role-based access control
-- **Database**: PostgreSQL integration with existing schema
-- **Frontend**: Jinja2 templates with Bootstrap styling
-- **Visualization**: Chart.js for data visualization
-- **Reporting**: ReportLab for PDF generation, pandas/openpyxl for Excel export
+- **Framework**: Flask 2.3.3 con SQLAlchemy ORM
+- **Autenticación**: Flask-Login con hash de contraseñas bcrypt
+- **Seguridad**: Protección CSRF (Flask-WTF) y control de acceso basado en roles
+- **Base de Datos**: PostgreSQL con integración al esquema existente
+- **Frontend**: Plantillas Jinja2 con estilos Bootstrap
+- **Visualización**: Chart.js para visualización de datos
+- **Reportes**: ReportLab para generación de PDF, pandas/openpyxl para exportación Excel
+- **Monitoreo**: Docker SDK para monitoreo de microservicios, Redis para caché
 
-### Project Structure
+### Estructura del Proyecto
 
 ```
 cms-backend/
-├── app.py                 # Main application entry point
-├── Dockerfile            # Container configuration
-├── requirements.txt      # Python dependencies
+├── app.py                 # Punto de entrada principal
+├── Dockerfile             # Configuración de contenedor
+├── requirements.txt       # Dependencias Python
 └── app/
-    ├── __init__.py       # Flask application factory
-    ├── config.py         # Configuration management
-    ├── models/           # Database models
+    ├── __init__.py        # Factory de aplicación Flask
+    ├── config.py          # Gestión de configuración
+    ├── models/            # Modelos de base de datos
     │   ├── __init__.py
-    │   ├── user.py       # CMS user model
-    │   ├── role.py       # Role and permission models
-    │   ├── cms_roles.py  # Admin/Editor role definitions
-    │   └── existing_models.py  # Read-only models for system data
-    ├── routes/           # Route handlers
-    │   ├── auth.py       # Authentication routes
-    │   ├── dashboard.py  # Main dashboard
-    │   ├── entities.py   # CRUD operations for entities
-    │   ├── reports.py    # Reporting functionality
-    │   ├── settings.py   # System configurations
-    │   └── monitoring.py # System monitoring
-    ├── templates/        # Jinja2 templates
-    ├── static/           # CSS, JS, images
-    └── utils/            # Utility functions
-        └── role_utils.py # Role-based access control utilities
+    │   ├── user.py         # Modelo de usuario CMS
+    │   ├── role.py         # Modelos de roles y permisos
+    │   ├── cms_roles.py    # Definiciones de roles Admin/Editor
+    │   └── existing_models.py  # Modelos de solo lectura para datos del sistema
+    ├── routes/             # Manejadores de rutas
+    │   ├── auth.py         # Rutas de autenticación
+    │   ├── dashboard.py    # Dashboard principal
+    │   ├── entities.py      # Operaciones CRUD para entidades
+    │   ├── reports.py      # Funcionalidad de reportes
+    │   ├── settings.py    # Configuraciones del sistema
+    │   └── monitoring.py   # Monitoreo del sistema
+    ├── templates/          # Plantillas Jinja2
+    ├── static/             # CSS, JS, imágenes
+    └── utils/              # Funciones utilitarias
+        └── role_utils.py   # Utilidades de control de acceso basado en roles
 ```
 
-## Features
+## Características
 
-### 1. Authentication and Authorization
+### 1. Autenticación y Autorización
 
-#### User Management
-- **CMS Users**: Dedicated administrative accounts (stored in `cms_users` table)
-- **Role-Based Access**: Admin and Editor roles with granular permissions
-- **Session Management**: Secure session handling with configurable timeouts
-- **Password Security**: bcrypt hashing with salt
+#### Gestión de Usuarios
+- **Usuarios CMS**: Cuentas administrativas dedicadas (almacenadas en tabla `cms_users`)
+- **Control de Acceso Basado en Roles**: Roles Admin y Editor con permisos granulares
+- **Gestión de Sesiones**: Manejo seguro de sesiones con timeouts configurables
+- **Seguridad de Contraseñas**: Hash bcrypt con salt
 
-#### Role System
-- **Admin Role**: Full CRUD permissions on all entities
-- **Editor Role**: Read and update permissions, no create/delete
-- **Permission Matrix**: Resource-action based permissions (doctors, patients, institutions)
+#### Sistema de Roles
+- **Rol Admin**: Permisos CRUD completos en todas las entidades
+- **Rol Editor**: Permisos de lectura y actualización, sin crear/eliminar
+- **Matriz de Permisos**: Permisos basados en recurso-acción (doctores, pacientes, instituciones)
+- **Perfiles Extendidos**: Tablas `admin_cms` y `editor_cms` con información adicional
 
-### 2. Entity Management
+### 2. Gestión de Entidades
 
-#### Doctor Management
-- **CRUD Operations**: Create, read, update, delete doctors
-- **Advanced Filtering**: By specialty, institution, experience, status
-- **Validation**: Unique email and medical license enforcement
-- **Associations**: Linking with specialties and institutions
+#### Gestión de Doctores
+- **Operaciones CRUD**: Crear, leer, actualizar, eliminar doctores
+- **Filtrado Avanzado**: Por especialidad, institución, experiencia, estado
+- **Validación**: Enfoque de email único y licencia médica
+- **Asociaciones**: Vinculación con especialidades e instituciones
+- **Ordenamiento**: Por nombre, experiencia, tarifa de consulta
 
-#### Patient Management
-- **Complete Profiles**: Management of demographic and health data
-- **Validation Flow**: Pending → Doctor Validated → Institution Validated → Full Access
-- **Medical Associations**: Linking with doctors and/or institutions
-- **Health Profiles**: Automatic creation with patient registration
+#### Gestión de Pacientes
+- **Perfiles Completos**: Gestión de datos demográficos y de salud
+- **Flujo de Validación**: Pendiente → Validado por Doctor → Validado por Institución → Acceso Completo
+- **Asociaciones Médicas**: Vinculación con doctores y/o instituciones
+- **Perfiles de Salud**: Creación automática con registro de paciente
+- **Vista Demográfica**: Uso de `vw_patient_demographics` para reportes
 
-#### Institution Management
-- **Healthcare Facilities**: Hospitals, clinics, insurers, health centers
-- **Geographic Organization**: Region/state-based filtering
-- **Verification Status**: Active/inactive and verified status tracking
-- **Contact Management**: Complete contact information
+#### Gestión de Instituciones
+- **Instalaciones de Salud**: Hospitales, clínicas, aseguradoras, centros de salud
+- **Organización Geográfica**: Filtrado basado en región/estado
+- **Estado de Verificación**: Seguimiento de estado activo/inactivo y verificado
+- **Gestión de Contacto**: Información de contacto completa
 
-### 3. Dashboard and Analytics
+### 3. Dashboard y Análisis
 
-#### Real-Time Metrics
-- **System Summary**: Total users, doctors, patients, institutions
-- **Validation Statistics**: Patient validation status distribution
-- **Financial Metrics**: Average consultation fees
-- **Growth Tracking**: Monthly registration trends
+#### Métricas en Tiempo Real
+- **Resumen del Sistema**: Total de usuarios, doctores, pacientes, instituciones
+- **Estadísticas de Validación**: Distribución de estado de validación de pacientes
+- **Métricas Financieras**: Promedio de tarifas de consulta
+- **Seguimiento de Crecimiento**: Tendencias de registro mensual
+- **Integridad de Relaciones**: Métricas de integridad de relaciones paciente-doctor-institución
 
-#### Data Visualization
-- **Interactive Charts**: Chart.js-powered visualizations
-- **Geographic Distribution**: Mapping of institutions and providers
-- **Specialty Distribution**: Doctor specialty analysis
-- **Health Conditions**: Population health statistics
+#### Visualización de Datos
+- **Gráficos Interactivos**: Visualizaciones con Chart.js
+- **Distribución Geográfica**: Mapeo de instituciones y proveedores
+- **Distribución de Especialidades**: Análisis de especialidades de doctores
+- **Condiciones de Salud**: Estadísticas de salud poblacional
 
-### 4. Reporting System
+#### Vistas de Base de Datos Utilizadas
+- `vw_dashboard_overview`: Resumen general del sistema
+- `vw_monthly_registrations`: Registros mensuales
+- `vw_doctor_specialty_distribution`: Distribución de especialidades
+- `vw_geographic_distribution`: Distribución geográfica
+- `vw_health_condition_prevalence`: Prevalencia de condiciones de salud
+- `vw_patient_validation_status`: Estado de validación de pacientes
+- `vw_patient_demographics`: Demografía de pacientes
 
-#### Analysis Views
-- **Monthly Registrations**: Patient onboarding trends
-- **Geographic Analysis**: Regional health distribution
-- **Specialty Analysis**: Doctor specialty distribution
-- **Health Prevalence**: Condition prevalence statistics
+### 4. Sistema de Reportes
 
-#### Export Capabilities
-- **PDF Reports**: ReportLab-generated PDF documents
-- **Excel Exports**: pandas/openpyxl for data export
-- **CSV Downloads**: Structured data downloads
+#### Vistas de Análisis
+- **Registros Mensuales**: Tendencias de incorporación de pacientes
+- **Análisis Geográfico**: Distribución de salud regional
+- **Análisis de Especialidades**: Distribución de especialidades de doctores
+- **Prevalencia de Salud**: Estadísticas de prevalencia de condiciones
 
-### 5. System Administration
+#### Capacidades de Exportación
+- **Reportes PDF**: Documentos PDF generados con ReportLab
+- **Exportaciones Excel**: pandas/openpyxl para exportación de datos
+- **Descargas CSV**: Descargas de datos estructurados
+- **Filtrado Avanzado**: Por fecha, estado, región, especialidad, validación
 
-#### Configuration Management
-- **Dynamic Configuration**: Runtime system configurations
-- **Environment Variables**: Configurable application behavior
-- **File Upload Limits**: Configurable upload restrictions
+### 5. Administración del Sistema
 
-#### Monitoring
-- **Health Checks**: Application health endpoints
-- **System Metrics**: Performance monitoring
-- **User Activity**: Login tracking and audit logs
+#### Gestión de Configuración
+- **Configuración Dinámica**: Configuraciones del sistema en tiempo de ejecución
+- **Variables de Entorno**: Comportamiento de aplicación configurable
+- **Límites de Carga de Archivos**: Restricciones de carga configurables
+- **Configuración de Sesión**: Timeouts y configuraciones de sesión
 
-## Database Integration
+#### Monitoreo
+- **Health Checks**: Endpoints de salud de aplicación
+- **Métricas del Sistema**: Monitoreo de rendimiento
+- **Monitoreo de Microservicios**: Verificación de estado de servicios mediante Docker SDK
+- **Monitoreo de Base de Datos**: Verificación de conectividad PostgreSQL
+- **Monitoreo de Redis**: Verificación de conectividad Redis
+- **Tiempos de Respuesta**: Medición de tiempos de respuesta de servicios
 
-### Schema Architecture
+## Integración con Base de Datos
 
-The CMS integrates with the main PredictHealth PostgreSQL database using read-only models for existing system data:
+### Arquitectura de Esquema
 
-- **`cms_users`**: CMS administrative accounts
-- **`cms_roles` & `cms_permissions`**: Role-based access control
-- **`doctors`, `patients`, `medical_institutions`**: Health entities
-- **`health_profiles`, `doctor_specialties`**: Supporting data
-- **`system_settings`**: Dynamic configuration
+El CMS se integra con la base de datos PostgreSQL principal de PredictHealth usando modelos de solo lectura para datos existentes del sistema:
 
-### Data Flow
+- **`cms_users`**: Cuentas administrativas del CMS
+- **`cms_roles` & `cms_user_roles`**: Control de acceso basado en roles
+- **`admin_cms` & `editor_cms`**: Perfiles extendidos de usuarios CMS
+- **`doctors`, `patients`, `medical_institutions`**: Entidades de salud
+- **`health_profiles`, `doctor_specialties`**: Datos de soporte
+- **`system_settings`**: Configuración dinámica
+- **`emails`, `phones`**: Información de contacto normalizada
 
-1. **Authentication**: CMS users authenticate against `cms_users` table
-2. **Authorization**: Role lookup via `cms_roles` and `cms_role_permissions`
-3. **Entity Management**: CRUD operations on health entities
-4. **Analytics**: Read-only queries against database views and procedures
-5. **Configurations**: Runtime configuration via `system_settings` table
+### Flujo de Datos
 
-## Security Features
+1. **Autenticación**: Usuarios CMS autentican contra tabla `cms_users`
+2. **Autorización**: Búsqueda de roles mediante `cms_roles` y `cms_user_roles`
+3. **Gestión de Entidades**: Operaciones CRUD en entidades de salud
+4. **Análisis**: Consultas de solo lectura contra vistas de base de datos y procedimientos
+5. **Configuraciones**: Configuración en tiempo de ejecución mediante tabla `system_settings`
 
-### Access Control
-- **CSRF Protection**: Flask-WTF CSRF tokens on all forms
-- **Session Security**: Secure session configuration with timeouts
-- **Role Enforcement**: Permission verification via decorators
-- **Input Validation**: Server-side validation on all user inputs
+## Características de Seguridad
 
-### Data Protection
-- **SQL Injection Prevention**: SQLAlchemy ORM protection
-- **XSS Prevention**: Template escaping and input sanitization
-- **File Upload Security**: Werkzeug secure filename handling
-- **Password Policies**: Strong password requirements
+### Control de Acceso
+- **Protección CSRF**: Tokens CSRF de Flask-WTF en todos los formularios
+- **Seguridad de Sesión**: Configuración de sesión segura con timeouts
+- **Aplicación de Roles**: Verificación de permisos mediante decoradores
+- **Validación de Entrada**: Validación del lado del servidor en todas las entradas de usuario
 
-## API Endpoints
+### Protección de Datos
+- **Prevención de Inyección SQL**: Protección ORM de SQLAlchemy
+- **Prevención XSS**: Escape de plantillas y sanitización de entrada
+- **Seguridad de Carga de Archivos**: Manejo seguro de nombres de archivo con Werkzeug
+- **Políticas de Contraseñas**: Requisitos de contraseña fuerte
 
-### Authentication
-- `GET/POST /auth/login` - User login
-- `POST /auth/logout` - User logout
+## Endpoints API
+
+### Autenticación
+- `GET/POST /auth/login` - Inicio de sesión de usuario
+- `POST /auth/logout` - Cierre de sesión de usuario
 
 ### Dashboard
-- `GET /dashboard/` - Main dashboard with analytics
+- `GET /dashboard/` - Dashboard principal con análisis
 
-### Entity Management
-- `GET /entities/doctors` - List doctors with filtering
-- `GET/POST /entities/doctors/create` - Create new doctor
-- `GET/POST /entities/doctors/edit/<id>` - Edit doctor
-- `POST /entities/doctors/delete/<id>` - Delete doctor
-- `GET /entities/doctors/view/<id>` - View doctor details
-- Similar CRUD endpoints for patients and institutions
+### Gestión de Entidades
 
-### Reports
-- `GET /reports/` - Reports dashboard
-- `GET /reports/monthly` - Monthly registration reports
-- `GET /reports/geographic` - Geographic analysis
-- `GET /reports/specialties` - Specialty distribution
-- `GET /reports/health` - Health condition reports
+#### Doctores
+- `GET /entities/doctors` - Listar doctores con filtrado
+- `GET /entities/doctors/create` - Formulario de creación
+- `POST /entities/doctors` - Crear nuevo doctor
+- `GET /entities/doctors/view/<doctor_id>` - Ver detalles de doctor
+- `GET /entities/doctors/edit/<doctor_id>` - Formulario de edición
+- `POST /entities/doctors/edit/<doctor_id>` - Actualizar doctor
+- `POST /entities/doctors/delete/<doctor_id>` - Eliminar doctor
 
-### Settings
-- `GET /settings/` - System settings management
-- `GET /settings/system` - System configuration
-- `GET /settings/backup` - Backup and restore
+#### Pacientes
+- `GET /entities/patients` - Listar pacientes con filtrado
+- `GET /entities/patients/create` - Formulario de creación
+- `POST /entities/patients` - Crear nuevo paciente
+- `GET /entities/patients/view/<patient_id>` - Ver detalles de paciente
+- `GET /entities/patients/edit/<patient_id>` - Formulario de edición
+- `POST /entities/patients/edit/<patient_id>` - Actualizar paciente
+- `POST /entities/patients/delete/<patient_id>` - Eliminar paciente
 
-### Monitoring
-- `GET /monitoring/` - System monitoring dashboard
-- `GET /monitoring/microservices` - Microservice status
+#### Instituciones
+- `GET /entities/institutions` - Listar instituciones con filtrado
+- `GET /entities/institutions/create` - Formulario de creación
+- `POST /entities/institutions` - Crear nueva institución
+- `GET /entities/institutions/view/<institution_id>` - Ver detalles de institución
+- `GET /entities/institutions/edit/<institution_id>` - Formulario de edición
+- `POST /entities/institutions/edit/<institution_id>` - Actualizar institución
+- `POST /entities/institutions/delete/<institution_id>` - Eliminar institución
+
+### Reportes
+- `GET /reports/` - Dashboard de reportes
+- `GET /reports/export/<report_type>/<format>` - Exportar reporte (CSV/PDF)
+
+### Configuración
+- `GET /settings/` - Gestión de configuraciones del sistema
+- `POST /settings/` - Guardar configuraciones
+
+### Monitoreo
+- `GET /monitoring/` - Dashboard de monitoreo del sistema
+- `GET /monitoring/microservices` - Estado de microservicios
+- `POST /monitoring/microservices` - Actualizar configuración de monitoreo
+- `GET /monitoring/api/service-details/<service_name>` - Detalles de servicio
 
 ### Health Check
-- `GET /health` - Application health status
+- `GET /health` - Estado de salud de la aplicación (JSON)
+- `GET /` - Redirección a login o dashboard según autenticación
 
-## Configuration
+## Configuración
 
-### Environment Variables
+### Variables de Entorno
 
 ```bash
 # Flask Configuration
 SECRET_KEY=your-secret-key-change-in-production
 FLASK_ENV=development
 DEBUG=True
+PORT=5001
 
 # Database
-DATABASE_URL=postgresql://predictHealth_user:password@postgres:5432/predicthealth_db
+DATABASE_URL=postgresql://predictHealth_user:password@postgres:5432/predicthealth_db?client_encoding=utf8
 
 # CMS Settings
 CMS_TITLE=PredictHealth CMS
@@ -211,158 +253,172 @@ CMS_VERSION=1.0.0
 # Session
 SESSION_TYPE=filesystem
 PERMANENT_SESSION_LIFETIME=3600
+
+# Docker (para monitoreo de microservicios)
+DOCKER_HOST=tcp://host.docker.internal:2375
+DOCKER_TLS_VERIFY=0
 ```
 
-### Configuration Classes
+### Clases de Configuración
 
-The application supports multiple configuration environments:
-- **Development**: Debug mode enabled, detailed error messages
-- **Production**: Debug disabled, optimized for performance
+La aplicación soporta múltiples entornos de configuración:
+- **Development**: Modo debug habilitado, mensajes de error detallados
+- **Production**: Debug deshabilitado, optimizado para rendimiento
 
-## Installation
+## Instalación
 
-### Prerequisites
+### Prerrequisitos
 
 - Python 3.11+
 - PostgreSQL database
-- Docker and Docker Compose (optional)
+- Docker y Docker Compose (opcional, para monitoreo de microservicios)
+- Redis (opcional, para caché)
 
-### Local Development Setup
+### Configuración de Desarrollo Local
 
-1. **Clone and Navigate**:
+1. **Clonar y Navegar**:
    ```powershell
    cd cms-backend
    ```
 
-2. **Create Virtual Environment**:
+2. **Crear Entorno Virtual**:
    ```powershell
    python -m venv venv
    .\venv\Scripts\Activate.ps1
    ```
 
-3. **Install Dependencies**:
+3. **Instalar Dependencias**:
    ```powershell
    pip install -r requirements.txt
    ```
 
-4. **Configure Environment**:
-   Create a `.env` file with required environment variables (see Configuration section)
+4. **Configurar Entorno**:
+   Crear archivo `.env` con variables de entorno requeridas (ver sección Configuración)
 
-5. **Database Setup**:
-   Ensure PostgreSQL is running and the database schema is initialized
+5. **Configuración de Base de Datos**:
+   Asegurar que PostgreSQL esté ejecutándose y el esquema de base de datos esté inicializado
 
-6. **Run Application**:
+6. **Ejecutar Aplicación**:
    ```powershell
    python app.py
    ```
 
-The application will be available at `http://localhost:5001`
+La aplicación estará disponible en `http://localhost:5001`
 
-### Docker Deployment
+### Despliegue Docker
 
 ```powershell
-# Build and run with Docker Compose
+# Construir y ejecutar con Docker Compose
 docker-compose up --build cms-backend
 ```
 
-The Dockerfile includes:
-- Python 3.11 slim base image
-- Health check monitoring
-- Non-root user execution
-- PostgreSQL client for database connectivity
+El Dockerfile incluye:
+- Imagen base Python 3.11 slim
+- Monitoreo de health check
+- Ejecución de usuario no root
+- Cliente PostgreSQL para conectividad de base de datos
+- Integración con Docker SDK para monitoreo
 
-## Usage
+## Uso
 
-### Admin Workflow
+### Flujo de Trabajo de Admin
 
-1. **Login**: Access via `/auth/login` with admin credentials
-2. **Dashboard Review**: Check system metrics and recent activity
-3. **Entity Management**: Create/edit doctors, patients, institutions
-4. **Report Generation**: Export system analysis and reports
-5. **System Configuration**: Adjust system parameters
+1. **Inicio de Sesión**: Acceder mediante `/auth/login` con credenciales de admin
+2. **Revisión de Dashboard**: Verificar métricas del sistema y actividad reciente
+3. **Gestión de Entidades**: Crear/editar doctores, pacientes, instituciones
+4. **Generación de Reportes**: Exportar análisis del sistema y reportes
+5. **Configuración del Sistema**: Ajustar parámetros del sistema
+6. **Monitoreo**: Verificar estado de microservicios y salud del sistema
 
-### Editor Workflow
+### Flujo de Trabajo de Editor
 
-1. **Login**: Access with editor credentials
-2. **View Entities**: Browse doctors, patients, institutions
-3. **Edit Records**: Update information for existing entities
-4. **Generate Reports**: Access read-only analysis
+1. **Inicio de Sesión**: Acceder con credenciales de editor
+2. **Ver Entidades**: Navegar doctores, pacientes, instituciones
+3. **Editar Registros**: Actualizar información de entidades existentes
+4. **Generar Reportes**: Acceder a análisis de solo lectura
 
-## Monitoring and Maintenance
+## Monitoreo y Mantenimiento
 
-### Health Monitoring
-- **Endpoint**: `/health` returns JSON health status
-- **Metrics**: Application uptime, database connectivity
-- **Alerts**: Automated health checks via Docker
+### Monitoreo de Salud
+- **Endpoint**: `/health` retorna estado de salud JSON
+- **Métricas**: Tiempo de actividad de aplicación, conectividad de base de datos
+- **Alertas**: Health checks automatizados mediante Docker
+- **Microservicios**: Monitoreo de estado y tiempos de respuesta de servicios
 
-### Performance Optimization
-- **Database Queries**: Optimized with SQLAlchemy lazy loading
-- **Caching**: Session-based data caching
-- **Pagination**: Efficient handling of large datasets
-- **Indexing**: Leverages database indexes for fast queries
+### Optimización de Rendimiento
+- **Consultas de Base de Datos**: Optimizadas con carga diferida de SQLAlchemy
+- **Caché**: Caché de datos basado en sesión
+- **Paginación**: Manejo eficiente de grandes conjuntos de datos
+- **Indexación**: Aprovecha índices de base de datos para consultas rápidas
+- **Vistas Materializadas**: Uso de vistas de base de datos para análisis
 
-### Backup and Recovery
-- **Data Export**: CSV/Excel export capabilities
-- **Audit Logs**: User action logging
-- **Configuration Backup**: Environment variable documentation
+### Respaldo y Recuperación
+- **Exportación de Datos**: Capacidades de exportación CSV/Excel
+- **Logs de Auditoría**: Registro de acciones de usuario
+- **Respaldo de Configuración**: Documentación de variables de entorno
 
-## Troubleshooting
+## Solución de Problemas
 
-### Common Issues
+### Problemas Comunes
 
-1. **Database Connection Errors**
-   - Verify `DATABASE_URL` configuration
-   - Check PostgreSQL service status
-   - Validate network connectivity
+1. **Errores de Conexión a Base de Datos**
+   - Verificar configuración `DATABASE_URL`
+   - Verificar estado del servicio PostgreSQL
+   - Validar conectividad de red
 
-2. **Permission Denied**
-   - Confirm user roles and permissions
-   - Verify session validity
-   - Validate CSRF token
+2. **Permiso Denegado**
+   - Confirmar roles y permisos de usuario
+   - Verificar validez de sesión
+   - Validar token CSRF
 
-3. **Import Errors**
-   - Ensure all dependencies are installed
-   - Check Python version compatibility
-   - Verify virtual environment activation
+3. **Errores de Importación**
+   - Asegurar que todas las dependencias estén instaladas
+   - Verificar compatibilidad de versión de Python
+   - Verificar activación de entorno virtual
 
-### Debug Mode
+4. **Problemas de Monitoreo de Microservicios**
+   - Verificar configuración `DOCKER_HOST`
+   - Verificar acceso a Docker daemon
+   - Verificar conectividad de red con servicios
 
-Enable debug mode for detailed error information:
+### Modo Debug
+
+Habilitar modo debug para información detallada de errores:
 ```powershell
 $env:FLASK_ENV="development"
 $env:DEBUG="True"
 python app.py
 ```
 
-## Security Best Practices
+## Mejores Prácticas de Seguridad
 
-### Production Deployment
-- **Secret Key**: Use strong, randomly generated secret keys
-- **HTTPS**: Enable SSL/TLS encryption
-- **Environment Variables**: Never commit sensitive data
-- **Regular Updates**: Keep dependencies updated
-- **Access Logging**: Monitor and audit access patterns
+### Despliegue en Producción
+- **Clave Secreta**: Usar claves secretas fuertes generadas aleatoriamente
+- **HTTPS**: Habilitar cifrado SSL/TLS
+- **Variables de Entorno**: Nunca comprometer datos sensibles
+- **Actualizaciones Regulares**: Mantener dependencias actualizadas
+- **Registro de Acceso**: Monitorear y auditar patrones de acceso
 
-### Data Protection
-- **Input Sanitization**: All user inputs validated and sanitized
-- **SQL Injection**: ORM prevents injection attacks
-- **Session Security**: Secure session configuration
+### Protección de Datos
+- **Sanitización de Entrada**: Todas las entradas de usuario validadas y sanitizadas
+- **Inyección SQL**: ORM previene ataques de inyección
+- **Seguridad de Sesión**: Configuración de sesión segura
 
-## Development
+## Desarrollo
 
-### Code Standards
-- Follow Flask and SQLAlchemy best practices
-- Implement proper error handling
-- Add comprehensive docstrings
-- Write unit tests for new features
+### Estándares de Código
+- Seguir mejores prácticas de Flask y SQLAlchemy
+- Implementar manejo adecuado de errores
+- Agregar docstrings comprensivos
+- Escribir pruebas unitarias para nuevas características
 
-### Development Guidelines
-- Use virtual environments
-- Follow PEP 8 style guidelines
-- Implement role-based access control
-- Test all database operations
-- Document API changes
+### Guías de Desarrollo
+- Usar entornos virtuales
+- Seguir guías de estilo PEP 8
+- Implementar control de acceso basado en roles
+- Probar todas las operaciones de base de datos
+- Documentar cambios de API
 
-## License
+## Licencia
 
-Part of the PredictHealth platform.
+Parte de la plataforma PredictHealth.

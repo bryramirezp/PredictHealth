@@ -88,20 +88,241 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🔧</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🔧</span>
                 Microservicios
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Arquitectura de microservicios escalable y modular para gestión de datos de salud. Cuatro microservicios especializados que manejan diferentes aspectos de la plataforma, comunicándose mediante APIs REST y compartiendo una base de datos PostgreSQL con Redis para caché.
+            </p>
+
+            <h2>Stack Tecnológico</h2>
+            <div>
+                <span class="badge">FastAPI 0.104.1</span>
+                <span class="badge">PostgreSQL</span>
+                <span class="badge">Redis 5.0.1</span>
+                <span class="badge">Docker</span>
+                <span class="badge">Pydantic 2.5.0</span>
+                <span class="badge">PyJWT 2.8.0</span>
+                <span class="badge">bcrypt 4.2.0</span>
+                <span class="badge">psycopg2-binary 2.9.9</span>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Servicios Individuales</h2>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-key" style="color: #4dd9d6;"></i> Auth-JWT Service</h4>
+                    <p>Puerto 8003. Servicio centralizado de autenticación y gestión de tokens JWT. Almacenamiento en Redis.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-user-md" style="color: #667eea;"></i> Doctors Service</h4>
+                    <p>Puerto 8000. Gestión de perfiles de doctores, especialidades, licencias médicas y asociaciones con instituciones.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-hospital" style="color: #f59e0b;"></i> Institutions Service</h4>
+                    <p>Puerto 8002. Gestión de instituciones médicas, organización geográfica y verificación de licencias.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-user-injured" style="color: #8b5cf6;"></i> Patients Service</h4>
+                    <p>Puerto 8004. Gestión de datos de pacientes, perfiles de salud, flujos de validación y expedientes médicos.</p>
+                </div>
             </div>
+
+            <h2>Auth-JWT Service</h2>
+            <p>
+                Servicio centralizado de autenticación y gestión de tokens JWT.
+            </p>
+
+            <div class="tech-section">
+                <h3>Características</h3>
+                <ul>
+                    <li>Creación, verificación y validación de tokens JWT</li>
+                    <li>Almacenamiento de tokens en Redis</li>
+                    <li>Creación y gestión de cuentas de usuario</li>
+                    <li>Soporte para autenticación inter-servicios</li>
+                    <li>Hashing de contraseñas con bcrypt</li>
+                </ul>
+
+                <h3>Endpoints Principales</h3>
+                <ul>
+                    <li><code>POST /auth/login</code> - Autenticación de usuario</li>
+                    <li><code>POST /auth/verify-token</code> - Verificar validez de token</li>
+                    <li><code>POST /auth/session/validate</code> - Validar sesión JWT</li>
+                    <li><code>POST /auth/logout</code> - Cerrar sesión</li>
+                    <li><code>POST /users/create</code> - Crear nueva cuenta de usuario</li>
+                </ul>
+            </div>
+
+            <h2>Doctors Service</h2>
+            <p>
+                Gestión de datos de proveedores de salud y asociaciones de especialidades.
+            </p>
+
+            <div class="tech-section">
+                <h3>Endpoints para Doctores Autenticados</h3>
+                <ul>
+                    <li><code>GET /api/v1/doctors/me/dashboard</code> - KPIs del dashboard</li>
+                    <li><code>GET /api/v1/doctors/me/profile</code> - Perfil del doctor</li>
+                    <li><code>PUT /api/v1/doctors/me/profile</code> - Actualizar perfil</li>
+                    <li><code>GET /api/v1/doctors/me/institution</code> - Institución asociada</li>
+                    <li><code>GET /api/v1/doctors/me/patients</code> - Lista de pacientes asignados</li>
+                    <li><code>GET /api/v1/doctors/me/patients/{id}/medical-record</code> - Expediente médico</li>
+                </ul>
+
+                <h3>Lógica de Negocio</h3>
+                <ul>
+                    <li>Restricciones de email y licencia médica únicos</li>
+                    <li>Validación de estado profesional (active, suspended, retired)</li>
+                    <li>Transacción atómica para creación (incluye cuenta de usuario)</li>
+                </ul>
+            </div>
+
+            <h2>Institutions Service</h2>
+            <p>
+                Gestión de instituciones médicas y organización geográfica.
+            </p>
+
+            <div class="tech-section">
+                <h3>Endpoints Principales</h3>
+                <ul>
+                    <li><code>GET /api/v1/institutions</code> - Listar instituciones con filtrado</li>
+                    <li><code>POST /api/v1/institutions</code> - Crear nueva institución</li>
+                    <li><code>GET /api/v1/institutions/{id}</code> - Detalles de institución</li>
+                    <li><code>PUT /api/v1/institutions/{id}</code> - Actualizar institución</li>
+                    <li><code>DELETE /api/v1/institutions/{id}</code> - Eliminar institución (soft delete)</li>
+                </ul>
+
+                <h3>Lógica de Negocio</h3>
+                <ul>
+                    <li>Validación de tipo de institución (clínica, hospital, aseguradora, etc.)</li>
+                    <li>Email de contacto y número de licencia únicos</li>
+                    <li>Seguimiento de región geográfica y estado de verificación</li>
+                </ul>
+            </div>
+
+            <h2>Patients Service</h2>
+            <p>
+                Gestión de datos de pacientes y seguimiento de perfiles de salud.
+            </p>
+
+            <div class="tech-section">
+                <h3>Endpoints Principales</h3>
+                <ul>
+                    <li><code>GET /api/v1/patients</code> - Listar pacientes con filtrado</li>
+                    <li><code>POST /api/v1/patients</code> - Crear nuevo paciente</li>
+                    <li><code>GET /api/v1/patients/{id}/dashboard</code> - Dashboard del paciente</li>
+                    <li><code>GET /api/v1/patients/{id}/medical-record</code> - Expediente médico completo</li>
+                    <li><code>GET /api/v1/patients/{id}/care-team</code> - Equipo médico</li>
+                    <li><code>GET /api/v1/patients/{id}/profile</code> - Perfil del paciente</li>
+                </ul>
+
+                <h3>Lógica de Negocio</h3>
+                <ul>
+                    <li>Progresión de validación: pending → validated_by_doctor → validated_by_institution → full_access</li>
+                    <li>Asociación médica requerida (doctor O institución)</li>
+                    <li>Transacción atómica para creación (incluye cuenta de usuario y perfil de salud)</li>
+                    <li>Cálculo de KPIs: health score, BMI, edad, clasificación BMI</li>
+                </ul>
+            </div>
+
+            <h2>Estructura Común</h2>
+            <p>
+                Todos los microservicios siguen una arquitectura consistente:
+            </p>
+
+            <div class="folders-section">
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-file-code" style="color: #4dd9d6;"></i>
+                        <strong>app/main.py</strong>
+                    </div>
+                    <p class="folder-description">Punto de entrada de la aplicación FastAPI.</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-database" style="color: #667eea;"></i>
+                        <strong>app/db.py</strong>
+                    </div>
+                    <p class="folder-description">Conexión a base de datos PostgreSQL con connection pooling.</p>
+                </div>
+
+                <div class="folder-item">
+                    <div class="folder-name">
+                        <i class="fas fa-code" style="color: #f59e0b;"></i>
+                        <strong>app/domain.py</strong>
+                    </div>
+                    <p class="folder-description">Modelos Pydantic y esquemas de request/response.</p>
+                </div>
+            </div>
+
+            <h2>Integración con Base de Datos</h2>
+            <p>
+                Todos los servicios se conectan a la misma instancia PostgreSQL con esquema normalizado:
+            </p>
+
+            <div class="tech-section">
+                <h3>Tablas Clave</h3>
+                <ul>
+                    <li><code>users</code> - Autenticación centralizada</li>
+                    <li><code>doctors</code> - Perfiles de proveedores de salud</li>
+                    <li><code>patients</code> - Información de pacientes</li>
+                    <li><code>medical_institutions</code> - Instalaciones de salud</li>
+                    <li><code>health_profiles</code> - Datos de salud de pacientes</li>
+                    <li><code>emails</code>, <code>phones</code>, <code>addresses</code> - Contacto normalizado</li>
+                </ul>
+
+                <h3>Conexión a Base de Datos</h3>
+                <ul>
+                    <li>Connection Pooling: SimpleConnectionPool con 1-10 conexiones</li>
+                    <li>Context Managers para gestión automática de conexiones</li>
+                    <li>DictCursor: resultados como diccionarios</li>
+                    <li>Manejo completo de errores con logging</li>
+                </ul>
+            </div>
+
+            <h2>Comunicación Inter-Servicios</h2>
+            <p>
+                Los servicios se comunican mediante APIs HTTP RESTful.
+            </p>
+
+            <div class="tech-section">
+                <h3>Auth Client Compartido</h3>
+                <p>
+                    Módulo <code>shared/auth_client.py</code> proporciona creación estandarizada de usuarios entre servicios:
+                </p>
+                <pre><code>from microservices.shared.auth_client import create_user
+
+create_user(email, password, user_type, reference_id)</code></pre>
+
+                <h3>Flujo de Autenticación</h3>
+                <ol>
+                    <li>Usuario se autentica vía auth-jwt-service</li>
+                    <li>Token JWT es retornado con información de usuario</li>
+                    <li>Otros servicios verifican token vía auth-jwt-service o decodifican localmente</li>
+                    <li>Servicios extraen <code>reference_id</code> del token para acceso a entidades</li>
+                </ol>
+            </div>
+
+            <h2>Principios de Diseño API</h2>
+            <div>
+                <span class="badge">RESTful</span>
+                <span class="badge">JSON</span>
+                <span class="badge">Pydantic Validation</span>
+                <span class="badge">OpenAPI/Swagger</span>
+                <span class="badge">HTTP Status Codes</span>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                Cada microservicio mantiene responsabilidades de dominio específicas mientras comparte infraestructura común (base de datos, Redis, autenticación).
+            </p>
         </main>
     </div>
 </body>

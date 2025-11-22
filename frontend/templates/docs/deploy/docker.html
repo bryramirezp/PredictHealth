@@ -88,20 +88,157 @@
         </aside>
 
         <!-- Content -->
-        <main class="content construction-page">
-            <h1>
-                <span style="font-size: 2rem;">🐳</span>
+        <main class="content">
+            <h1 class="page-title">
+                <span class="emoji">🐳</span>
                 Docker
             </h1>
 
-            <div class="construction-icon">
-                <i class="fas fa-tools"></i>
+            <p class="intro-text">
+                Containerización completa de la plataforma PredictHealth mediante Docker Compose. Todos los servicios están empaquetados en contenedores Docker con health checks, volúmenes persistentes y configuración de red.
+            </p>
+
+            <h2>Docker Compose</h2>
+            <p>
+                El archivo <code>docker-compose.yml</code> define todos los servicios de la plataforma:
+            </p>
+
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h4><i class="fas fa-database" style="color: #4dd9d6;"></i> PostgreSQL</h4>
+                    <p>Base de datos principal con inicialización automática mediante init.sql.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-bolt" style="color: #667eea;"></i> Redis</h4>
+                    <p>Caché y almacenamiento de sesiones con persistencia AOF.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-server" style="color: #f59e0b;"></i> Backend Flask</h4>
+                    <p>API Gateway y web server en puerto 5000.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-shield-alt" style="color: #8b5cf6;"></i> CMS Backend</h4>
+                    <p>Panel administrativo en puerto 5001.</p>
+                </div>
+
+                <div class="tech-card">
+                    <h4><i class="fas fa-cogs" style="color: #10b981;"></i> Microservicios</h4>
+                    <p>Auth-JWT (8003), Doctors (8000), Patients (8004), Institutions (8002).</p>
+                </div>
             </div>
 
-            <div class="construction-message">
-                <h2>En construcción...</h2>
-                <p>Esta sección de documentación está siendo desarrollada.</p>
+            <h2>Configuración de Servicios</h2>
+            <div class="tech-section">
+                <h3>Red Docker</h3>
+                <p>
+                    Todos los servicios se comunican mediante la red <code>predicthealth-network</code> (bridge, subnet: 172.20.0.0/16).
+                </p>
+
+                <h3>Volúmenes Persistentes</h3>
+                <ul>
+                    <li><code>postgres_data</code> - Datos persistentes de PostgreSQL</li>
+                    <li><code>redis_data</code> - Datos persistentes de Redis</li>
+                </ul>
+
+                <h3>Health Checks</h3>
+                <p>
+                    Todos los servicios incluyen health checks configurados:
+                </p>
+                <ul>
+                    <li>PostgreSQL: <code>pg_isready</code> cada 30s</li>
+                    <li>Redis: <code>redis-cli ping</code> cada 30s</li>
+                    <li>Servicios de aplicación: endpoints <code>/health</code></li>
+                </ul>
             </div>
+
+            <h2>Dockerfiles</h2>
+            <p>
+                Cada servicio tiene su propio Dockerfile optimizado:
+            </p>
+
+            <div class="tech-section">
+                <h3>Características Comunes</h3>
+                <ul>
+                    <li>Multi-stage builds para imágenes de producción optimizadas</li>
+                    <li>Ejecución con usuario no root para seguridad</li>
+                    <li>Health checks integrados</li>
+                    <li>Dependencias mínimas de runtime</li>
+                </ul>
+
+                <h3>Estructura de Dockerfiles</h3>
+                <ul>
+                    <li><code>backend-flask/Dockerfile</code> - Python 3.11, Flask, copia de frontend</li>
+                    <li><code>cms-backend/Dockerfile</code> - Python 3.11, Flask, cliente PostgreSQL</li>
+                    <li><code>microservices/*/Dockerfile</code> - Python 3.11, FastAPI</li>
+                    <li><code>database/postgresql/Dockerfile</code> - PostgreSQL 15 con extensiones</li>
+                    <li><code>database/redis/Dockerfile</code> - Redis Alpine-based</li>
+                </ul>
+            </div>
+
+            <h2>Inicialización</h2>
+            <p>
+                Comandos para construir y ejecutar la plataforma:
+            </p>
+
+            <div class="tech-section">
+                <h3>Construcción y Ejecución</h3>
+                <pre><code># Construir y levantar todos los servicios
+docker-compose up --build
+
+# Ejecutar en segundo plano
+docker-compose up -d
+
+# Ver logs de un servicio específico
+docker-compose logs backend-flask
+docker-compose logs servicio-doctores
+
+# Verificar estado de contenedores
+docker-compose ps</code></pre>
+
+                <h3>Población de Base de Datos</h3>
+                <pre><code># Poblar con datos de prueba
+Get-Content populate.sql | docker exec -i predicthealth-postgres psql -U predictHealth_user -d predicthealth_db</code></pre>
+            </div>
+
+            <h2>Puertos Expuestos</h2>
+            <div>
+                <span class="badge">5000 - Frontend/API Gateway</span>
+                <span class="badge">5001 - CMS Backend</span>
+                <span class="badge">8000 - Doctors Service</span>
+                <span class="badge">8002 - Institutions Service</span>
+                <span class="badge">8003 - Auth JWT Service</span>
+                <span class="badge">8004 - Patients Service</span>
+                <span class="badge">5432 - PostgreSQL</span>
+                <span class="badge">6379 - Redis</span>
+            </div>
+
+            <h2>Dependencias entre Servicios</h2>
+            <p>
+                Los servicios se inician en orden según dependencias:
+            </p>
+
+            <div class="tech-section">
+                <h3>Orden de Inicio</h3>
+                <ol>
+                    <li>PostgreSQL y Redis (infraestructura)</li>
+                    <li>Auth-JWT Service (autenticación)</li>
+                    <li>Microservicios de dominio (doctors, patients, institutions)</li>
+                    <li>Backend Flask y CMS Backend (aplicaciones)</li>
+                </ol>
+
+                <h3>Health Checks y Dependencias</h3>
+                <p>
+                    Los servicios esperan que sus dependencias pasen health checks antes de iniciar completamente.
+                </p>
+            </div>
+
+            <p class="footer-note">
+                <i class="fas fa-info-circle"></i>
+                Docker Compose proporciona orquestación completa de la plataforma, facilitando desarrollo local y despliegue consistente.
+            </p>
         </main>
     </div>
 </body>
