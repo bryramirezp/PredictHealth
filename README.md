@@ -184,9 +184,9 @@ docker-compose up --build
 Get-Content populate.sql | docker exec -i predicthealth-postgres psql -U predictHealth_user -d predicthealth_db
 
 #### 4. Probar archivo TKinter
-```poershell
-cd PredictHealthpcapp
-venv\Scripts/activate
+
+cd PredictHealthPCApp
+venv\Scripts\activate
 python main.py
 ```
 
