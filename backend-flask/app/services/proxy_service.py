@@ -51,16 +51,20 @@ class ProxyService:
     def _decode_jwt_token(self, token: str) -> Optional[Dict[str, Any]]:
         """Decode JWT token and return payload"""
         try:
+            if not self.jwt_secret_key:
+                logger.error("❌ JWT_SECRET_KEY no está configurada en proxy_service")
+                return None
             payload = jwt.decode(token, self.jwt_secret_key, algorithms=[self.jwt_algorithm])
             return payload
         except jwt.ExpiredSignatureError:
-            logger.warning("JWT token has expired")
+            logger.warning("⚠️ JWT token has expired")
             return None
         except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid JWT token: {e}")
+            logger.warning(f"⚠️ Invalid JWT token (clave incorrecta?): {e}")
+            logger.warning(f"   Usando JWT_SECRET_KEY: {self.jwt_secret_key[:10]}... (primeros 10 caracteres)")
             return None
         except Exception as e:
-            logger.error(f"Error decoding JWT token: {e}")
+            logger.error(f"❌ Error decoding JWT token: {e}")
             return None
 
     def _get_auth_headers(self) -> Dict[str, str]:
@@ -78,15 +82,16 @@ class ProxyService:
         if token:
             headers['Authorization'] = f'Bearer {token}'
             logger.info("🔑 JWT Bearer token agregado a headers")
+            logger.info(f"   🔐 Usando JWT_SECRET_KEY: {self.jwt_secret_key[:10]}... (primeros 10 caracteres)")
             # Verificar contenido del token antes de enviarlo
             try:
                 payload = self._decode_jwt_token(token)
                 if payload:
-                    logger.debug(f"   Token payload - user_type: {payload.get('user_type')}, metadata: {payload.get('metadata')}")
+                    logger.info(f"   📋 Token payload enviado - user_type: {payload.get('user_type')}, user_id: {payload.get('user_id')}, metadata: {payload.get('metadata')}")
                 else:
-                    logger.warning("   ⚠️ No se pudo decodificar token para verificación")
+                    logger.error("   ❌ No se pudo decodificar token para verificación - el microservicio probablemente tampoco podrá decodificarlo")
             except Exception as e:
-                logger.warning(f"   ⚠️ Error decodificando token para verificación: {e}")
+                logger.error(f"   ❌ Error decodificando token para verificación: {e}")
         else:
             logger.warning("⚠️ No hay token JWT disponible para autenticación")
 

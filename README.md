@@ -180,7 +180,7 @@ cd predicthealth
 # 2. Construir y levantar todos los servicios
 docker-compose up --build
 
-# 3. Poblar base de datos con datos de prueba
+# 3. Poblar base de datos con datos de prueba desde Powershell
 Get-Content populate.sql | docker exec -i predicthealth-postgres psql -U predictHealth_user -d predicthealth_db
 ```
 

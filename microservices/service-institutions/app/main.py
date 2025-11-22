@@ -21,7 +21,7 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "UDEM")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("service-institutions")
 
 app = FastAPI(
     title="Servicio de Instituciones",
@@ -37,8 +37,10 @@ def verify_jwt_token(token: str) -> Dict[str, Any]:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
+        logger.warning("Token expirado")
         raise HTTPException(status_code=401, detail="Token expirado")
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        logger.error(f"Error decodificando token: {e}")
         raise HTTPException(status_code=401, detail="Token inválido")
 
 def get_current_user(authorization: str = Header(None)) -> Dict[str, Any]:
@@ -47,7 +49,9 @@ def get_current_user(authorization: str = Header(None)) -> Dict[str, Any]:
         raise HTTPException(status_code=401, detail="Token de autorización 'Bearer' requerido")
     
     token = authorization.split(" ")[1]
-    return verify_jwt_token(token)
+    user_data = verify_jwt_token(token)
+    logger.info(f"Usuario autenticado: user_type={user_data.get('user_type')}, id={user_data.get('user_id')}")
+    return user_data
 
 def _get_institution_id_from_token(current_user: Dict[str, Any]) -> Optional[str]:
     """Extrae el institution_id del token JWT."""
@@ -63,14 +67,21 @@ def _get_institution_id_from_token(current_user: Dict[str, Any]) -> Optional[str
     if reference_id:
         return str(reference_id)
     
+    logger.warning(f"No se encontró reference_id en el token: {current_user}")
     return None
 
 def require_institution_access(current_user: Dict[str, Any], institution_id: str):
     """Verifica que el usuario actual tenga permiso para acceder a los datos de una institución."""
     user_id_from_token = _get_institution_id_from_token(current_user)
     
-    if current_user.get("user_type") == "institution" and user_id_from_token and str(user_id_from_token) != institution_id:
-        raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este recurso")
+    if current_user.get("user_type") == "institution":
+        if not user_id_from_token:
+             logger.warning("Token de institución sin ID válido")
+             raise HTTPException(status_code=403, detail="Token de institución inválido")
+             
+        if str(user_id_from_token) != str(institution_id):
+            logger.warning(f"Acceso denegado: token_id={user_id_from_token} != target_id={institution_id}")
+            raise HTTPException(status_code=403, detail="No tienes permiso para acceder a este recurso")
 
 # --- Lógica de Negocio y Acceso a Datos (Helpers Internos) ---
 
@@ -205,6 +216,105 @@ def list_institutions(skip: int = 0, limit: int = 100):
         ) for i in institutions_data
     ]
 
+# --- Endpoints para Gestión de Doctores y Pacientes de la Institución ---
+
+@app.get("/api/v1/institutions/doctors")
+def get_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Obtiene la lista de doctores de la institución del usuario autenticado."""
+    if current_user.get("user_type") != "institution":
+        raise HTTPException(status_code=403, detail="Este endpoint es solo para instituciones")
+    
+    institution_id = _get_institution_id_from_token(current_user)
+    if not institution_id:
+        raise HTTPException(status_code=400, detail="No se pudo identificar la institución")
+    
+    query = """
+        SELECT
+            d.id, d.first_name, d.last_name, d.medical_license, d.years_experience,
+            d.consultation_fee, d.is_active, d.professional_status,
+            ds.name as specialty_name,
+            e.email_address as contact_email,
+            ph.phone_number as contact_phone,
+            (SELECT COUNT(*) FROM patients WHERE doctor_id = d.id AND is_active = TRUE) as active_patients
+        FROM doctors d
+        LEFT JOIN doctor_specialties ds ON d.specialty_id = ds.id
+        LEFT JOIN emails e ON e.entity_id = d.id AND e.entity_type = 'doctor' AND e.is_primary = TRUE
+        LEFT JOIN phones ph ON ph.entity_id = d.id AND ph.entity_type = 'doctor' AND ph.is_primary = TRUE
+        WHERE d.institution_id = %s AND d.is_active = TRUE
+        ORDER BY d.last_name, d.first_name
+    """
+    doctors_data = execute_query(query, (str(institution_id),), fetch_all=True) or []
+    
+    # Formatear datos para el frontend
+    doctors_list = []
+    for doctor in doctors_data:
+        doctor_dict = dict(doctor)
+        # Mapear specialty_name a specialty para el frontend
+        doctor_dict['specialty'] = doctor_dict.get('specialty_name')
+        doctors_list.append(doctor_dict)
+    
+    return {"doctors": doctors_list}
+
+@app.get("/api/v1/institutions/me/doctors")
+def get_my_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Alias para /api/v1/institutions/doctors - Obtiene doctores de la institución autenticada."""
+    return get_institution_doctors(current_user)
+
+@app.get("/api/v1/institutions/patients")
+def get_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Obtiene la lista de pacientes de la institución del usuario autenticado."""
+    logger.info("Solicitando lista de pacientes")
+    
+    if current_user.get("user_type") != "institution":
+        logger.warning(f"Acceso denegado: user_type={current_user.get('user_type')} != institution")
+        raise HTTPException(status_code=403, detail="Este endpoint es solo para instituciones")
+    
+    institution_id = _get_institution_id_from_token(current_user)
+    if not institution_id:
+        logger.error("No se pudo identificar la institución del token")
+        raise HTTPException(status_code=400, detail="No se pudo identificar la institución")
+    
+    logger.info(f"Obteniendo pacientes para institución: {institution_id}")
+    
+    query = """
+        SELECT
+            p.id, p.first_name, p.last_name, p.date_of_birth, p.last_login,
+            p.is_verified, p.created_at,
+            e.email_address as contact_email,
+            ph.phone_number as contact_phone,
+            d.first_name as doctor_first_name,
+            d.last_name as doctor_last_name,
+            CASE 
+                WHEN p.is_verified = TRUE THEN 'verified'
+                ELSE 'unverified'
+            END as validation_status,
+            CONCAT(d.first_name, ' ', d.last_name) as doctor_name
+        FROM patients p
+        LEFT JOIN emails e ON e.entity_id = p.id AND e.entity_type = 'patient' AND e.is_primary = TRUE
+        LEFT JOIN phones ph ON ph.entity_id = p.id AND ph.entity_type = 'patient' AND ph.is_primary = TRUE
+        LEFT JOIN doctors d ON p.doctor_id = d.id
+        WHERE p.institution_id = %s AND p.is_active = TRUE
+        ORDER BY p.last_name, p.first_name
+    """
+    patients_data = execute_query(query, (str(institution_id),), fetch_all=True) or []
+    
+    # Formatear datos para el frontend
+    patients_list = []
+    for patient in patients_data:
+        patient_dict = dict(patient)
+        # Calcular risk_level basado en condiciones (simplificado por ahora)
+        # TODO: Implementar lógica real de cálculo de riesgo
+        patient_dict['risk_level'] = 'low'  # Placeholder
+        patient_dict['last_activity'] = patient_dict.get('last_login') or patient_dict.get('created_at')
+        patients_list.append(patient_dict)
+    
+    return {"patients": patients_list}
+
+@app.get("/api/v1/institutions/me/patients")
+def get_my_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Alias para /api/v1/institutions/patients - Obtiene pacientes de la institución autenticada."""
+    return get_institution_patients(current_user)
+
 @app.get("/api/v1/institutions/{institution_id}", response_model=InstitutionResponse)
 def get_institution(institution_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
     """Obtiene la información detallada de una institución específica."""
@@ -268,99 +378,6 @@ def delete_institution(institution_id: str, current_user: Dict[str, Any] = Depen
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Institución no encontrada.")
         
         cursor.execute("UPDATE medical_institutions SET is_active = FALSE WHERE id = %s", (UUID(institution_id),))
-
-# --- Endpoints para Gestión de Doctores y Pacientes de la Institución ---
-
-@app.get("/api/v1/institutions/doctors")
-def get_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Obtiene la lista de doctores de la institución del usuario autenticado."""
-    if current_user.get("user_type") != "institution":
-        raise HTTPException(status_code=403, detail="Este endpoint es solo para instituciones")
-    
-    institution_id = _get_institution_id_from_token(current_user)
-    if not institution_id:
-        raise HTTPException(status_code=400, detail="No se pudo identificar la institución")
-    
-    query = """
-        SELECT
-            d.id, d.first_name, d.last_name, d.medical_license, d.years_experience,
-            d.consultation_fee, d.is_active, d.professional_status,
-            ds.name as specialty_name,
-            e.email_address as contact_email,
-            ph.phone_number as contact_phone,
-            (SELECT COUNT(*) FROM patients WHERE doctor_id = d.id AND is_active = TRUE) as active_patients
-        FROM doctors d
-        LEFT JOIN doctor_specialties ds ON d.specialty_id = ds.id
-        LEFT JOIN emails e ON e.entity_id = d.id AND e.entity_type = 'doctor' AND e.is_primary = TRUE
-        LEFT JOIN phones ph ON ph.entity_id = d.id AND ph.entity_type = 'doctor' AND ph.is_primary = TRUE
-        WHERE d.institution_id = %s AND d.is_active = TRUE
-        ORDER BY d.last_name, d.first_name
-    """
-    doctors_data = execute_query(query, (UUID(institution_id),), fetch_all=True)
-    
-    # Formatear datos para el frontend
-    doctors_list = []
-    for doctor in doctors_data:
-        doctor_dict = dict(doctor)
-        # Mapear specialty_name a specialty para el frontend
-        doctor_dict['specialty'] = doctor_dict.get('specialty_name')
-        doctors_list.append(doctor_dict)
-    
-    return {"doctors": doctors_list}
-
-@app.get("/api/v1/institutions/me/doctors")
-def get_my_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Alias para /api/v1/institutions/doctors - Obtiene doctores de la institución autenticada."""
-    return get_institution_doctors(current_user)
-
-@app.get("/api/v1/institutions/patients")
-def get_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Obtiene la lista de pacientes de la institución del usuario autenticado."""
-    if current_user.get("user_type") != "institution":
-        raise HTTPException(status_code=403, detail="Este endpoint es solo para instituciones")
-    
-    institution_id = _get_institution_id_from_token(current_user)
-    if not institution_id:
-        raise HTTPException(status_code=400, detail="No se pudo identificar la institución")
-    
-    query = """
-        SELECT
-            p.id, p.first_name, p.last_name, p.date_of_birth, p.last_login,
-            p.is_verified, p.created_at,
-            e.email_address as contact_email,
-            ph.phone_number as contact_phone,
-            d.first_name as doctor_first_name,
-            d.last_name as doctor_last_name,
-            CASE 
-                WHEN p.is_verified = TRUE THEN 'verified'
-                ELSE 'unverified'
-            END as validation_status,
-            CONCAT(d.first_name, ' ', d.last_name) as doctor_name
-        FROM patients p
-        LEFT JOIN emails e ON e.entity_id = p.id AND e.entity_type = 'patient' AND e.is_primary = TRUE
-        LEFT JOIN phones ph ON ph.entity_id = p.id AND ph.entity_type = 'patient' AND ph.is_primary = TRUE
-        LEFT JOIN doctors d ON p.doctor_id = d.id
-        WHERE p.institution_id = %s AND p.is_active = TRUE
-        ORDER BY p.last_name, p.first_name
-    """
-    patients_data = execute_query(query, (UUID(institution_id),), fetch_all=True)
-    
-    # Formatear datos para el frontend
-    patients_list = []
-    for patient in patients_data:
-        patient_dict = dict(patient)
-        # Calcular risk_level basado en condiciones (simplificado por ahora)
-        # TODO: Implementar lógica real de cálculo de riesgo
-        patient_dict['risk_level'] = 'low'  # Placeholder
-        patient_dict['last_activity'] = patient_dict.get('last_login') or patient_dict.get('created_at')
-        patients_list.append(patient_dict)
-    
-    return {"patients": patients_list}
-
-@app.get("/api/v1/institutions/me/patients")
-def get_my_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Alias para /api/v1/institutions/patients - Obtiene pacientes de la institución autenticada."""
-    return get_institution_patients(current_user)
 
 @app.get("/health")
 def health_check():
