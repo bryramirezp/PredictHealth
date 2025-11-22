@@ -182,7 +182,14 @@ docker-compose up --build
 
 # 3. Poblar base de datos con datos de prueba desde Powershell
 Get-Content populate.sql | docker exec -i predicthealth-postgres psql -U predictHealth_user -d predicthealth_db
+
+#### 4. Probar archivo TKinter
+```poershell
+cd PredictHealthpcapp
+venv\Scripts/activate
+python main.py
 ```
+
 
 > **Nota**: El script `init.sql` se ejecuta automáticamente al iniciar PostgreSQL, creando el esquema completo. El script `populate.sql` agrega datos de prueba adicionales.
 

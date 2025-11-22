@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Error: institution-core.js no está cargado.");
             return;
         }
-        
+
         const userInfo = await InstitutionCore.checkAuth();
         if (userInfo) {
             initDashboardPage(userInfo);
@@ -24,7 +24,8 @@ async function initDashboardPage(userInfo) {
 
     try {
         // Obtener datos del dashboard de la institución
-        const dashboardData = await InstitutionCore.apiRequest(InstitutionCore.ENDPOINTS.DASHBOARD());
+        const response = await InstitutionCore.apiRequest(InstitutionCore.ENDPOINTS.DASHBOARD());
+        const dashboardData = response?.data || response || {};
 
         // Renderizar widgets del dashboard
         renderDashboardWidgets(dashboardData);
@@ -48,7 +49,7 @@ function renderDashboardWidgets(data) {
     const totalDoctorsEl = document.getElementById('total-doctors');
     const totalPatientsEl = document.getElementById('total-patients');
     const newPatientsEl = document.getElementById('new-patients-month');
-    
+
     if (totalDoctorsEl) {
         totalDoctorsEl.textContent = data.total_doctors || data.doctors?.length || 0;
     }
@@ -93,7 +94,7 @@ function renderTopDoctorsList(container, doctors) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 

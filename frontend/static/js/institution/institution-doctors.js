@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Error: institution-core.js no está cargado.");
             return;
         }
-        
+
         const userInfo = await InstitutionCore.checkAuth();
         if (userInfo) {
             initDoctorsPage(userInfo);
@@ -30,13 +30,13 @@ async function initDoctorsPage(userInfo) {
     try {
         // Mostrar carga
         InstitutionCore.showLoading('doctors-list-table-body', 'Cargando doctores...');
-        
+
         // Obtener la lista de doctores
         const doctorsData = await InstitutionCore.apiRequest(InstitutionCore.ENDPOINTS.DOCTORS());
-        
-        // El backend puede devolver directamente {doctors: [...]} o el array directamente
-        const doctors = doctorsData?.doctors || doctorsData || [];
-        
+
+        // El backend devuelve {status: "success", data: {doctors: [...]}}
+        const doctors = doctorsData?.data?.doctors || doctorsData?.doctors || [];
+
         if (Array.isArray(doctors) && doctors.length > 0) {
             renderDoctorsTable(tableBody, doctors);
         } else {
@@ -56,15 +56,15 @@ async function initDoctorsPage(userInfo) {
  */
 function renderDoctorsTable(tableBody, doctors) {
     let html = '';
-    
+
     doctors.forEach(doctor => {
         const fullName = `Dr. ${doctor.first_name || ''} ${doctor.last_name || ''}`.trim();
         const specialty = doctor.specialty || doctor.specialty_name || 'No especificada';
         const email = doctor.contact_email || 'N/A';
-        const statusBadge = doctor.is_active 
+        const statusBadge = doctor.is_active
             ? '<span class="badge bg-success">Activo</span>'
             : '<span class="badge bg-secondary">Inactivo</span>';
-        
+
         html += `
             <tr>
                 <td>${fullName}</td>
@@ -75,21 +75,21 @@ function renderDoctorsTable(tableBody, doctors) {
                     <button type="button" class="btn btn-sm btn-warning" onclick="editDoctor('${doctor.id}')" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
-                    ${doctor.is_active 
-                        ? `<button type="button" class="btn btn-sm btn-danger deactivate-doctor" data-doctor-id="${doctor.id}" title="Desactivar">
+                    ${doctor.is_active
+                ? `<button type="button" class="btn btn-sm btn-danger deactivate-doctor" data-doctor-id="${doctor.id}" title="Desactivar">
                             <i class="fas fa-trash-alt"></i>
                            </button>`
-                        : `<button type="button" class="btn btn-sm btn-success activate-doctor" data-doctor-id="${doctor.id}" title="Activar">
+                : `<button type="button" class="btn btn-sm btn-success activate-doctor" data-doctor-id="${doctor.id}" title="Activar">
                             <i class="fas fa-check"></i>
                            </button>`
-                    }
+            }
                 </td>
             </tr>
         `;
     });
-    
+
     tableBody.innerHTML = html;
-    
+
     // Configurar event listeners para botones de activar/desactivar
     setupDoctorActionListeners();
 }
@@ -107,7 +107,7 @@ function setupDoctorActionListeners() {
             }
         });
     });
-    
+
     // Botones de activar
     document.querySelectorAll('.activate-doctor').forEach(button => {
         button.addEventListener('click', async (e) => {
@@ -128,9 +128,9 @@ async function deleteDoctor(doctorId) {
         await InstitutionCore.apiRequest(InstitutionCore.ENDPOINTS.DELETE_DOCTOR(doctorId), {
             method: 'DELETE'
         });
-        
+
         InstitutionCore.showSuccessMessage('Doctor desactivado exitosamente');
-        
+
         // Recargar la lista
         const userInfo = await InstitutionCore.getCurrentUserInfo();
         if (userInfo) {

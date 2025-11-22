@@ -5,7 +5,7 @@ Aplicación de gestión de salud personal desarrollada con Python y CustomTkinte
 ## Características
 
 - Autenticación JWT con validación de tipo de usuario (solo pacientes)
-- Dashboard con 6 gráficas de salud (presión arterial, frecuencia cardíaca, peso, actividad física, sueño, citas mensuales)
+- Dashboard con 6 gráficas de salud 
 - Sistema de reservaciones médicas (crear, ver, cancelar)
 - Historial médico completo (solo lectura)
 - Gestión de perfil (nombre, fecha de nacimiento, foto de perfil)

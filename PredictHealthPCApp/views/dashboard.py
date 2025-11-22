@@ -4,6 +4,8 @@ import customtkinter as ctk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from typing import Optional, Dict, Any
+from datetime import datetime
 from config import COLORS
 
 class DashboardView(ctk.CTkFrame):
@@ -57,82 +59,25 @@ class DashboardView(ctk.CTkFrame):
         # Grid para las gráficas (2 columnas x 3 filas)
         self.scroll_frame.grid_columnconfigure(0, weight=1)
         self.scroll_frame.grid_columnconfigure(1, weight=1)
-    
-    def load_data(self):
-        # Obtener datos del API
-        result = self.api_service.get_estadisticas()
         
+    def load_data(self):
+        """Cargar datos del dashboard"""
+        result = self.api_service.get_estadisticas()
+        print(f"📊 Resultado get_estadisticas: {result}")
         if result.get('success'):
             data = result['data']
-            self.create_charts(data)
+            print(f"📊 Data recibida: {data}")
+            dashboard_data = self.prepare_chart_data(data)
+            print(f"📊 Dashboard data preparada: {dashboard_data}")
+            self.create_charts(dashboard_data)
         else:
-            # Verificar si es error de autenticación
-            if result.get('auth_error') and self.on_auth_error:
-                self.on_auth_error()
-                return
-            
             error_label = ctk.CTkLabel(
                 self.scroll_frame,
-                text=f"Error al cargar estadísticas: {result.get('message', 'Desconocido')}",
+                text=f"Error al cargar datos: {result.get('message', 'Desconocido')}",
                 font=("Arial", 16),
                 text_color=COLORS['error_red']
             )
-            error_label.grid(row=0, column=0, columnspan=2, pady=50)
-    
-    def create_charts(self, data):
-        # Actualizar cards con datos reales
-        self.update_metric_cards(data)
-        
-        # Configurar estilo de matplotlib
-        plt.style.use('default')
-        
-        # 1. Presión Arterial
-        self.create_chart_frame(
-            data['presion_arterial'],
-            "Presión Arterial",
-            0, 0,
-            self.plot_presion_arterial
-        )
-        
-        # 2. Frecuencia Cardíaca
-        self.create_chart_frame(
-            data['frecuencia_cardiaca'],
-            "Frecuencia Cardíaca",
-            0, 1,
-            self.plot_frecuencia_cardiaca
-        )
-        
-        # 3. Peso
-        self.create_chart_frame(
-            data['peso'],
-            "Control de Peso",
-            1, 0,
-            self.plot_peso
-        )
-        
-        # 4. Nivel de Actividad
-        self.create_chart_frame(
-            data['nivel_actividad'],
-            "Actividad Física (Pasos)",
-            1, 1,
-            self.plot_actividad
-        )
-        
-        # 5. Horas de Sueño
-        self.create_chart_frame(
-            data['horas_sueno'],
-            "Calidad del Sueño",
-            2, 0,
-            self.plot_sueno
-        )
-        
-        # 6. Citas Mensuales
-        self.create_chart_frame(
-            data['citas_mensuales'],
-            "Citas Médicas por Mes",
-            2, 1,
-            self.plot_citas
-        )
+            error_label.pack(pady=50)
     
     def create_chart_frame(self, data, title, row, col, plot_function):
         # Frame contenedor
@@ -272,79 +217,68 @@ class DashboardView(ctk.CTkFrame):
         )
         badge.pack(pady=(5, 15))
 
-    def update_metric_cards(self, data):
-        """Actualizar cards con datos reales del dashboard"""
-        # Limpiar cards anteriores
-        for widget in self.metrics_frame.winfo_children():
-            widget.destroy()
+    def prepare_chart_data(self, real_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Convierte datos reales del backend a formato para gráficas"""
+        from datetime import datetime
         
-        # Obtener datos reales del backend
-        edad = data.get('age', 0)
-        bmi = data.get('bmi', 0)
-        bmi_class = data.get('bmi_classification', 'Desconocido')
-        health_score = data.get('health_score', 0)
+        # Datos que SÍ existen y funcionan
+        conditions = real_data.get('conditions', [])
+        medications = real_data.get('medications', [])
         
-        # Determinar color del health score
-        if health_score >= 80:
-            score_color = COLORS['success_green']
-            score_text = "Excelente"
-        elif health_score >= 60:
-            score_color = COLORS['primary_blue']
-            score_text = "Bueno"
-        elif health_score >= 40:
-            score_color = COLORS['warning_yellow']
-            score_text = "Regular"
-        else:
-            score_color = COLORS['error_red']
-            score_text = "Atención"
+        # Timeline de diagnósticos
+        timeline_diagnosticos = []
+        for cond in conditions:
+            if cond.get('diagnosis_date'):
+                timeline_diagnosticos.append({
+                    'nombre': cond.get('name', 'Sin nombre'),
+                    'fecha': cond.get('diagnosis_date'),
+                    'notas': cond.get('notes', '')
+                })
+        timeline_diagnosticos.sort(key=lambda x: x['fecha'] if x['fecha'] else '9999-12-31')
         
-        # Determinar color del BMI
-        if 'Normal' in bmi_class or '✅' in bmi_class:
-            bmi_color = COLORS['success_green']
-        elif 'Sobrepeso' in bmi_class or '🟠' in bmi_class:
-            bmi_color = COLORS['warning_yellow']
-        else:
-            bmi_color = COLORS['error_red']
+        # Medicamentos activos
+        medicamentos_activos = []
+        for med in medications:
+            medicamentos_activos.append({
+                'nombre': med.get('name', 'Sin nombre'),
+                'dosis': med.get('dosage', 'N/D'),
+                'frecuencia': med.get('frequency', 'N/D'),
+                'inicio': med.get('start_date', 'N/D')
+            })
         
-        # Card 1: Edad
-        self.create_metric_card(
-            self.metrics_frame, 
-            "🎂 Edad", 
-            f"{edad} años" if edad else "N/D",
-            "Tu edad actual",
-            COLORS['primary_blue'],
-            0
-        )
+        # Historial de citas (desde JSON local)
+        citas_result = self.api_service.get_citas()
+        citas_por_mes = {}
         
-        # Card 2: IMC (Índice de Masa Corporal)
-        self.create_metric_card(
-            self.metrics_frame,
-            "⚖️ IMC",
-            f"{bmi}" if bmi else "N/D",
-            bmi_class if bmi else "Sin datos",
-            bmi_color,
-            1
-        )
+        if citas_result.get('success'):
+            citas = citas_result['data']
+            for cita in citas:
+                try:
+                    fecha = datetime.strptime(cita.get('fecha'), '%Y-%m-%d')
+                    mes_key = fecha.strftime('%Y-%m')
+                    citas_por_mes[mes_key] = citas_por_mes.get(mes_key, 0) + 1
+                except:
+                    pass
         
-        # Card 3: Puntuación de Salud
-        self.create_metric_card(
-            self.metrics_frame,
-            "💪 Salud General",
-            f"{health_score}/100" if health_score else "N/D",
-            score_text,
-            score_color,
-            2
-        )
+        meses_ordenados = sorted(citas_por_mes.keys())[-6:]
+        meses_labels = [datetime.strptime(m, '%Y-%m').strftime('%b') for m in meses_ordenados]
+        cantidades = [citas_por_mes[m] for m in meses_ordenados]
         
-        # Card 4: Próxima Cita 
-        self.create_metric_card(
-            self.metrics_frame,
-            "📅 Próxima Cita",
-            "Sin citas",
-            "Agenda tu consulta",
-            COLORS['gray_medium'],
-            3
-        )
+        return {
+            'age': real_data.get('age', 0),
+            'bmi': real_data.get('bmi', 0),
+            'bmi_classification': real_data.get('bmi_classification', 'Desconocido'),
+            'health_score': real_data.get('health_score', 0),
+            'timeline_diagnosticos': timeline_diagnosticos,
+            'medicamentos_activos': medicamentos_activos,
+            'citas_por_mes': {
+                'meses': meses_labels if meses_labels else ['Nov'],
+                'cantidad': cantidades if cantidades else [3]
+            },
+            'total_conditions': len(conditions),
+            'total_medications': len(medications)
+        }
+
 
     def update_metric_cards(self, data):
         """Actualizar cards con datos reales del dashboard"""
@@ -453,3 +387,172 @@ class DashboardView(ctk.CTkFrame):
             color,
             3
         )
+    
+    def create_charts(self, data):
+        # Actualizar cards con datos reales
+        self.update_metric_cards(data)
+        
+        # Configurar estilo de matplotlib
+        plt.style.use('default')
+        
+        # 1. Timeline de Diagnósticos
+        self.create_chart_frame(
+            data.get('timeline_diagnosticos', []),
+            "Timeline de Diagnósticos",
+            0, 0,
+            self.plot_timeline_diagnosticos
+        )
+        
+        # 2. Medicamentos Activos
+        self.create_chart_frame(
+            data.get('medicamentos_activos', []),
+            "Medicamentos Activos",
+            0, 1,
+            self.plot_medicamentos_activos
+        )
+        
+        # 3. Historial de Citas
+        self.create_chart_frame(
+            data.get('citas_por_mes', {}),
+            "Historial de Citas por Mes",
+            1, 0,
+            self.plot_citas_mensuales
+        )
+        
+        # 4. Resumen de Salud
+        self.create_chart_frame(
+            data,
+            "Resumen de Salud",
+            1, 1,
+            self.plot_resumen_salud
+        )
+        
+        # 5 y 6: Cards adicionales
+        self.create_summary_cards(data)
+    
+    def plot_timeline_diagnosticos(self, ax, data):
+        """Timeline de diagnósticos"""
+        if not data:
+            ax.text(0.5, 0.5, 'No hay diagnósticos registrados', 
+                   ha='center', va='center', fontsize=12, color=COLORS['gray_medium'])
+            ax.axis('off')
+            return
+        
+        nombres = [d['nombre'][:30] for d in data]
+        y_positions = range(len(nombres))
+        
+        ax.barh(y_positions, [1]*len(nombres), color=COLORS['primary_blue'], alpha=0.7)
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels(nombres, fontsize=9)
+        ax.set_xlabel('Diagnósticos')
+        
+        for i, d in enumerate(data):
+            if d['fecha']:
+                try:
+                    fecha = datetime.strptime(d['fecha'], '%Y-%m-%d')
+                    ax.text(0.5, i, fecha.strftime('%Y-%m-%d'), 
+                           va='center', ha='center', fontsize=8, color='white', weight='bold')
+                except:
+                    pass
+        
+        ax.set_xlim(0, 1)
+        ax.set_xticks([])
+        ax.grid(axis='y', alpha=0.3)
+    
+    def plot_medicamentos_activos(self, ax, data):
+        """Lista de medicamentos"""
+        if not data:
+            ax.text(0.5, 0.5, 'No hay medicamentos registrados', 
+                   ha='center', va='center', fontsize=12, color=COLORS['gray_medium'])
+            ax.axis('off')
+            return
+        
+        ax.axis('off')
+        ax.text(0.5, 0.95, 'Medicamentos Activos', 
+               ha='center', va='top', fontsize=12, weight='bold')
+        
+        y_start = 0.85
+        y_step = 0.15
+        
+        for i, med in enumerate(data[:6]):
+            y_pos = y_start - (i * y_step)
+            ax.text(0.05, y_pos, f"💊 {med['nombre']}", 
+                   ha='left', va='top', fontsize=10, weight='bold')
+            ax.text(0.05, y_pos - 0.04, f"{med['dosis']} - {med['frecuencia']}", 
+                   ha='left', va='top', fontsize=8, color=COLORS['gray_medium'])
+            if med['inicio'] != 'N/D':
+                ax.text(0.95, y_pos, f"Desde: {med['inicio']}", 
+                       ha='right', va='top', fontsize=8, color=COLORS['primary_blue'])
+        
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+    
+    def plot_citas_mensuales(self, ax, data):
+        """Citas por mes"""
+        meses = data.get('meses', ['Nov'])
+        cantidad = data.get('cantidad', [3])
+        
+        if sum(cantidad) == 0:
+            ax.text(0.5, 0.5, 'No hay citas registradas', 
+                   ha='center', va='center', fontsize=12, color=COLORS['gray_medium'])
+            ax.axis('off')
+            return
+        
+        bars = ax.bar(meses, cantidad, color=COLORS['primary_blue'], alpha=0.7)
+        
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{int(height)}',
+                   ha='center', va='bottom', fontsize=9, weight='bold')
+        
+        ax.set_xlabel('Mes')
+        ax.set_ylabel('Número de Citas')
+        ax.grid(axis='y', alpha=0.3)
+    
+    def plot_resumen_salud(self, ax, data):
+        """Resumen de salud"""
+        categorias = ['Condiciones', 'Medicamentos']
+        valores = [data.get('total_conditions', 0), data.get('total_medications', 0)]
+        colors = [COLORS['error_red'], COLORS['warning_yellow']]
+        
+        bars = ax.bar(categorias, valores, color=colors, alpha=0.7)
+        
+        for bar in bars:
+            height = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2., height,
+                   f'{int(height)}',
+                   ha='center', va='bottom', fontsize=12, weight='bold')
+        
+        ax.set_ylabel('Cantidad')
+        ax.set_title('Estado Actual de Salud', fontsize=12, weight='bold', pad=10)
+        ax.grid(axis='y', alpha=0.3)
+    
+    def create_summary_cards(self, data):
+        """Cards de resumen"""
+        cards_frame = ctk.CTkFrame(self.scroll_frame, fg_color=COLORS['gray_light'])
+        cards_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=20)
+        
+        cards_frame.grid_columnconfigure(0, weight=1)
+        cards_frame.grid_columnconfigure(1, weight=1)
+        
+        # Card Condiciones
+        self.create_summary_card(
+            cards_frame, "🏥 Condiciones", str(data.get('total_conditions', 0)),
+            "Diagnosticadas", COLORS['error_red'] if data.get('total_conditions', 0) > 0 else COLORS['success_green'], 0
+        )
+        
+        # Card Medicamentos
+        self.create_summary_card(
+            cards_frame, "💊 Medicamentos", str(data.get('total_medications', 0)),
+            "En tratamiento", COLORS['warning_yellow'] if data.get('total_medications', 0) > 0 else COLORS['success_green'], 1
+        )
+    
+    def create_summary_card(self, parent, title, value, subtitle, color, col):
+        """Crear card de resumen"""
+        card = ctk.CTkFrame(parent, fg_color=COLORS['white'], corner_radius=10)
+        card.grid(row=0, column=col, sticky="ew", padx=10, pady=10)
+        
+        ctk.CTkLabel(card, text=title, font=("Arial", 14, "bold"), text_color=COLORS['gray_dark']).pack(pady=(20, 5))
+        ctk.CTkLabel(card, text=value, font=("Arial", 36, "bold"), text_color=color).pack(pady=5)
+        ctk.CTkLabel(card, text=subtitle, font=("Arial", 11), text_color=COLORS['gray_medium']).pack(pady=(5, 20))

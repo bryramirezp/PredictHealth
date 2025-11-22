@@ -76,6 +76,16 @@ class APIService:
                 
                 # Obtener perfil del paciente (sin validar token ya que acaba de ser creado)
                 try:
+                    # Inicializar user_data mínimo antes de pedir perfil para que get_perfil no falle
+                    if not self.user_data:
+                        self.user_data = {
+                            'id': user_id,
+                            'nombre': '',
+                            'email': email,
+                            'telefono': '',
+                            'fecha_nacimiento': '',
+                            'user_type': temp_user_type
+                        }
                     profile_result = self.get_perfil(skip_validation=True)
                     if profile_result.get('success'):
                         profile_data = profile_result.get('data', {})
@@ -659,79 +669,63 @@ class APIService:
     
     # ==================== ESTADÍSTICAS ====================
     def get_estadisticas(self) -> Dict[str, Any]:
-        """Obtener datos para las gráficas del dashboard desde el gateway"""
+        """Obtener datos para las gráficas del dashboard"""
+        print(f"🔍 get_estadisticas() llamado. user_data: {self.user_data}")
+        
         try:
             if not self.user_data:
                 return {'success': False, 'message': 'No hay sesión'}
             
-            # Validar token antes de la petición
-            if not self.validate_token():
-                return {'success': False, 'message': 'Token expirado', 'auth_error': True}
+            user_id = self.user_data.get('id')
             
-            url = f"{self.base_url}/patient/dashboard"
+            # 1. Obtener datos del dashboard (KPIs básicos)
+            dashboard_url = f"http://localhost:8004/api/v1/patients/{user_id}/dashboard"
             
-            response = requests.get(
-                url, 
-                headers=self.get_headers(),
+            dashboard_response = requests.get(
+                dashboard_url,
+                headers={'Authorization': f'Bearer {self.token}'},
                 timeout=API_TIMEOUT
             )
             
-            auth_error = self._check_auth_error(response)
-            if auth_error:
-                return auth_error
+            if dashboard_response.status_code != 200:
+                return {'success': False, 'message': f'Error en dashboard: {dashboard_response.status_code}'}
             
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('status') == 'success':
-                    dashboard_data = data.get('data', {})
-                    
-                    # Usar datos reales donde estén disponibles
-                    age = dashboard_data.get('age', 0)
-                    bmi = dashboard_data.get('bmi', 25.5)
-                    health_score = dashboard_data.get('health_score', 60)
-                    
-                    # Formatear para las gráficas
-                    stats = {
-                        'presion_arterial': {
-                            'fechas': ['Nov 01', 'Nov 08', 'Nov 15', 'Nov 21'],
-                            'sistolica': [120, 118, 122, 119],
-                            'diastolica': [80, 78, 82, 79]
-                        },
-                        'frecuencia_cardiaca': {
-                            'fechas': ['Nov 01', 'Nov 08', 'Nov 15', 'Nov 21'],
-                            'valores': [72, 70, 75, 71]
-                        },
-                        'peso': {
-                            'fechas': ['Oct', 'Nov'],
-                            'valores': [70.5, 69.8]
-                        },
-                        'nivel_actividad': {
-                            'dias': ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                            'pasos': [8500, 10200, 7800, 9500, 11000, 6500, 5000]
-                        },
-                        'horas_sueno': {
-                            'dias': ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                            'horas': [7.5, 8, 6.5, 7, 8.5, 9, 8]
-                        },
-                        'citas_mensuales': {
-                            'meses': ['Jul', 'Ago', 'Sep', 'Oct', 'Nov'],
-                            'cantidad': [2, 1, 3, 2, 4]
-                        },
-                        # Datos REALES del backend
-                        'age': age,
-                        'bmi': bmi,
-                        'bmi_classification': dashboard_data.get('bmi_classification', ''),
-                        'health_score': health_score
-                    }
-                    return {'success': True, 'data': stats}
+            dashboard_data = dashboard_response.json()
             
-            # Si el endpoint falla, usar datos mock
-            return self._get_mock_estadisticas()
+            # 2. Obtener historial médico (condiciones y medicamentos)
+            medical_record_url = f"http://localhost:8004/api/v1/patients/{user_id}/medical-record"
+            
+            medical_response = requests.get(
+                medical_record_url,
+                headers={'Authorization': f'Bearer {self.token}'},
+                timeout=API_TIMEOUT
+            )
+            
+            if medical_response.status_code == 200:
+                medical_data = medical_response.json()
+                
+                # Combinar datos
+                dashboard_data['conditions'] = medical_data.get('conditions', [])
+                dashboard_data['medications'] = medical_data.get('medications', [])
+            else:
+                print(f"⚠️ No se pudieron obtener datos médicos: {medical_response.status_code}")
+                dashboard_data['conditions'] = []
+                dashboard_data['medications'] = []
+            
+            # 3. Agregar datos de citas locales
+            citas_result = self.get_proxima_cita()
+            if citas_result.get('success') and citas_result.get('data'):
+                dashboard_data['next_appointment'] = citas_result['data']
+            
+            print(f"✅ Datos combinados: conditions={len(dashboard_data.get('conditions', []))}, medications={len(dashboard_data.get('medications', []))}")
+            
+            return {'success': True, 'data': dashboard_data}
             
         except Exception as e:
             print(f"Error obteniendo estadísticas: {e}")
-            # En caso de error, devolver datos mock
-            return self._get_mock_estadisticas()
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'message': f'Error: {str(e)}'}
     
     def _get_mock_estadisticas(self):
         """Datos mock de respaldo"""

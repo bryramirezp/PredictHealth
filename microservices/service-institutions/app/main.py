@@ -243,7 +243,9 @@ def get_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_u
         WHERE d.institution_id = %s AND d.is_active = TRUE
         ORDER BY d.last_name, d.first_name
     """
+    logger.info(f"🔍 Ejecutando query de doctores para institución ID: {institution_id} (tipo: {type(institution_id)})")
     doctors_data = execute_query(query, (str(institution_id),), fetch_all=True) or []
+    logger.info(f"🔍 Query finalizada. Doctores encontrados: {len(doctors_data)}")
     
     # Formatear datos para el frontend
     doctors_list = []
@@ -255,7 +257,7 @@ def get_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_u
     
     return {"doctors": doctors_list}
 
-@app.get("/api/v1/institutions/me/doctors")
+@app.get("/api/v1/institutions/doctors")
 def get_my_institution_doctors(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Alias para /api/v1/institutions/doctors - Obtiene doctores de la institución autenticada."""
     return get_institution_doctors(current_user)
@@ -310,9 +312,9 @@ def get_institution_patients(current_user: Dict[str, Any] = Depends(get_current_
     
     return {"patients": patients_list}
 
-@app.get("/api/v1/institutions/me/patients")
-def get_my_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Alias para /api/v1/institutions/patients - Obtiene pacientes de la institución autenticada."""
+@app.get("/api/v1/institutions/patients")
+def get_institution_patients(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Obtiene la list  a de pacientes de la institución autenticada."""
     return get_institution_patients(current_user)
 
 @app.get("/api/v1/institutions/{institution_id}", response_model=InstitutionResponse)

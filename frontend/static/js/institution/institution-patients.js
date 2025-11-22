@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("Error: institution-core.js no está cargado.");
             return;
         }
-        
+
         const userInfo = await InstitutionCore.checkAuth();
         if (userInfo) {
             initPatientsPage(userInfo);
@@ -30,13 +30,13 @@ async function initPatientsPage(userInfo) {
     try {
         // Mostrar carga
         InstitutionCore.showLoading('patients-list-table-body', 'Cargando pacientes...');
-        
+
         // Obtener la lista de pacientes
         const patientsData = await InstitutionCore.apiRequest(InstitutionCore.ENDPOINTS.PATIENTS());
-        
-        // El backend puede devolver directamente {patients: [...]} o el array directamente
-        const patients = patientsData?.patients || patientsData || [];
-        
+
+        // El backend devuelve {status: "success", data: {patients: [...]}}
+        const patients = patientsData?.data?.patients || patientsData?.patients || [];
+
         if (Array.isArray(patients) && patients.length > 0) {
             renderPatientsTable(tableBody, patients);
         } else {
@@ -56,16 +56,16 @@ async function initPatientsPage(userInfo) {
  */
 function renderPatientsTable(tableBody, patients) {
     let html = '';
-    
+
     patients.forEach(patient => {
         const fullName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim();
         const email = patient.contact_email || 'N/A';
-        const doctorName = patient.doctor_name 
-            ? `Dr. ${patient.doctor_name}` 
-            : (patient.doctor_first_name && patient.doctor_last_name 
-                ? `Dr. ${patient.doctor_first_name} ${patient.doctor_last_name}` 
+        const doctorName = patient.doctor_name
+            ? `Dr. ${patient.doctor_name}`
+            : (patient.doctor_first_name && patient.doctor_last_name
+                ? `Dr. ${patient.doctor_first_name} ${patient.doctor_last_name}`
                 : 'Sin asignar');
-        
+
         html += `
             <tr>
                 <td>${fullName}</td>
@@ -79,7 +79,7 @@ function renderPatientsTable(tableBody, patients) {
             </tr>
         `;
     });
-    
+
     tableBody.innerHTML = html;
 }
 
